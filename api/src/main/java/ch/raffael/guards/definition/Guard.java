@@ -105,8 +105,8 @@ import java.lang.annotation.Target;
  * at the end of the day, just writing boxed/primitive variants isn't that much work and
  * gives you the full flexibility how to handle the values.
  *
- * We'll just provide some abstract classes for commit use cases in
- * {@link ch.raffael.guards.definition.util}
+ * We'll just provide some abstract classes for common use cases in
+ * {@link ch.raffael.guards.definition.util}.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */

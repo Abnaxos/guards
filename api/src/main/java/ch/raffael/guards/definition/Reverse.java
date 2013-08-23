@@ -14,26 +14,31 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.definition;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.Reverse;
-
 
 /**
- * Mark a value as signed (opposite of {@link NotNegative @NotNegative}.
+ * Defines an annotation to be the reverse of the specified guards. This is similar to
+ * {@link ch.raffael.guards.Repeal @Repeal}, but on guard definition level: The
+ * annotation {@link ch.raffael.guards.Nullable @Nullable} always repeals the annotation
+ * {@link ch.raffael.guards.NotNull @NotNull}. The difference is that through this
+ * annotation, {@link ch.raffael.guards.NotNull @NotNull} also repeals
+ * {@link ch.raffael.guards.Nullable @Nullable}.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.ANNOTATION_TYPE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Reverse({ NotNegative.class, Positive.class })
-public @interface Signed {
+public @interface Reverse {
+
+    Class<? extends Annotation>[] value();
 
 }

@@ -22,16 +22,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import ch.raffael.guards.definition.Reverse;
+
 
 /**
  * Mark the value as nullable (opposite of {@link NotNull @NotNull}).
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.PACKAGE })
 @Retention(RetentionPolicy.CLASS)
 @Documented
-@Repeal(NotNull.class)
+@Reverse(NotNull.class)
 public @interface Nullable {
 
 }

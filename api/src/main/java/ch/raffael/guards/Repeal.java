@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.PARAMETER, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.PARAMETER, ElementType.METHOD, ElementType.PACKAGE })
 @Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface Repeal {

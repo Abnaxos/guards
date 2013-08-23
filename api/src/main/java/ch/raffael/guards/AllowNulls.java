@@ -26,14 +26,12 @@ import ch.raffael.guards.definition.Reverse;
 
 
 /**
- * Mark a value as signed (opposite of {@link NotNegative @NotNegative}.
- *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.CLASS)
 @Documented
-@Reverse({ NotNegative.class, Positive.class })
-public @interface Signed {
+@Reverse(NoNulls.class)
+public @interface AllowNulls {
 
 }
