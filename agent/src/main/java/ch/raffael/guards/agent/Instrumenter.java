@@ -28,6 +28,7 @@ import org.objectweb.asm.commons.Method;
 
 import ch.raffael.guards.definition.Guard;
 
+import static ch.raffael.guards.agent.Types.*;
 import static com.google.common.base.Objects.*;
 import static org.objectweb.asm.Opcodes.*;
 
@@ -221,10 +222,6 @@ class Instrumenter extends ClassVisitor {
             if ( endLabel != null ) {
                 visitLabel(endLabel);
             }
-        }
-
-        private boolean isDoubleWord(Type type) {
-            return type.equals(Type.LONG_TYPE) || type.equals(Type.DOUBLE_TYPE);
         }
 
         private void genViolation(Guard.Type guardType) {

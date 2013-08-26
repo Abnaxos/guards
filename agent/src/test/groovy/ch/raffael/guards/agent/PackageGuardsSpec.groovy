@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.test.transform;
-
-import ch.raffael.guards.NotNull;
 
 
+package ch.raffael.guards.agent
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class Test {
+class PackageGuardsSpec extends GuardsSpecification {
 
-    @NotNull
-    public Object foo(@NotNull Test2 t, String s) {
-        if ( true ) {
-            System.out.println("Test: " + t);
-        }
-        return null;
-    }
-
-    public boolean bool() {
-        return true;
+    def "Load a class and see whether the transformer gets package-info.java"() {
+      when:
+        tf.load('trace.TraceClass')
+        tf.load('trace.repeal.RepealClass')
+      then:
+        true
     }
 
 }

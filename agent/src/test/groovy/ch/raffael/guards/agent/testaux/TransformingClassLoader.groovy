@@ -16,6 +16,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent.testaux
 
 import ch.raffael.guards.agent.GuardsTransformer
@@ -47,9 +49,7 @@ class TransformingClassLoader extends ClassLoader {
     }
 
     Class<?> load(String name) {
-        if ( name.indexOf('.') < 0 ) {
-            name = TF_PREFIX + name
-        }
+        name = TF_PREFIX + name
         loadClass(name, false)
     }
 

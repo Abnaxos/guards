@@ -17,6 +17,7 @@
 package ch.raffael.guards.agent;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Function;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
+import ch.raffael.guards.GuardsInternalError;
 import ch.raffael.guards.Repeal;
 
 
@@ -86,10 +88,14 @@ class Types {
     }
 
     static final Type T_OBJECT = Type.getType(Object.class);
+    static final Type T_OBJECT_ARRAY = Type.getType(Object[].class);
 
     static final Type T_CLASS = Type.getType(Class.class);
+    static final Type T_METHOD = Type.getType(java.lang.reflect.Method.class);
     static final Method M_GET_CLASS_LOADER = getMethod(Class.class, "getClassLoader");
     static final Method M_ASSERTION_STATUS = getMethod(Class.class, "desiredAssertionStatus");
+    static final Method M_GET_METHOD = getMethod(Class.class, "getMethod", String.class, Class[].class);
+    static final Method M_METHOD_DEFAULT_VALUE = getMethod(java.lang.reflect.Method.class, "getDefaultValue");
 
     static final Type T_CHECKER_STORE = Type.getType(CheckerStore.class);
     static final Method M_CHECKER_STORE_GET = getMethod(CheckerStore.class, "get", int.class);
@@ -107,6 +113,8 @@ class Types {
     static final Method M_CHECK_OBJECT = getMethod(CheckerBridge.class, "check", Object.class);
     static final Type T_INVOKER = Type.getType(CheckerBridge.Invoker.class);
 
+    static final Type T_GUARDS_INTERNAL_ERROR = Type.getType(GuardsInternalError.class);
+
     static final Type T_ILLEGAL_STATE_EXCEPTION = Type.getType(IllegalStateException.class);
     static final Type T_ILLEGAL_ARGUMENT_EXCEPTION = Type.getType(IllegalArgumentException.class);
     static final Type T_ASSERTION_ERROR = Type.getType(AssertionError.class);
@@ -116,17 +124,37 @@ class Types {
     static final Method M_CTOR_W_STRING = new Method("<init>", "(Ljava/lang/String;)V");
     static final Method M_TO_STRING = new Method("toString", "()Ljava/lang/String;");
 
+    static final Type T_MAP = Type.getType(Map.class);
+    static final Method M_MAP_REMOVE = getMethod(Map.class, "remove", Object.class);
+    static final Type T_HASHMAP = Type.getType(HashMap.class);
+    static final Method M_HASHMAP_CTOR_COPY = getConstructor(HashMap.class, Map.class);
+
+    static final Type T_ARRAYS = Type.getType(Arrays.class);
+
     static final String F_CHECKER_STORE = "$$ch$raffael$guards$checkerStore";
     static final String F_ASSERTIONS_ENABLED = "$$ch$raffael$guards$assertionsEnabled";
 
     static final Type T_REPEAL = Type.getType(Repeal.class);
 
-    private static Method getMethod(Class<?> clazz, String name, Class<?>... args) {
+    static boolean isDoubleWord(Type type) {
+        return type.equals(Type.LONG_TYPE) || type.equals(Type.DOUBLE_TYPE);
+    }
+
+    static Method getMethod(Class<?> clazz, String name, Class<?>... args) {
         try {
-            return Method.getMethod(clazz.getMethod(name, args));
+            return Method.getMethod(clazz.getDeclaredMethod(name, args));
         }
         catch ( NoSuchMethodException e ) {
-            throw new ExceptionInInitializerError("Cannot find Method: " + name + ": " + Arrays.asList(args));
+            throw new ExceptionInInitializerError("Cannot find Method for " + clazz + ": " + name + ": " + Arrays.asList(args));
+        }
+    }
+
+    static Method getConstructor(Class<?> clazz, Class<?>... args) {
+        try {
+            return Method.getMethod(clazz.getDeclaredConstructor(args));
+        }
+        catch ( NoSuchMethodException e ) {
+            throw new ExceptionInInitializerError("Cannot find Constructor for " + clazz + ": " + Arrays.asList(args));
         }
     }
 

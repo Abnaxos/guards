@@ -28,7 +28,7 @@ import ch.raffael.guards.definition.Guard;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.PACKAGE })
 @Retention(RetentionPolicy.CLASS)
 @Guard(message = "Trace")
 @Documented

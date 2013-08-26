@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.test.transform;
+package ch.raffael.guards.test.annotations;
 
-import ch.raffael.guards.NotNull;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class Test2 {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface IntDefault {
 
-    static {
-        System.out.println("Test2");
-    }
-
-    @NotNull
-    public Object foo(Test t) {
-        return null;
-    }
+    int foo() default 42;
 
 }
