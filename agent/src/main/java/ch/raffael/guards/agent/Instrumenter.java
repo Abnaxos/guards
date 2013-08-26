@@ -106,9 +106,9 @@ class Instrumenter extends ClassVisitor {
                 for ( ClassScanner.GuardDeclaration guard : param.guards ) {
                     CheckerBridge bridge =
                             new CheckerBridge(type, methodInfo.method,
-                                              "Parameter "+param.name, param.type,
+                                              "Parameter " + param.name, param.type,
                                               Guard.Type.PARAMETER,
-                                              checkerStore.loader().implementAnnotation(guard.handle.getAnnotationClass(), guard.values),
+                                              ClassSynthesizer.get(guard.handle.getAnnotationClass()).implementAnnotation(guard.handle.getAnnotationClass(), guard.values),
                                               guard.handle,
                                               checkerStore.loader());
                     int guardIndex = checkerStore.add(bridge);
@@ -118,11 +118,23 @@ class Instrumenter extends ClassVisitor {
                     //S: checkerStore, checkerStore, guardIndex
                     invokeVirtual(Types.T_CHECKER_STORE, Types.M_CHECKER_STORE_GET);
                     //S: checkerStore, guardBridge
+                    dup();
+                    //S: checkerStore, guardBridge, guardBridge
+                    Label onNull = newLabel();
+                    ifNull(onNull);
+                    //S: checkerStore, guardBridge
                     loadArg(i);
                     //S: checkerStore, guardBridge, arg
-                    invokeVirtual(CheckerBridge.TYPE, firstNonNull(PRIMITIVE_CHECKS.get(param.type), Types.M_CHECK_OBJECT));
+                    invokeVirtual(Types.T_CHECKER_BRIDGE, firstNonNull(PRIMITIVE_CHECKS.get(param.type), Types.M_CHECK_OBJECT));
                     //S: checkerStore, msg
                     genViolation(Guard.Type.PARAMETER);
+                    Label cont = newLabel();
+                    goTo(cont);
+                    visitLabel(onNull);
+                    //S: checkerStore, guardBridge
+                    pop(); // pop the null guardBridge
+                    //S: checkerStore
+                    visitLabel(cont);
                     //S: checkerStore
                 }
                 pop(); // drop the CheckerStore
@@ -151,11 +163,11 @@ class Instrumenter extends ClassVisitor {
                                           "Return value",
                                           methodInfo.method.getReturnType(),
                                           Guard.Type.RESULT,
-                                          checkerStore.loader().implementAnnotation(guard.handle.getAnnotationClass(), guard.values),
+                                          ClassSynthesizer.get(guard.handle.getAnnotationClass()).implementAnnotation(guard.handle.getAnnotationClass(), guard.values),
                                           guard.handle,
                                           checkerStore.loader());
                 int guardIndex = checkerStore.add(bridge);
-                if ( isLongWord(methodInfo.method.getReturnType()) ) {
+                if ( isDoubleWord(methodInfo.method.getReturnType()) ) {
                     dup2();
                 }
                 else {
@@ -168,7 +180,12 @@ class Instrumenter extends ClassVisitor {
                 //S: RET, RET, checkerStore, index
                 invokeVirtual(Types.T_CHECKER_STORE, Types.M_CHECKER_STORE_GET);
                 //S: RET, RET, bridge
-                if ( isLongWord(methodInfo.method.getReturnType()) ) {
+                dup();
+                //S: RET, RET, bridge, bridge
+                Label onNull = newLabel();
+                ifNull(onNull);
+                //S: RET, RET, bridge
+                if ( isDoubleWord(methodInfo.method.getReturnType()) ) {
                     // well, that's more complicated because you cannot use swap with long
                     // RET == W1, W2
                     // W1, W2, bridge
@@ -182,9 +199,23 @@ class Instrumenter extends ClassVisitor {
                     swap();
                 }
                 //S: RET, bridge, RET
-                invokeVirtual(CheckerBridge.TYPE, firstNonNull(PRIMITIVE_CHECKS.get(methodInfo.method.getReturnType()), Types.M_CHECK_OBJECT));
+                invokeVirtual(Types.T_CHECKER_BRIDGE, firstNonNull(PRIMITIVE_CHECKS.get(methodInfo.method.getReturnType()), Types.M_CHECK_OBJECT));
                 //S: RET, msg
                 genViolation(Guard.Type.RESULT);
+                Label cont = newLabel();
+                goTo(cont);
+                visitLabel(onNull);
+                //S: RET, RET, bridge
+                pop(); // pop the null bridge
+                //S: RET, RET
+                if ( isDoubleWord(methodInfo.method.getReturnType()) ) {
+                    pop2();
+                }
+                else {
+                    pop();
+                }
+                // S: RET
+                visitLabel(cont);
                 //S: RET
             }
             if ( endLabel != null ) {
@@ -192,7 +223,7 @@ class Instrumenter extends ClassVisitor {
             }
         }
 
-        private boolean isLongWord(Type type) {
+        private boolean isDoubleWord(Type type) {
             return type.equals(Type.LONG_TYPE) || type.equals(Type.DOUBLE_TYPE);
         }
 

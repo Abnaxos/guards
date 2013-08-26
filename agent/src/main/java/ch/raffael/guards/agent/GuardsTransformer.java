@@ -27,7 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.ProtectionDomain;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -47,6 +49,17 @@ import org.objectweb.asm.util.TraceClassVisitor;
  */
 public final class GuardsTransformer implements ClassFileTransformer {
 
+    private static final Set<ClassLoader> SYSTEM_CLASS_LOADERS;
+    static {
+        ImmutableSet.Builder<ClassLoader> builder = ImmutableSet.builder();
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        while ( loader != null ) {
+            builder.add(loader);
+            loader = loader.getParent();
+        }
+        SYSTEM_CLASS_LOADERS = builder.build();
+    }
+
     private volatile Path dumpPath = null;
     private volatile DumpFormat dumpFormat = DumpFormat.BYTECODE;
     private volatile Mode mode = Mode.ASSERT;
@@ -65,6 +78,9 @@ public final class GuardsTransformer implements ClassFileTransformer {
     }
 
     public void parseArgumentString(String args) {
+        if ( args == null ) {
+            return;
+        }
         for ( String arg : args.split(",") ) {
             String argName;
             String argValue = null;
@@ -158,6 +174,7 @@ public final class GuardsTransformer implements ClassFileTransformer {
         if ( Log.debugEnabled() ) {
             Log.debug("Instrumenting class: %s", className);
         }
+        Realm realm = Realm.get(loader);
         Type type = Type.getObjectType(className);
         // find outermost class
         try {
@@ -166,7 +183,7 @@ public final class GuardsTransformer implements ClassFileTransformer {
                 outermostType = type;
             }
             CheckerStore checkerStore = CheckerStore.storeFor(loader, type.getClassName());
-            ClassScanner scanner = new ClassScanner(checkerStore);
+            ClassScanner scanner = new ClassScanner(realm);
             new ClassReader(bytecode).accept(scanner, 0);
             ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES + ClassWriter.COMPUTE_MAXS);
             FieldVisitor fv = classWriter.visitField(Opcodes.ACC_STATIC + Opcodes.ACC_FINAL, Types.F_CHECKER_STORE, Types.T_CHECKER_STORE.getDescriptor(), null, null);
@@ -179,7 +196,7 @@ public final class GuardsTransformer implements ClassFileTransformer {
             visitor = new InitClassVisitor(visitor, type);
             visitor = new Instrumenter(visitor, outermostType, mode, checkerStore, scanner);
             //visitor = new GuardsClassVisitor(loader, Type.getType("L" + (outermostName != null ? outermostName : className) + ";"), visitor);
-            new ClassReader(bytecode).accept(visitor, 0);
+            new ClassReader(bytecode).accept(visitor, ClassReader.EXPAND_FRAMES);
             byte[] instrumented = classWriter.toByteArray();
             if ( dumpPath != null ) {
                 DumpFormat format = dumpFormat;
@@ -205,7 +222,7 @@ public final class GuardsTransformer implements ClassFileTransformer {
     }
 
     private boolean isInstrumentable(ClassLoader loader) {
-        if ( loader instanceof GuardsClassLoader ) {
+        if ( loader instanceof ClassSynthesizer ) {
             return false;
         }
         try {
@@ -251,6 +268,10 @@ public final class GuardsTransformer implements ClassFileTransformer {
         else {
             return null;
         }
+    }
+
+    public static boolean isSystemClassLoader(ClassLoader loader) {
+        return loader == null || SYSTEM_CLASS_LOADERS.contains(loader);
     }
 
     private class InitClassVisitor extends ClassVisitor {

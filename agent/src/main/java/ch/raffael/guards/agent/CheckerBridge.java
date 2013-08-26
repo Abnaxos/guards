@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -115,50 +114,6 @@ public final class CheckerBridge {
             .put(char.class, int.class)
             .build();
 
-    static final Type TYPE = Type.getType(CheckerBridge.class);
-
-    private static final Object[] NO_ARGS = new Object[0];
-    private static final Invoker NULL_INVOKER = new Invoker() {
-        @Override
-        public boolean check(int value) {
-            return true;
-        }
-        @Override
-        public boolean check(byte value) {
-            return true;
-        }
-        @Override
-        public boolean check(short value) {
-            return true;
-        }
-        @Override
-        public boolean check(long value) {
-            return true;
-        }
-        @Override
-        public boolean check(float value) {
-            return true;
-        }
-        @Override
-        public boolean check(double value) {
-            return true;
-        }
-        @Override
-        public boolean check(char value) {
-            return true;
-        }
-        @Override
-        public boolean check(boolean value) {
-            return true;
-        }
-        @Override
-        public boolean check(Object value) {
-            return true;
-        }
-    };
-
-    private static final AtomicLong INVOKER_COUNTER = new AtomicLong();
-
     private final Type type;
     private final Method method;
     private final String targetDescription;
@@ -166,14 +121,17 @@ public final class CheckerBridge {
     private final GuardHandle guardHandle;
     private final Annotation guardAnnotation;
     private final Guard.Type guardType;
-    private final GuardsClassLoader classLoader;
+    private final ClassLoader classLoader;
     private final Object initLock = new Object();
     private volatile Invoker invoker = null;
     private Guard.Checker checker = null;
     private Class valueClass = null;
     private boolean checkNulls = false;
 
-    CheckerBridge(Type type, Method method, String targetDescription, Type valueType, Guard.Type guardType, Annotation guardAnnotation, GuardHandle guardHandle, GuardsClassLoader classLoader) {
+    CheckerStore checkerStore;
+    int index = -1;
+
+    CheckerBridge(Type type, Method method, String targetDescription, Type valueType, Guard.Type guardType, Annotation guardAnnotation, GuardHandle guardHandle, ClassLoader classLoader) {
         this.type = type;
         this.method = method;
         this.targetDescription = targetDescription;
@@ -271,11 +229,12 @@ public final class CheckerBridge {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void doInitialize() {
         try {
             valueClass = PRIMITIVES.get(valueType.getClassName());
             if ( valueClass == null ) {
-                valueClass = Class.forName(valueType.getClassName(), false, classLoader.getParent());
+                valueClass = Class.forName(valueType.getClassName(), false, classLoader);
             }
             Class<?> checkerClass = Class.forName(guardAnnotation.annotationType().getName() + "$Checker", false, guardAnnotation.getClass().getClassLoader());
             if ( !Guard.Checker.class.isAssignableFrom(checkerClass) ) {
@@ -307,7 +266,8 @@ public final class CheckerBridge {
             if ( checkerMethods.getFirst().method.getAnnotation(CheckNulls.class) != null ) {
                 checkNulls = true;
             }
-            Class<? extends Invoker> invokerClass = classLoader.invokerClass((Class<? extends Guard.Checker>)checkerClass, checkerMethods.getFirst());
+            Class<? extends Invoker> invokerClass = ClassSynthesizer.get(checkerClass)
+                    .invokerClass((Class<? extends Guard.Checker>)checkerClass, checkerMethods.getFirst());
             invoker = invokerClass.getConstructor(checkerClass).newInstance(checker);
         }
         catch ( Exception e ) {
@@ -317,7 +277,7 @@ public final class CheckerBridge {
         finally {
             if ( invoker == null ) {
                 // an error occurred; make sure the code still runs, but without any checks
-                invoker = NULL_INVOKER;
+                checkerStore.invalidate(index);
             }
         }
     }

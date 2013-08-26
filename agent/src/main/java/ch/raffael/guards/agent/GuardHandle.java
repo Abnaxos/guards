@@ -18,9 +18,7 @@ package ch.raffael.guards.agent;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,7 +40,7 @@ import ch.raffael.guards.definition.Index;
 @SuppressWarnings("ObjectEquality")
 final class GuardHandle {
 
-    private static final GuardHandle NOT_A_GUARD = new GuardHandle(new Guard() {
+    static final GuardHandle NOT_A_GUARD = new GuardHandle(new Guard() {
         @SuppressWarnings("ZeroLengthArrayAllocation")
         private final Type[] types = new Type[0];
         @Override
@@ -61,18 +59,18 @@ final class GuardHandle {
     private static final CheckerHandle INVALID_CHECKER = new CheckerHandle(null, null);
     private static ConcurrentMap<Class, GuardHandle> STORE = new MapMaker().weakKeys().makeMap();
 
-    private final Class<? extends Annotation> annotationClass; // FIXME: memory leak here!
+    private final Class<? extends Annotation> annotationClass;
     private final Type annotationType;
     private final Guard guardAnnotation;
     private final Set<Guard.Type> types;
     private final AtomicReference<CheckerHandle> checkerHandle = new AtomicReference<>(null);
-    private final String annotationMsgFormat;
+    private final String violationMsgFormat;
     private final Method[] violationArgGetters;
 
-    private GuardHandle(Guard guardAnnotation, Class<? extends Annotation> annotationClass, String annotationMsgFormat, Method[] violationArgGetters) {
+    private GuardHandle(Guard guardAnnotation, Class<? extends Annotation> annotationClass, String violationMsgFormat, Method[] violationArgGetters) {
         this.guardAnnotation = guardAnnotation;
         this.annotationClass = annotationClass;
-        this.annotationMsgFormat = annotationMsgFormat;
+        this.violationMsgFormat = violationMsgFormat;
         this.violationArgGetters = violationArgGetters;
         if ( guardAnnotation.types().length == 0 ) {
             types = Collections.emptySet();
@@ -98,31 +96,12 @@ final class GuardHandle {
         }
     }
 
-    static GuardHandle get(ClassLoader loader, String annotationBinaryName) {
-        Class annotationClass;
-        try {
-            annotationClass = Class.forName(annotationBinaryName, false, loader);
-        }
-        catch ( ClassNotFoundException e ) {
-            return null;
-        }
-        GuardHandle metaData = STORE.get(annotationClass);
-        if ( metaData == null ) {
-            metaData = loadGuard(annotationClass);
-            GuardHandle prev = STORE.putIfAbsent(annotationClass, metaData);
-            if ( prev != null ) {
-                metaData = prev;
-            }
-        }
-        return metaData != NOT_A_GUARD ? metaData : null;
-    }
-
     Set<Guard.Type> getTypes() {
         return types;
     }
 
     @SuppressWarnings("unchecked")
-    private static GuardHandle loadGuard(Class annotationClass) {
+    static GuardHandle load(Class annotationClass) {
         if ( !annotationClass.isAnnotation() ) {
             if ( Log.traceEnabled() ) {
                 Log.trace("%s is not a guard: Not an annotation", annotationClass);
@@ -172,74 +151,9 @@ final class GuardHandle {
         return annotationClass;
     }
 
-    Guard.Checker newChecker(Annotation guardAnnotation, Guard.Type type, Class<?> valueClass) {
-        if ( checkerHandle.get() == null ) {
-            Class<?> checkerClass;
-            Constructor<?> constructor = null;
-            try {
-                checkerClass = Class.forName(annotationClass.getName() + "$Checker", false, annotationClass.getClassLoader());
-                if ( !Guard.Checker.class.isAssignableFrom(checkerClass) ) {
-                    Log.error("Checker %s does not extend Guard.Checker", checkerClass);
-                }
-                else {
-                    if ( !Modifier.isPublic(checkerClass.getModifiers()) ) {
-                        checkerClass = null;
-                        Log.error("Checker %s is not public", checkerClass);
-                    }
-                    else if ( Modifier.isAbstract(checkerClass.getModifiers()) ) {
-                        checkerClass = null;
-                        Log.error("Checker %s is abstract", checkerClass);
-                    }
-                    if ( checkerClass != null ) {
-                        try {
-                            constructor = checkerClass.getConstructor(annotationClass, Guard.Type.class, Class.class);
-                        }
-                        catch ( NoSuchMethodException e ) {
-                            try {
-                                constructor = checkerClass.getConstructor(Annotation.class, Guard.Type.class, Class.class);
-                            }
-                            catch ( NoSuchMethodException e1 ) {
-                                Log.error("No suitable constructor found for checker %s", checkerClass);
-                            }
-                        }
-                        if ( constructor != null ) {
-                            if ( !Modifier.isPublic(constructor.getModifiers()) ) {
-                                constructor = null;
-                                Log.error("Constructor %s is not public", constructor);
-                            }
-                        }
-                    }
-                }
-                if ( checkerClass != null && constructor != null ) {
-                    checkerHandle.compareAndSet(null, new CheckerHandle(checkerClass, constructor));
-                }
-                else {
-                    checkerHandle.compareAndSet(null, INVALID_CHECKER);
-                }
-            }
-            catch ( ClassNotFoundException e ) {
-                if ( Log.debugEnabled() ) {
-                    Log.debug("No checker class found for %s", annotationClass.getName());
-                }
-                checkerHandle.compareAndSet(null, INVALID_CHECKER);
-            }
-        }
-        CheckerHandle handle = checkerHandle.get();
-        assert handle != null;
-        if ( handle.constructor != null ) {
-            try {
-                return handle.constructor.newInstance(guardAnnotation, type, valueClass);
-            }
-            catch ( InstantiationException | IllegalAccessException | InvocationTargetException e ) {
-                Log.error("Error invoking %s", e, handle.constructor);
-            }
-        }
-        return null;
-    }
-
     String violationMessage(Annotation annotation) {
         if ( violationArgGetters == null ) {
-            return guardAnnotation.message();
+            return violationMsgFormat;
         }
         else {
             try {
@@ -247,10 +161,10 @@ final class GuardHandle {
                 for ( int i = 0; i < args.length; i++ ) {
                     args[i] = violationArgGetters[i].invoke(annotation);
                 }
-                return String.format(guardAnnotation.message(), args);
+                return String.format(violationMsgFormat, args);
             }
             catch ( Exception e ) {
-                return "[" + e + "] " + guardAnnotation.message();
+                return "[" + e + "] " + violationMsgFormat;
             }
         }
     }

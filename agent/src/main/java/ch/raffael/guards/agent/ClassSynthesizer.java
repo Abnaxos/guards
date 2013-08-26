@@ -19,10 +19,13 @@ package ch.raffael.guards.agent;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapMaker;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -39,21 +42,43 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-final class GuardsClassLoader extends ClassLoader {
+final class ClassSynthesizer extends ClassLoader {
 
-    static final String GEN_PACKAGE = GuardsClassLoader.class.getPackage().getName().replace('.', '/') + "/$gen/";
+    private static final ClassSynthesizer SYSTEM_SYNTHESIZER = new ClassSynthesizer("SYSTEM", ClassLoader.getSystemClassLoader());
+    private static final ConcurrentMap<Class<?>, ClassSynthesizer> SYNTHESIZERS = new MapMaker().weakKeys().makeMap();
+
+    static final String GEN_PACKAGE = ClassSynthesizer.class.getPackage().getName().replace('.', '/') + "/$gen/";
 
     private final AtomicInteger invokerCounter = new AtomicInteger();
     private final String description;
 
-    GuardsClassLoader(String description, ClassLoader parent) {
+    private final Map<Class<? extends Guard.Checker>, Map<Class<?>, Class<? extends CheckerBridge.Invoker>>> invokerClasses =
+            new MapMaker().weakKeys().makeMap();
+
+
+    private ClassSynthesizer(String description, ClassLoader parent) {
         super(parent);
         this.description = description;
     }
 
+    public static ClassSynthesizer get(Class<?> clazz) {
+        if ( GuardsTransformer.isSystemClassLoader(clazz.getClassLoader()) ) {
+            return SYSTEM_SYNTHESIZER;
+        }
+        ClassSynthesizer synthesizer = SYNTHESIZERS.get(clazz);
+        if ( synthesizer == null ) {
+            synthesizer = new ClassSynthesizer(clazz.toString(), clazz.getClassLoader());
+            ClassSynthesizer prev = SYNTHESIZERS.putIfAbsent(clazz, synthesizer);
+            if ( prev != null ) {
+                synthesizer = prev;
+            }
+        }
+        return synthesizer;
+    }
+
     @Override
     public String toString() {
-        return GuardsClassLoader.class.getName() + "{" + description + "}";
+        return ClassSynthesizer.class.getName() + "{" + description + "}";
     }
 
     @SuppressWarnings("unchecked")
@@ -72,6 +97,23 @@ final class GuardsClassLoader extends ClassLoader {
 
     @SuppressWarnings("unchecked")
     public Class<? extends CheckerBridge.Invoker> invokerClass(Class<? extends Guard.Checker> checkerClass, CheckerBridge.CheckerMethod checkerMethod) {
+        synchronized ( invokerClasses ) {
+            Map<Class<?>, Class<? extends CheckerBridge.Invoker>> forCheckerClass = invokerClasses.get(checkerClass);
+            if ( forCheckerClass == null ) {
+                forCheckerClass = new HashMap<>();
+                invokerClasses.put(checkerClass, forCheckerClass);
+            }
+            Class<? extends CheckerBridge.Invoker> invokerClass = forCheckerClass.get(checkerMethod.type);
+            if ( invokerClass == null ) {
+                invokerClass = createInvokerClass(checkerClass, checkerMethod);
+                forCheckerClass.put(checkerMethod.type, invokerClass);
+            }
+            return invokerClass;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<? extends CheckerBridge.Invoker> createInvokerClass(Class<? extends Guard.Checker> checkerClass, CheckerBridge.CheckerMethod checkerMethod) {
         Type targetType = Type.getObjectType(GEN_PACKAGE + "Invoker_" + invokerCounter.getAndIncrement());
         Type checkerType = Type.getType(checkerClass);
         Type valueType = Type.getType(checkerMethod.type);
@@ -107,6 +149,11 @@ final class GuardsClassLoader extends ClassLoader {
         check.returnValue();
         check.visitMaxs(2, 2);
         check.visitEnd();
+        GeneratorAdapter toString = method(writer, ACC_PUBLIC, "toString", "()Ljava/lang/String;");
+        toString.push("Invoker{" + checkerClass.getEnclosingClass().getName() + ":" + checkerMethod.type + "}");
+        toString.returnValue();
+        toString.visitMaxs(1, 0);
+        toString.visitEnd();
         writer.visitEnd();
         byte[] bytecode = writer.toByteArray();
         return (Class<? extends CheckerBridge.Invoker>)defineClass(targetType.getClassName(), bytecode, 0, bytecode.length);

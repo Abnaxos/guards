@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.common.collect.MapMaker;
-import org.objectweb.asm.Type;
 
 import ch.raffael.guards.GuardsInternalError;
 import ch.raffael.guards.definition.Guard;
@@ -47,8 +46,6 @@ import ch.raffael.guards.definition.Guard;
  */
 public final class CheckerStore {
 
-    static final Type TYPE = Type.getType(CheckerStore.class);
-
     private static final Map<ClassLoader, Map<String, CheckerStore>> STORES =
             new MapMaker().weakKeys().concurrencyLevel(2).makeMap();
 
@@ -61,7 +58,7 @@ public final class CheckerStore {
             }
             CheckerStore store = storesForLoader.get(className);
             if ( store == null ) {
-                store = new CheckerStore(new GuardsClassLoader(className, loader));
+                store = new CheckerStore(loader);
                 storesForLoader.put(className, store);
             }
             return store;
@@ -82,24 +79,25 @@ public final class CheckerStore {
         }
     }
 
+    private final ClassLoader loader;
     private final Object addLock = new Object();
-    private final GuardsClassLoader loader;
     private final CopyOnWriteArrayList<CheckerBridge> checkers = new CopyOnWriteArrayList<>();
 
-    private CheckerStore(GuardsClassLoader loader) {
+    private CheckerStore(ClassLoader loader) {
         this.loader = loader;
     }
 
     int add(CheckerBridge bridge) {
         synchronized ( addLock ) {
-            int index = checkers.size();
+            bridge.checkerStore = this;
+            bridge.index = checkers.size();
             checkers.add(bridge);
-            return index;
+            return bridge.index;
         }
     }
 
-    int count() {
-        return checkers.size();
+    void invalidate(int index) {
+        checkers.set(index, null);
     }
 
     public CheckerBridge get(int index) {
@@ -108,7 +106,7 @@ public final class CheckerStore {
         return checker;
     }
 
-    GuardsClassLoader loader() {
+    ClassLoader loader() {
         return loader;
     }
 

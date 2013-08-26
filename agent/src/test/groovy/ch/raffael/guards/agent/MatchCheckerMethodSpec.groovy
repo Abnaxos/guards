@@ -16,6 +16,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
 import spock.lang.Specification
@@ -27,7 +29,8 @@ import java.util.List
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-class MatchCheckerMethodCheck extends Specification {
+@SuppressWarnings("GroovyAccessibility")
+class MatchCheckerMethodSpec extends Specification {
 
     def "Also matches super types"() {
       given:
@@ -38,7 +41,7 @@ class MatchCheckerMethodCheck extends Specification {
         }.getClass()
 
       when:
-        def list = CheckerBridge.filterCheckerMethods(AWTEvent.class, cls)
+        def list = CheckerBridge.matchCheckerMethods(AWTEvent.class, cls)
 
       then:
         list.size() == 1
@@ -56,7 +59,7 @@ class MatchCheckerMethodCheck extends Specification {
         }.getClass()
 
       when:
-        def list = CheckerBridge.filterCheckerMethods(List.class, cls)
+        def list = CheckerBridge.matchCheckerMethods(List.class, cls)
 
       then:
         list.size() == 1
@@ -75,7 +78,7 @@ class MatchCheckerMethodCheck extends Specification {
         }.getClass()
 
       when:
-        def list = CheckerBridge.filterCheckerMethods(Iterable.class, cls)
+        def list = CheckerBridge.matchCheckerMethods(Iterable.class, cls)
 
       then:
         list.size() == 1

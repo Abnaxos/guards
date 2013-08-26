@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableMap;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
+import ch.raffael.guards.Repeal;
+
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -116,6 +118,8 @@ class Types {
 
     static final String F_CHECKER_STORE = "$$ch$raffael$guards$checkerStore";
     static final String F_ASSERTIONS_ENABLED = "$$ch$raffael$guards$assertionsEnabled";
+
+    static final Type T_REPEAL = Type.getType(Repeal.class);
 
     private static Method getMethod(Class<?> clazz, String name, Class<?>... args) {
         try {

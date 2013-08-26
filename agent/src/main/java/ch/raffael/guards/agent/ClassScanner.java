@@ -37,13 +37,15 @@ import static org.objectweb.asm.Opcodes.*;
  */
 class ClassScanner extends ClassVisitor {
 
-    private final CheckerStore checkerStore;
+    private final Realm realm;
+
+    private Realm.PackageInfo packageInfo;
 
     private final Map<Method, MethodInfo> methods = new HashMap<>();
 
-    ClassScanner(CheckerStore checkerStore) {
+    ClassScanner(Realm realm) {
         super(ASM4);
-        this.checkerStore = checkerStore;
+        this.realm = realm;
     }
 
     Map<Method, MethodInfo> getMethods() {
@@ -51,23 +53,36 @@ class ClassScanner extends ClassVisitor {
     }
 
     @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        int pos = name.lastIndexOf('/');
+        if ( pos == -1 ) {
+            packageInfo = realm.getPackageInfo("");
+        }
+        else {
+            packageInfo = realm.getPackageInfo(name.substring(0, pos));
+        }
+    }
+
+    @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         Method method = new Method(name, desc);
-        MethodInfo info = new MethodInfo(access, method);
+        MethodInfo info = new MethodInfo(access, method, realm);
         methods.put(method, info);
         return info;
     }
 
-    class MethodInfo extends MethodVisitor {
+    static class MethodInfo extends MethodVisitor {
+        private Realm realm;
         final int access;
         final Method method;
         final ParameterInfo[] parameters;
         final LinkedList<GuardDeclaration> guards = new LinkedList<>();
         Integer firstLine = null;
-        public MethodInfo(int access, Method method) {
+        MethodInfo(int access, Method method, Realm realm) {
             super(ASM4);
             this.access = access;
             this.method = method;
+            this.realm = realm;
             Type[] argumentTypes = method.getArgumentTypes();
             parameters = new ParameterInfo[argumentTypes.length];
             for ( int i = 0; i < argumentTypes.length; i++ ) {
@@ -93,7 +108,7 @@ class ClassScanner extends ClassVisitor {
         @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
             super.visitAnnotation(desc, visible);
-            GuardHandle guardHandle = GuardHandle.get(checkerStore.loader(), Type.getType(desc).getClassName());
+            GuardHandle guardHandle = realm.getGuardHandle(Type.getType(desc).getClassName());
             if ( guardHandle == null ) {
                 return null;
             }
@@ -102,7 +117,7 @@ class ClassScanner extends ClassVisitor {
                 return null;
             }
             else {
-                guards.add(new GuardDeclaration(guardHandle));
+                guards.add(new GuardDeclaration(realm, guardHandle));
                 return guards.getLast();
             }
         }
@@ -110,7 +125,7 @@ class ClassScanner extends ClassVisitor {
         @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
             super.visitParameterAnnotation(parameter, desc, visible);
-            GuardHandle guardHandle = GuardHandle.get(checkerStore.loader(), Type.getType(desc).getClassName());
+            GuardHandle guardHandle = realm.getGuardHandle(Type.getType(desc).getClassName());
             if ( guardHandle == null ) {
                 return null;
             }
@@ -119,7 +134,7 @@ class ClassScanner extends ClassVisitor {
                 return null;
             }
             else {
-                parameters[parameter].guards.add(new GuardDeclaration(guardHandle));
+                parameters[parameter].guards.add(new GuardDeclaration(realm, guardHandle));
                 return parameters[parameter].guards.getLast();
             }
         }
@@ -131,25 +146,32 @@ class ClassScanner extends ClassVisitor {
                 firstLine = line;
             }
         }
+
+        @Override
+        public void visitEnd() {
+            realm = null;
+        }
     }
 
-    class ParameterInfo {
+    static class ParameterInfo {
         final int index;
         final Type type;
         String name;
         final LinkedList<GuardDeclaration> guards = new LinkedList<>();
-        private ParameterInfo(int index, Type type) {
+        ParameterInfo(int index, Type type) {
             this.index = index;
             this.type = type;
             name = "#" + index;
         }
     }
 
-    class GuardDeclaration extends AnnotationVisitor {
+    static class GuardDeclaration extends AnnotationVisitor {
+        private Realm realm;
         final GuardHandle handle;
         final Map<String, Object> values = new HashMap<>();
-        private GuardDeclaration(GuardHandle handle) {
+        GuardDeclaration(Realm realm, GuardHandle handle) {
             super(ASM4);
+            this.realm = realm;
             this.handle = handle;
         }
         @Override
@@ -162,7 +184,7 @@ class ClassScanner extends ClassVisitor {
         public void visitEnum(String name, String desc, String value) {
             super.visitEnum(name, desc, value);
             try {
-                Class<?> enumClass = Class.forName(desc, false, checkerStore.loader().getParent());
+                Class<?> enumClass = Class.forName(desc, false, realm.loader());
                 // FIXME: make that lazy
                 values.put(name, Enum.valueOf((Class<? extends Enum>)enumClass, value));
             }
@@ -170,6 +192,10 @@ class ClassScanner extends ClassVisitor {
 // FIXME: Handle exception
                 e.printStackTrace();
             }
+        }
+        @Override
+        public void visitEnd() {
+            realm = null;
         }
     }
 
