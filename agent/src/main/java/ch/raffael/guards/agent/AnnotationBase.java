@@ -22,6 +22,7 @@ import java.lang.annotation.AnnotationFormatError;
 import java.util.Arrays;
 import java.util.Map;
 
+import com.google.common.primitives.Primitives;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
@@ -32,7 +33,7 @@ import org.objectweb.asm.commons.Method;
 public abstract class AnnotationBase implements Annotation, Serializable {
 
     static final Type TYPE = Type.getType(AnnotationBase.class);
-    static final Method M_VALUE = Types.getMethod(AnnotationBase.class, "$$$value$$$", Map.class, String.class, Object.class);
+    static final Method M_VALUE = Types.getMethod(AnnotationBase.class, "$$$value$$$", Map.class, String.class, Class.class, Object.class);
     static final Method M_INIT = Types.getMethod(AnnotationBase.class, "$$$init$$$", Map.class);
     static final Method M_CTOR = Types.getConstructor(AnnotationBase.class, Class.class);
 
@@ -55,11 +56,11 @@ public abstract class AnnotationBase implements Annotation, Serializable {
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    protected final Object $$$value$$$(Map<String, Object> values, String name, Object defaultValue) {
+    protected final Object $$$value$$$(Map<String, Object> values, String name, Class type, Object defaultValue) {
         Object value = values.remove(name);
         if ( value == null ) {
             if ( defaultValue == null ) {
-                throw new AnnotationFormatError("No value specified for " + annotationType + "::" + name);
+                throw new AnnotationFormatError("No value specified for " + annotationType.getName() + "::" + name);
             }
             value = defaultValue;
         }
@@ -99,13 +100,16 @@ public abstract class AnnotationBase implements Annotation, Serializable {
         else {
             valuesStringBuilder.append(value);
         }
+        if ( !Primitives.wrap(type).isInstance(value) ) {
+            throw new AnnotationFormatError("Incompatible type for " + annotationType.getName() + "::(" + type + ")" + name + ": (" + value.getClass().getName() + ")" + value);
+        }
         return value;
     }
 
     @SuppressWarnings("UnusedDeclaration")
     protected final void $$$init$$$(Map<String, Object> values) {
         if ( !values.isEmpty() ) {
-            throw new AnnotationFormatError("Unknown values specified: " + values);
+            throw new AnnotationFormatError("Unknown values specified for " + annotationType.getName() + ": " + values);
         }
         stringValue = "@" + annotationType.getName() + "(" + valuesStringBuilder + ")";
         valuesStringBuilder = null;

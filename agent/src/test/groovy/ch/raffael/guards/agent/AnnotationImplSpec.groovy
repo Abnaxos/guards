@@ -16,6 +16,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
 import ch.raffael.guards.test.annotations.*
@@ -114,16 +116,25 @@ class AnnotationImplSpec extends Specification {
 
       then:
         def e = thrown AnnotationFormatError
-        e.message.contains 'Unknown values specified: '
+        e.message.startsWith 'Unknown values specified for '
     }
 
-    def "AnnotationFormatError missing arguments"() {
+    def "AnnotationFormatError on missing arguments"() {
       when:
         def a = synth.implementAnnotation(IntParam, [:])
 
       then:
         def e = thrown AnnotationFormatError
-        e.message.contains 'No value specified for '
+        e.message.startsWith 'No value specified for '
+    }
+
+    def "AnnotationFormatError on incompatible argument type"() {
+      when:
+        synth.implementAnnotation(IntParam, [value: 'foobar'])
+
+      then:
+        def e = thrown AnnotationFormatError
+        e.message.startsWith('Incompatible type for ')
     }
 
 }

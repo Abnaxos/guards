@@ -248,13 +248,15 @@ final class ClassSynthesizer extends ClassLoader {
             //S: map, this, this, map
             ctor.push(method.getName());
             //S: map, this, this, map, "fieldName"
+            ctor.push(type);
+            //S: map, this, this, map, "fieldName", type
             if ( method.getDefaultValue() != null ) {
                 ctor.getStatic(targetType, "$def$" + method.getName(), Types.T_OBJECT);
             }
             else {
                 ctor.visitInsn(ACONST_NULL);
             }
-            //S: map, this, this, map, "fieldName", defaultValue
+            //S: map, this, this, map, "fieldName", type, defaultValue
             ctor.invokeVirtual(AnnotationBase.TYPE, AnnotationBase.M_VALUE);
             //S: map, this, value
             ctor.unbox(type);
