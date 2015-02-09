@@ -16,12 +16,12 @@ statement
 
 // may be implemented in the future if reasonable, currently unused
 variableDefinition
-    : IDENTIFIER ':=' conditional
+    : Identifier ':=' conditional
     EOF
     ;
 // may be implemented in the future if reasonable, currently unused
 functionDefinition
-    : IDENTIFIER '(' ( IDENTIFIER (',' IDENTIFIER)* )? ')' ':=' conditional
+    : Identifier '(' ( Identifier (',' Identifier)* )? ')' ':=' conditional
     EOF
     ;
 

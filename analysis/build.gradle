@@ -16,6 +16,8 @@
 
 
 
+
+
 apply plugin:guards.PreparedShadow
 
 def antlr4Version = '4.5'
@@ -45,7 +47,7 @@ tasks.create('antlr4') {
         javaexec {
             classpath configurations.antlr4Tool
             main 'org.antlr.v4.Tool'
-            args '-o', antlr4Out, '-listener', '-package', antlr4Package, antlr4Src
+            args '-o', antlr4Out, '-visitor', '-package', antlr4Package, antlr4Src
         }
         mkdir antlr4Final
         copy {

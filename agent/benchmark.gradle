@@ -1,0 +1,83 @@
+/*
+ * Copyright 2015 Raffael Herzog
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import guards.PreparedShadow
+
+
+configurations {
+    benchmarkCompile {
+        extendsFrom compile, provided, included
+    }
+    benchmarkRuntime {
+        extendsFrom runtime, benchmarkCompile
+    }
+}
+
+dependencies {
+    benchmarkCompile group:'com.google.caliper', name:'caliper', version:'1.0-beta-1'
+}
+
+sourceSets {
+    benchmark {
+        java {
+            srcDir 'src/benchmark/java'
+            compileClasspath += sourceSets.main.output
+            compileClasspath += files(tasks[PreparedShadow.JAR_TASK].archivePath)
+            runtimeClasspath += sourceSets.main.output
+            runtimeClasspath += files(tasks[PreparedShadow.JAR_TASK].archivePath)
+        }
+        resources {
+            srcDir 'src/benchmark/resources'
+        }
+    }
+}
+
+compileBenchmarkJava.dependsOn classes, PreparedShadow.JAR_TASK
+
+task('runSimpleBenchmark') {
+    dependsOn compileBenchmarkJava
+
+    String[] agentArgs = [
+            '+dump',
+//            'nopMethod=dedicated_method',
+            '-nopMode',
+//            'multiGuardMethod=mh_guard',
+//            '-mutableCallSites',
+    ]
+
+    doFirst {
+        println '~' * 80
+        def cp = sourceSets.benchmark.runtimeClasspath
+        println "Agent args: $agentArgs"
+        if (  project.properties['printcp'] == 'true' ) {
+            println "Classpath: ["
+            cp.each { f ->
+                println "    $f"
+            }
+            println ']'
+        }
+        println '~' * 80
+        javaexec {
+            main = 'verysimple.Test'
+            if ( project.properties['noagent'] != 'true' ) {
+                jvmArgs = [ "-javaagent:${pseudoAgentJar.archivePath}=${agentArgs.join(',')}" ]
+            }
+            classpath = cp
+//            args = [ "${agentArgs.join(',')}" ]
+        }
+        println '~' * 80
+    }
+}

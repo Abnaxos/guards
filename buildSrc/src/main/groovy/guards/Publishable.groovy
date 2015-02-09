@@ -16,11 +16,15 @@
 
 
 
+
+
 package guards
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.maven.MavenDeployment
+import org.gradle.api.tasks.bundling.Jar
 
 
 /**
@@ -33,45 +37,33 @@ class Publishable implements Plugin<Project> {
         target.with {
             apply plugin:'maven'
             apply plugin:'signing'
-//            apply plugin:'com.bmuschko.nexus'
 
-//            sourcesJar {
-//            }
-//            afterEvaluate {
-//                sourcesJar {
-//                    if ( project.plugins.findPlugin(PreparedShadow) ) {
-//                        dependsOn preparedShadowSourceJar
-//                        from zipTree(preparedShadowSourceJar.archivePath)
-//                    }
-//                    configurations.included.allDependencies.each { dep ->
-//                        dependsOn dep.dependencyProject.sourcesJar
-//                        from zipTree(dep.dependencyProject.sourcesJar.archivePath)
-//                    }
-//                }
-//            }
+            javadoc {
+                source sourceSets.main.allJava
+                destinationDir file("$buildDir/javadoc")
+                title = "$project.archivesBaseName $project.version"
 
-//            signing {
-//                sign configurations.archives
-//            }
-//
-//            publishing {
-//                publications {
-//                    maven(MavenPublication) {
-//                        artifact jar
-//                        artifact sourceJar
-//
-//                        pom.packaging = 'jar'
-//
-////                        pom.project {
-////                            licenses {
-////                                license {
-////                                    name 'MIT License'
-////                                }
-////                            }
-////                        }
-//                    }
-//                }
-//            }
+                options {
+                    doclet 'ch.raffael.doclets.pegdown.PegdownDoclet'
+                    docletpath (configurations.pegdownDoclet.files as File[])
+                }
+            }
+            afterEvaluate  {
+                javadoc {
+                    configurations.included.allDependencies.each { Dependency dep ->
+                        source dep.dependencyProject.sourceSets.main.allJava
+                    }
+                }
+            }
+
+            task('javadocJar', type:Jar) {
+                dependsOn javadoc
+
+                from fileTree(javadoc.destinationDir)
+            }
+            artifacts {
+                archives sourcesJar, javadocJar
+            }
 
             uploadArchives {
                 repositories.mavenDeployer {

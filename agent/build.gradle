@@ -19,6 +19,8 @@
 apply plugin:guards.PreparedShadow
 apply plugin:guards.Publishable
 
+apply from:'benchmark.gradle'
+
 dependencies {
     included project(':runtime')
 

@@ -19,7 +19,6 @@ package verysimple;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
-import guards.Fail;
 import util.Util;
 
 import ch.raffael.guards.NotNull;
@@ -35,7 +34,7 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         //GuardsAgent.installAgent(args.length > 0 ? args[0] : "");
-        Thread.sleep(5000);
+        //Thread.sleep(5000);
         try {
             LinkedList<Stopwatch> stopWatches = new LinkedList<>();
             for( int j = 0; j < 10; j++ ) {
@@ -76,7 +75,7 @@ public class Test {
             @Nullable
             Object retval,
             @NotNull
-            @Fail
+            //@Fail
             Object notNull)
     {
         return retval;

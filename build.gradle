@@ -63,19 +63,6 @@ allprojects {
             }
         }
     }
-    afterEvaluate {
-        sourcesJar {
-            configurations.included.allDependencies.each { Dependency dep ->
-                dependsOn dep.dependencyProject.sourcesJar
-                from zipTree(dep.dependencyProject.sourcesJar.archivePath)
-            }
-        }
-        javadoc {
-            configurations.included.allDependencies.each { Dependency dep ->
-                source dep.dependencyProject.sourceSets.main.allJava
-            }
-        }
-    }
 }
 
 // dependencies
@@ -108,19 +95,32 @@ allprojects {
     }
 }
 
-// sources JAR
+// compiler
 allprojects {
-    task('sourcesJar', type:Jar) {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << '-Xlint:-options'
+    }
+}
+
+// sources jar
+allprojects {
+    task('sourcesJar', type:org.gradle.api.tasks.bundling.Jar) {
         classifier = 'sources'
 
         from sourceSets.main.allSource
     }
-    artifacts {
-        archives sourcesJar
+    afterEvaluate {
+        sourcesJar {
+            configurations.included.allDependencies.each { org.gradle.api.artifacts.Dependency dep ->
+                dependsOn dep.dependencyProject.sourcesJar
+                from zipTree(dep.dependencyProject.sourcesJar.archivePath)
+            }
+        }
     }
 }
 
-// javadocs
+
+// javadoc
 allprojects {
     configurations {
         pegdownDoclet
@@ -132,22 +132,6 @@ allprojects {
     }
     dependencies {
         pegdownDoclet group:'ch.raffael.pegdown-doclet', name:'pegdown-doclet', classifier:'all', version:'1.2-SNAPSHOT'
-    }
-    javadoc {
-        source sourceSets.main.allJava
-        destinationDir file("$buildDir/javadoc")
-        title = "$project.archivesBaseName $project.version"
-
-        options {
-            doclet 'ch.raffael.doclets.pegdown.PegdownDoclet'
-            docletpath (configurations.pegdownDoclet.files as File[])
-        }
-    }
-
-    task('javadocJar', type:Jar) {
-        dependsOn javadoc
-
-        from fileTree(javadoc.destinationDir)
     }
 
 }
