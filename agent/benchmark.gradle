@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+
+
 import guards.PreparedShadow
 
 
@@ -49,13 +51,14 @@ compileBenchmarkJava.dependsOn classes, PreparedShadow.JAR_TASK
 
 task('runSimpleBenchmark') {
     dependsOn compileBenchmarkJava
+    dependsOn pseudoAgentJar
 
     String[] agentArgs = [
             '+dump',
-//            'nopMethod=dedicated_method',
+            //'nopMethod=dedicated_method',
             '-nopMode',
-//            'multiGuardMethod=mh_guard',
-//            '-mutableCallSites',
+            //'multiGuardMethod=mh_guard',
+            //'-mutableCallSites',
     ]
 
     doFirst {

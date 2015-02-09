@@ -20,18 +20,30 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 
 import ch.raffael.guards.NotNull;
+import ch.raffael.guards.Sensitive;
+import ch.raffael.guards.agent.guava.collect.ForwardingMap;
+import ch.raffael.guards.agent.guava.collect.ImmutableBiMap;
+import ch.raffael.guards.agent.guava.collect.ImmutableMap;
+import ch.raffael.guards.agent.guava.collect.ImmutableSet;
 import ch.raffael.guards.agent.guava.reflect.Reflection;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.runtime.ContractViolationError;
 import ch.raffael.guards.runtime.GuardsInternalError;
+import ch.raffael.guards.runtime.internal.Substitutor;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 final class GuardInstance {
+
+    private static final Set<String> NON_ANNOTATION_VALUES = ImmutableSet.of(
+            "clone", "finalize", "getClass", "hashCode", "toString", "annotationType");
 
     private static final ClassValue<Type> TYPES = new ClassValue<Type>() {
         @SuppressWarnings("unchecked")
@@ -59,11 +71,6 @@ final class GuardInstance {
         this.annotation = annotation;
         guardType = TYPES.get(annotation.annotationType());
         this.testMethod = Resolver.resolverFor(annotation.annotationType()).findTestMethod(this);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends Throwable> void sneakyThrow(Throwable e) throws T {
-        throw (T)e;
     }
 
     GuardTarget getTarget() {
@@ -109,9 +116,9 @@ final class GuardInstance {
         //    buf.append("'").append(value).append("'");
         //}
         buf.append(": ");
-        appendMessage(buf);
+        appendMessage(buf, value);
         if ( target.isSensitive() ) {
-            buf.append("\n  (value concealed for security)");
+            buf.append("\n  ").append(Sensitive.SENSITIVE_MSG);
         }
         else {
             buf.append("\n  Value : ");
@@ -130,8 +137,8 @@ final class GuardInstance {
         ContractViolationError violationError = new ContractViolationError(buf.toString());
         StackTraceElement[] stackTrace = violationError.getStackTrace();
         int removeCount = 0;
-        for( int i = 0; i < stackTrace.length; i++ ) {
-            if ( Reflection.getPackageName(stackTrace[i].getClassName()).equals(MY_PACKAGE_NAME) ) {
+        for( StackTraceElement aStackTrace : stackTrace ) {
+            if ( Reflection.getPackageName(aStackTrace.getClassName()).equals(MY_PACKAGE_NAME) ) {
                 removeCount++;
             }
             else {
@@ -152,13 +159,48 @@ final class GuardInstance {
         throw violationError;
     }
 
-    private void appendMessage(StringBuilder buf) {
+    private void appendMessage(StringBuilder buf, Object value) {
         // TODO: error message substitution
         String message = guardType.configuration.message().trim();
         if ( message.isEmpty() ) {
-            message = guardType.annotationType.getName();
+            buf.append(guardType.annotationType.getName());
         }
-        buf.append(message);
+        else {
+            substituteAnnotationValues(buf, message, value);
+        }
+    }
+
+    private void substituteAnnotationValues(StringBuilder buf, String string, final Object value) {
+        Substitutor.substitute(buf, string, new ForwardingMap<String, String>() {
+            private Map<String, String> delegate;
+            @Override
+            protected Map<String, String> delegate() {
+                if ( delegate == null ) {
+                    ImmutableMap.Builder<String, String> builder = ImmutableBiMap.builder();
+                    for( Method method : annotation.getClass().getMethods() ) {
+                        if ( method.getParameterCount() == 0 && method.getReturnType() != void.class && !NON_ANNOTATION_VALUES.contains(method.getName()) ) {
+                            Object value;
+                            try {
+                                value = method.invoke(annotation);
+                            }
+                            catch ( Exception e ) {
+                                Logging.LOG.log(Level.SEVERE, "Error getting value " + method.getName() + " from " + annotation, e);
+                                value = "ERROR:" + e.getClass().getName();
+                            }
+                            builder.put(method.getName(), String.valueOf(value));
+                        }
+                        if ( target.isSensitive() ) {
+                            builder.put("return", Sensitive.SENSITIVE_MSG);
+                        }
+                        else {
+                            builder.put("return", String.valueOf(value));
+                        }
+                    }
+                    delegate = builder.build();
+                }
+                return delegate;
+            }
+        });
     }
 
     static final class Type {

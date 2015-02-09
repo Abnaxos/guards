@@ -16,6 +16,7 @@
 
 package ch.raffael.guards;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,5 +31,26 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Sensitive {
+
+    final String SENSITIVE_MSG = "(concealed for security)";
+
+    final Sensitive SENSITIVE = new Sensitive() {
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Sensitive.class;
+        }
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj != null && obj instanceof Sensitive;
+        }
+        @Override
+        public String toString() {
+            return "@" + Sensitive.class.getName() + "()";
+        }
+    };
 
 }

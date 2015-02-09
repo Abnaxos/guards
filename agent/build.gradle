@@ -16,10 +16,10 @@
 
 
 
+
+
 apply plugin:guards.PreparedShadow
 apply plugin:guards.Publishable
-
-apply from:'benchmark.gradle'
 
 dependencies {
     included project(':runtime')
@@ -62,3 +62,5 @@ test {
 }
 
 develEnv.dependsOn preparedShadowJar, preparedShadowSourceJar, pseudoAgentJar
+
+apply from:'benchmark.gradle'

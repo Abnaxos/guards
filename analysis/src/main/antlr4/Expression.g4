@@ -1,14 +1,14 @@
 grammar Expression;
 
-expression
-    : statement
+statement
+    : effect
     // just some ideas to allow more powerful 'scripts'
     //| variableDefintion
     //| functionDefinition
     ;
 
-statement
-    : conditional '->'
+effect
+    : expression '->'
     // the rest of the statement is the effect, to be evaluated separately depending on the context:
     //  *  ComplexRelation: 'equal', 'subset', 'superset', 'inconsistent'
     //  *  validate: Error message
@@ -16,14 +16,16 @@ statement
 
 // may be implemented in the future if reasonable, currently unused
 variableDefinition
-    : Identifier ':=' conditional
+    : Identifier ':=' expression
     EOF
     ;
 // may be implemented in the future if reasonable, currently unused
 functionDefinition
-    : Identifier '(' ( Identifier (',' Identifier)* )? ')' ':=' conditional
+    : Identifier '(' ( Identifier (',' Identifier)* )? ')' ':=' expression
     EOF
     ;
+
+expression: conditional;
 
 conditional
     : logical
@@ -80,10 +82,10 @@ Identifier
     ;
 
 StringLiteral
-    :   '\'' CHARS '\''
+    :   '\'' CHAR* '\''
     ;
 CharLiteral
-    : '\'' CHARS '\'' ('c'|'C')
+    : '\'' CHAR '\'' ('c'|'C')
     ;
 IntLiteral
     :   SIGN? ('0' | '1'..'9' DIGIT*)
@@ -117,8 +119,12 @@ LineComment
     -> skip
     ;
 
-fragment CHARS
-    :   ( '\\' . | ~('\''|'\\') )*
+/*fragment CHAR
+    :   ( '\\' . | ~('\''|'\\') )
+    ;*/
+fragment CHAR
+    :   ('\\' ('\''|'\\'))
+    |   ~('\\'|'\'')
     ;
 
 fragment DIGIT
