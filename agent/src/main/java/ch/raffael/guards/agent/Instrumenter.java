@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Raffael Herzog
+ * Copyright 2015 Raffael Herzog
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,16 @@
 
 package ch.raffael.guards.agent;
 
-import java.util.Map;
+import ch.raffael.guards.agent.asm.AnnotationVisitor;
+import ch.raffael.guards.agent.asm.ClassVisitor;
+import ch.raffael.guards.agent.asm.MethodVisitor;
+import ch.raffael.guards.agent.asm.Type;
+import ch.raffael.guards.agent.asm.commons.AdviceAdapter;
 
-import com.google.common.collect.ImmutableMap;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.Method;
-
-import ch.raffael.guards.definition.Guard;
-
-import static ch.raffael.guards.agent.Types.*;
-import static com.google.common.base.Objects.*;
-import static org.objectweb.asm.Opcodes.*;
+import static ch.raffael.guards.agent.IntFlags.containsFlag;
+import static ch.raffael.guards.agent.asm.Opcodes.ACC_ANNOTATION;
+import static ch.raffael.guards.agent.asm.Opcodes.ASM5;
+import static ch.raffael.guards.agent.asm.Opcodes.V1_7;
 
 
 /**
@@ -38,248 +33,117 @@ import static org.objectweb.asm.Opcodes.*;
  */
 class Instrumenter extends ClassVisitor {
 
-    private static final Map<Type, Method> PRIMITIVE_CHECKS = ImmutableMap.<Type, Method>builder()
-            .put(Type.INT_TYPE, Types.M_CHECK_INT)
-            .put(Type.BYTE_TYPE, Types.M_CHECK_BYTE)
-            .put(Type.SHORT_TYPE, Types.M_CHECK_SHORT)
-            .put(Type.LONG_TYPE, Types.M_CHECK_LONG)
-            .put(Type.FLOAT_TYPE, Types.M_CHECK_FLOAT)
-            .put(Type.DOUBLE_TYPE, Types.M_CHECK_DOUBLE)
-            .put(Type.CHAR_TYPE, Types.M_CHECK_CHAR)
-            .put(Type.BOOLEAN_TYPE, Types.M_CHECK_BOOLEAN)
-            .build();
+    private final ClassLoader loader;
 
-    private final Type outermostType;
-    private final GuardsTransformer.Mode mode;
-    private final CheckerStore checkerStore;
-    private final ClassScanner scanner;
-    private Type type;
-
-    Instrumenter(ClassVisitor cv, Type outermostType, GuardsTransformer.Mode mode, CheckerStore checkerStore, ClassScanner scanner) {
-        super(ASM4, cv);
-        this.outermostType = outermostType;
-        this.mode = mode;
-        this.checkerStore = checkerStore;
-        this.scanner = scanner;
+    Instrumenter(ClassLoader loader, ClassVisitor cv) {
+        super(ASM5, cv);
+        this.loader = loader;
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        if ( version < V1_7 ) {
+            // TODO: can we just upgrade the bytecode version and if so, from what versions?
+            throw new CancelException("Bytecode version <1.7 (" + V1_7 + "): " + version);
+        }
+        if ( containsFlag(access, ACC_ANNOTATION) ) {
+            throw new CancelException("Is an annotation type");
+        }
         super.visit(version, access, name, signature, superName, interfaces);
-        type = Type.getObjectType(name);
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        ClassScanner.MethodInfo info = scanner.getMethods().get(new Method(name, desc));
-        return new MethodInstrumenter(super.visitMethod(access, name, desc, signature, exceptions), info);
-    }
-
-    private class MethodInstrumenter extends AdviceAdapter {
-        private final ClassScanner.MethodInfo methodInfo;
-        private MethodInstrumenter(MethodVisitor mv, ClassScanner.MethodInfo methodInfo) {
-            super(ASM4, mv, methodInfo.access, methodInfo.method.getName(), methodInfo.method.getDescriptor());
-            this.methodInfo = methodInfo;
-        }
-
-        @Override
-        protected void onMethodEnter() {
-            //if ( methodInfo.firstLine != null ) {
-            //    Label lineLabel = newLabel();
-            //    visitLabel(lineLabel);
-            //    visitLineNumber(methodInfo.firstLine, lineLabel);
-            //}
-            boolean hasGuards = false;
-            for ( ClassScanner.ParameterInfo param : methodInfo.parameters ) {
-                if ( !param.guards.isEmpty() ) {
-                    hasGuards = true;
-                    break;
+    public MethodVisitor visitMethod(int access, final String name, final String desc, String signature, String[] exceptions) {
+        final Type[] argumentTypes = Type.getArgumentTypes(desc);
+        final Type returnType = Type.getReturnType(desc);
+        return new AdviceAdapter(ASM5, super.visitMethod(access, name, desc, signature, exceptions), access, name, desc) {
+            @Override
+            public void visitCode() {
+                super.visitCode();
+                checkParameters();
+            }
+            @Override
+            protected void onMethodEnter() {
+                // DO NOT INSERT PARAMETER CHECK CODE HERE
+                //
+                // The reason is that this one is *too* correct. ;)
+                // If the instrumented method is a constructor, this method gets called only after
+                // the super constructor has been called. While it's usually the way to go to
+                // instrument constructors, in our case, we'd like to do this earlier.
+                //
+                // The bytecode of checkParameters() won't change any of the object's state, what
+                // it does, is perfectly OK to do before calling the super constructor -- we're just
+                // messing with some parameters. The bytecode verifier doesn't complain neither.
+                // We're *actually* failing fast that way. ;)
+                //
+                //checkParameters();
+                super.onMethodEnter();
+            }
+            private void checkParameters() {
+                if ( argumentTypes.length == 0 ) {
+                    return;
                 }
-            }
-            if ( !hasGuards ) {
-                return;
-            }
-            Label endLabel = genAssertCheck();
-            for ( int i = 0; i < methodInfo.parameters.length; i++ ) {
-                ClassScanner.ParameterInfo param = methodInfo.parameters[i];
-                getStatic(outermostType, Types.F_CHECKER_STORE, Types.T_CHECKER_STORE);
-                //S: checkerStore
-                for ( ClassScanner.GuardDeclaration guard : param.guards ) {
-                    CheckerBridge bridge =
-                            new CheckerBridge(type, methodInfo.method,
-                                              "Parameter " + param.name, param.type,
-                                              Guard.Type.PARAMETER,
-                                              ClassSynthesizer.get(guard.handle.getAnnotationClass()).implementAnnotation(guard.handle.getAnnotationClass(), guard.values),
-                                              guard.handle,
-                                              checkerStore.loader());
-                    int guardIndex = checkerStore.add(bridge);
-                    dup(); // duplicate the checker store, we'll re-use it
-                    //S: checkerStore, checkerStore
-                    push(guardIndex);
-                    //S: checkerStore, checkerStore, guardIndex
-                    invokeVirtual(Types.T_CHECKER_STORE, Types.M_CHECKER_STORE_GET);
-                    //S: checkerStore, guardBridge
-                    dup();
-                    //S: checkerStore, guardBridge, guardBridge
-                    Label onNull = newLabel();
-                    ifNull(onNull);
-                    //S: checkerStore, guardBridge
+                for( int i = 0; i < argumentTypes.length; i++ ) {
                     loadArg(i);
-                    //S: checkerStore, guardBridge, arg
-                    invokeVirtual(Types.T_CHECKER_BRIDGE, firstNonNull(PRIMITIVE_CHECKS.get(param.type), Types.M_CHECK_OBJECT));
-                    //S: checkerStore, msg
-                    genViolation(Guard.Type.PARAMETER);
-                    Label cont = newLabel();
-                    goTo(cont);
-                    visitLabel(onNull);
-                    //S: checkerStore, guardBridge
-                    pop(); // pop the null guardBridge
-                    //S: checkerStore
-                    visitLabel(cont);
-                    //S: checkerStore
+                    invokeDynamic("guard:arg" + i, "(" + argumentTypes[i].getDescriptor() + ")V", Indy.BOOTSTRAP_ASM_HANDLE, name, desc, i);
                 }
-                pop(); // drop the CheckerStore
-                //S: ---
             }
-            if ( endLabel != null ) {
-                visitLabel(endLabel);
-            }
-            //super.onMethodEnter();
-        }
 
-        @Override
-        protected void onMethodExit(int opcode) {
-            //super.onMethodExit(opcode);
-            if ( opcode == ATHROW || opcode == RETURN ) {
-                return;
+            @Override
+            protected void onMethodExit(int opcode) {
+                checkReturnValue(opcode);
+                super.onMethodExit(opcode);
             }
-            if ( methodInfo.guards.isEmpty() ) {
-                return;
+            private void checkReturnValue(int opcode) {
+                String guardDesc = "(" + Type.getReturnType(desc) + ")V";
+                String indyName = "guard:return";
+                switch ( opcode ) {
+                    case IRETURN: // return int
+                        assert returnType.equals(Type.INT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                        dup();
+                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                        break;
+                    case LRETURN: // return long
+                        assert returnType.equals(Type.LONG_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                        dup2();
+                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name , desc, -1);
+                        break;
+                    case FRETURN: // return float
+                        assert returnType.equals(Type.FLOAT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                        dup();
+                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                        break;
+                    case DRETURN: // return double
+                        assert returnType.equals(Type.DOUBLE_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                        dup2();
+                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                        break;
+                    case ARETURN: // return reference
+                        dup();
+                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                    case RETURN: // return void => no instrumentation
+                    case ATHROW: // throw exception => no instrumentation
+                        break;
+                    default:
+                        assert false : "Unexpected onMethodExit() opcode: " + opcode;
+                }
             }
-            Label endLabel = genAssertCheck();
-            //S: RET
-            for ( ClassScanner.GuardDeclaration guard : methodInfo.guards ) {
-                CheckerBridge bridge =
-                        new CheckerBridge(type, methodInfo.method,
-                                          "Return value",
-                                          methodInfo.method.getReturnType(),
-                                          Guard.Type.RESULT,
-                                          ClassSynthesizer.get(guard.handle.getAnnotationClass()).implementAnnotation(guard.handle.getAnnotationClass(), guard.values),
-                                          guard.handle,
-                                          checkerStore.loader());
-                int guardIndex = checkerStore.add(bridge);
-                if ( isDoubleWord(methodInfo.method.getReturnType()) ) {
-                    dup2();
-                }
-                else {
-                    dup();
-                }
-                //S: RET, RET
-                getStatic(outermostType, Types.F_CHECKER_STORE, Types.T_CHECKER_STORE);
-                //S: RET, RET, checkerStore
-                push(guardIndex);
-                //S: RET, RET, checkerStore, index
-                invokeVirtual(Types.T_CHECKER_STORE, Types.M_CHECKER_STORE_GET);
-                //S: RET, RET, bridge
-                dup();
-                //S: RET, RET, bridge, bridge
-                Label onNull = newLabel();
-                ifNull(onNull);
-                //S: RET, RET, bridge
-                if ( isDoubleWord(methodInfo.method.getReturnType()) ) {
-                    // well, that's more complicated because you cannot use swap with long
-                    // RET == W1, W2
-                    // W1, W2, bridge
-                    dupX2();
-                    // bridge, W1, W2, bridge
-                    pop();
-                    // bridge, W1, W2
-                    // => RET, bridge, RET
-                }
-                else {
-                    swap();
-                }
-                //S: RET, bridge, RET
-                invokeVirtual(Types.T_CHECKER_BRIDGE, firstNonNull(PRIMITIVE_CHECKS.get(methodInfo.method.getReturnType()), Types.M_CHECK_OBJECT));
-                //S: RET, msg
-                genViolation(Guard.Type.RESULT);
-                Label cont = newLabel();
-                goTo(cont);
-                visitLabel(onNull);
-                //S: RET, RET, bridge
-                pop(); // pop the null bridge
-                //S: RET, RET
-                if ( isDoubleWord(methodInfo.method.getReturnType()) ) {
-                    pop2();
-                }
-                else {
-                    pop();
-                }
-                // S: RET
-                visitLabel(cont);
-                //S: RET
-            }
-            if ( endLabel != null ) {
-                visitLabel(endLabel);
-            }
-        }
 
-        private void genViolation(Guard.Type guardType) {
-            // right now, we've got on the stack: checkerStore, msg
-            // if msg is != null, throw an exception, otherwise, the check succeeded
-            dup();
-            //S: msg, msg
-            Label checkLabel = newLabel();
-            ifNull(checkLabel);
-            //S: msg
-            // throwing the exception
-            Type exceptionType;
-            Method exceptionCtor = Types.M_CTOR_W_STRING;
-            if ( mode == GuardsTransformer.Mode.ASSERT ) {
-                exceptionType = Types.T_ASSERTION_ERROR;
-                exceptionCtor = Types.M_ASSERTION_ERROR_CTOR;
+            @Override
+            public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+                // TODO: remove this, I was just a proving a theory
+                //Type t = Type.getType(desc);
+                //System.out.println("annotation: " + t);
+                ////try {
+                ////    System.err.println(loader.loadClass(t.getClassName()));
+                ////}
+                ////catch ( ClassNotFoundException e ) {
+                ////    System.err.println(e);
+                ////}
+                return super.visitAnnotation(desc, visible);
             }
-            else if ( guardType == Guard.Type.PARAMETER ) {
-                exceptionType = Types.T_ILLEGAL_ARGUMENT_EXCEPTION;
-            }
-            else { // guardType == Guard.Type.RESULT
-                exceptionType = Types.T_ILLEGAL_STATE_EXCEPTION;
-            }
-            newInstance(exceptionType);
-            //S: msg, exc
-            dupX1();
-            //S: exc, msg, exc
-            swap();
-            //S: exc, exc, msg
-            invokeConstructor(exceptionType, exceptionCtor);
-            //S: exc
-            throwException();
-            // end of throw
-            visitLabel(checkLabel);
-            // drop the null message
-            pop();
-        }
 
-        private Label genAssertCheck() {
-            if ( mode == GuardsTransformer.Mode.ASSERT ) {
-                getStatic(outermostType, Types.F_ASSERTIONS_ENABLED, Type.BOOLEAN_TYPE);
-                Label endLabel = newLabel();
-                visitJumpInsn(IFEQ, endLabel);
-                return endLabel;
-            }
-            else {
-                return null;
-            }
-        }
 
-        // we're using COMPUTE_MAXS for now
-        //@Override
-        //public void visitMaxs(int maxStack, int maxLocals) {
-        //    // we need up to 4 things on the stack, so, in the worst case, the max stack
-        //    // size is 4 more than in the original method; we're just adding 4.
-        //    // In ASSERT mode, it's up to 5
-        //    super.visitMaxs(maxStack + (mode == GuardsAgent.Mode.ASSERT ? 5 : 4), maxLocals);
-        //}
+        };
     }
-
 }

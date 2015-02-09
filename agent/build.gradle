@@ -1,0 +1,62 @@
+/*
+ * Copyright 2015 Raffael Herzog
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+apply plugin:guards.PreparedShadow
+apply plugin:guards.Publishable
+
+dependencies {
+    included project(':runtime')
+
+    provided findToolsJar()
+
+    shadowed group:'org.ow2.asm', name:'asm-debug-all', version:'5.0.3'
+    shadowed group:'com.google.guava', name:'guava', version:'18.0'
+}
+
+preparedShadowJar {
+    relocate 'com.google.common', 'ch.raffael.guards.agent.guava'
+    relocate 'com.google.thirdparty', 'ch.raffael.guards.agent.guava.thirdparty'
+    relocate 'org.objectweb.asm', 'ch.raffael.guards.agent.asm'
+}
+
+def agentManifest = {
+    def guardsAgentMain = 'ch.raffael.guards.agent.GuardsAgent'
+    attributes(
+            'Premain-Class': guardsAgentMain,
+            'Agent-Class': guardsAgentMain,
+            'Can-Redefine-Classes': 'true',
+            'Can-Retransform-Classes': 'true',
+            )
+}
+
+jar {
+    configure(manifest, agentManifest)
+}
+task('pseudoAgentJar', type:Jar) {jar
+    destinationDir = file(buildDir)
+    archiveName = 'pseudo-agent.jar'
+
+    configure(manifest, agentManifest)
+}
+
+test {
+    dependsOn pseudoAgentJar
+    jvmArgs = [ "-javaagent:$pseudoAgentJar.archivePath" ]
+}
+
+develEnv.dependsOn preparedShadowJar, preparedShadowSourceJar, pseudoAgentJar

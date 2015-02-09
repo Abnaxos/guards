@@ -1,0 +1,200 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+apply plugin:'wrapper'
+
+wrapper {
+    gradleVersion='2.2.1'
+}
+
+allprojects {
+    apply plugin:'java'
+    apply plugin:'groovy'
+    apply plugin:'idea'
+
+    repositories {
+        jcenter()
+    }
+
+    buildDir = file('target')
+    group = 'ch.raffael.guards'
+    version = '0.1-SNAPSHOT'
+    sourceCompatibility = '1.7'
+}
+subprojects {
+    archivesBaseName = "guards${path.replace((char)':', (char)'-')}"
+}
+
+/*
+ * Copyright 2015 Raffael Herzog
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// provided & included scopes
+allprojects {
+    configurations {
+        provided
+        included
+        testCompile.extendsFrom provided, included
+    }
+    sourceSets.main.compileClasspath += configurations.provided
+    sourceSets.main.compileClasspath += configurations.included
+
+
+    afterEvaluate {
+        jar {
+            configurations.included.allDependencies.each { Dependency dep ->
+                dependsOn dep.dependencyProject.jar
+                from zipTree(dep.dependencyProject.jar.archivePath)
+            }
+        }
+    }
+    afterEvaluate {
+        sourcesJar {
+            configurations.included.allDependencies.each { Dependency dep ->
+                dependsOn dep.dependencyProject.sourcesJar
+                from zipTree(dep.dependencyProject.sourcesJar.archivePath)
+            }
+        }
+        javadoc {
+            configurations.included.allDependencies.each { Dependency dep ->
+                source dep.dependencyProject.sourceSets.main.allJava
+            }
+        }
+    }
+}
+
+// dependencies
+allprojects {
+    configurations {
+        loggingApi
+        loggingImpl { extendsFrom loggingApi }
+        groovy
+    }
+
+    dependencies {
+        def slf4jVersion = '1.7.10'
+
+        provided group:'org.jetbrains', name:'annotations', version:'13.0'
+
+        loggingApi group:'org.slf4j', name:'slf4j-api', version:slf4jVersion
+
+        loggingImpl group:'ch.qos.logback', name:'logback-classic', version:'1.1.2'
+        loggingImpl group:'org.slf4j', name:'jul-to-slf4j', version:slf4jVersion
+
+        groovy group:'org.codehaus.groovy', name:'groovy-all', classifier:'indy', version:'2.3.9'
+
+        testCompile configurations.loggingImpl
+        testCompile configurations.groovy
+        testCompile('org.spockframework:spock-core:0.7-groovy-2.0') {
+            exclude group:'org.codehaus.groovy'
+        }
+        testCompile group:'cglib', name:'cglib-nodep', version:'3.1'
+        testCompile group:'org.slf4j', name:'slf4j-simple', version:slf4jVersion
+    }
+}
+
+// sources JAR
+allprojects {
+    task('sourcesJar', type:Jar) {
+        classifier = 'sources'
+
+        from sourceSets.main.allSource
+    }
+    artifacts {
+        archives sourcesJar
+    }
+}
+
+// javadocs
+allprojects {
+    configurations {
+        pegdownDoclet
+    }
+    repositories {
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
+    dependencies {
+        pegdownDoclet group:'ch.raffael.pegdown-doclet', name:'pegdown-doclet', classifier:'all', version:'1.2-SNAPSHOT'
+    }
+    javadoc {
+        source sourceSets.main.allJava
+        destinationDir file("$buildDir/javadoc")
+        title = "$project.archivesBaseName $project.version"
+
+        options {
+            doclet 'ch.raffael.doclets.pegdown.PegdownDoclet'
+            docletpath (configurations.pegdownDoclet.files as File[])
+        }
+    }
+
+    task('javadocJar', type:Jar) {
+        dependsOn javadoc
+
+        from fileTree(javadoc.destinationDir)
+    }
+
+}
+task('allJavadoc', type:Javadoc) {
+    destinationDir file("$buildDir/allJavadoc")
+    title = "$project.name $project.version"
+
+    options {
+        doclet 'ch.raffael.doclets.pegdown.PegdownDoclet'
+        docletpath(configurations.pegdownDoclet.files as File[])
+    }
+
+    afterEvaluate {
+        subprojects.each { p ->
+            if ( p.javadoc.enabled ) {
+                source p.sourceSets.main.allJava
+            }
+        }
+    }
+}
+
+// IDE
+allprojects {
+    tasks.create('develEnv')
+    idea.module {
+        inheritOutputDirs = false
+        outputDir = compileJava.destinationDir
+        testOutputDir = compileTestJava.destinationDir
+        excludeDirs = []
+    }
+}
+subprojects {
+    idea.module.scopes.PROVIDED.plus += [configurations.provided]
+    idea.module.scopes.COMPILE.plus += [configurations.included]
+}
+idea.module.excludeDirs = [ file('.gradle'), file('gradle') ]
+
+def findToolsJar() {
+    def home = new File(System.getProperty('java.home'))
+    def tools = new File(home, 'lib/tools.jar')
+    if ( tools.file ) {
+        return files(tools)
+    }
+    tools = new File(home, '../lib/tools.jar')
+    if ( tools.file ) {
+        return files(tools)
+    }
+    throw new FileNotFoundException("No tools jar found for java.home $home")
+}
+
