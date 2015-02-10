@@ -27,6 +27,7 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(message = "Feature not implemented: $value",
+        performanceImpact = PerformanceImpact.LOW,
         flags = GuardFlag.METHOD_CALL_GUARD)
 public @interface Future {
 

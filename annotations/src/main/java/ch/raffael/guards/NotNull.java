@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.GuardFlag;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
@@ -35,6 +36,7 @@ import ch.raffael.guards.definition.GuardFlag;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(message = "Value must not be null",
+        performanceImpact = PerformanceImpact.LOW,
         subsetOf = Nullable.class,
         flags = GuardFlag.TEST_NULLS)
 public @interface NotNull {

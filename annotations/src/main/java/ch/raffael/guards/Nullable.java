@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
@@ -34,6 +35,7 @@ import ch.raffael.guards.definition.Guard;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(handler = Guard.AlwaysTrue.class,
+        performanceImpact = PerformanceImpact.LOW,
         supersetOf = NotNull.class)
 public @interface Nullable {
 

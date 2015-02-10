@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
@@ -34,6 +35,7 @@ import ch.raffael.guards.definition.Guard;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(message = "The value must greater than zero.",
+        performanceImpact = PerformanceImpact.LOW,
         subsetOf = { Unsigned.class, Signed.class })
 public @interface Positive {
 

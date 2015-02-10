@@ -112,7 +112,7 @@ public @interface Guard {
      */
     Class<? extends Handler<?>> handler() default ByConvention.class;
 
-    PerformanceImpact performanceImpact() default PerformanceImpact.LOW;
+    PerformanceImpact performanceImpact();
 
     @GuardAnnotation
     Class<? extends Annotation>[] subsetOf() default {};
@@ -179,6 +179,32 @@ public @interface Guard {
         @Retention(RetentionPolicy.RUNTIME)
         @Documented
         public @interface Test {
+        }
+
+        /**
+         * Declare automatic type conversions. Possible type conversions are:
+         *
+         *  *  `byte` -> `short` -> `int` -> `long`
+         *  *  `char` -> `int` -> `long`
+         *  *  `float` -> `double`
+         */
+        @Target(ElementType.METHOD)
+        @Retention(RetentionPolicy.RUNTIME)
+        @Documented
+        @Future
+        public @interface ConvertFrom {
+
+            /**
+             * The primitive types to convert.
+             */
+            Class<?>[] value();
+
+            /**
+             * Enable unboxing. Not that you shouldn't use that when `checkNullValues` is `true`.
+             * The conversion will simply throw a `NullPointerException` if trying to unbox `null`
+             * values.
+             */
+            boolean unboxing();
         }
 
     }

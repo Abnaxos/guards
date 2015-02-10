@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.ComplexRelation;
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
@@ -33,6 +34,7 @@ import ch.raffael.guards.definition.Guard;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(message = "Value must be in range $min (inclusive: $minInclusive) to $max (inclusive: $maxInclusive)",
+        performanceImpact = PerformanceImpact.LOW,
         validate = {
                 "min >= max -> error: $min must be less than $max"
         },

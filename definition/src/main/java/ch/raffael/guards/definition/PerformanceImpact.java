@@ -21,6 +21,18 @@ package ch.raffael.guards.definition;
  */
 public enum PerformanceImpact {
 
-    LOW, HIGH;
+    /**
+     * Use for very simple guards like x>1.
+     */
+    LOW,
+    /**
+     * Use for more complex guards like string comparisons.
+     */
+    MEDIUM,
+    /**
+     * Use for expected high performance impact like iterating collections or matching regular
+     * expressions.
+     */
+    HIGH;
 
 }

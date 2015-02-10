@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
@@ -31,8 +32,10 @@ import ch.raffael.guards.definition.Guard;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "This will always fail")
+@Guard(message = "This will always fail",
+        performanceImpact = PerformanceImpact.LOW)
 public @interface Fail {
+
     String value() default "42!";
 
     class Handler extends Guard.Handler<Fail> {

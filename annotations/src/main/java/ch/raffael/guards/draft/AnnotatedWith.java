@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.ComplexRelation;
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
@@ -33,6 +34,7 @@ import ch.raffael.guards.definition.Guard;
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.CLASS)
 @Guard(message = "Class not annotated with $value",
+        performanceImpact = PerformanceImpact.MEDIUM,
         validate = "allOf.isEmpty() && anyOf.isEmpty && noneOf.isEmpty -> warning: No annotation restrictions specified",
         complexRelations= @ComplexRelation("todo"))
 @Documented
