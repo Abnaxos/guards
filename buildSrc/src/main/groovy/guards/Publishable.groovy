@@ -16,6 +16,8 @@
 
 
 
+
+
 package guards
 
 import org.gradle.api.Plugin
@@ -56,6 +58,7 @@ class Publishable implements Plugin<Project> {
 
             task('javadocJar', type:Jar) {
                 dependsOn javadoc
+                classifier = 'javadoc'
 
                 from fileTree(javadoc.destinationDir)
             }

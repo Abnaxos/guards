@@ -23,6 +23,9 @@ allprojects {
     group = 'ch.raffael.guards'
     version = '0.1-SNAPSHOT'
     sourceCompatibility = '1.7'
+
+    tasks.create('develEnv')
+    build.dependsOn develEnv
 }
 subprojects {
     archivesBaseName = "guards${path.replace((char)':', (char)'-')}"
@@ -119,7 +122,6 @@ allprojects {
     }
 }
 
-
 // javadoc
 allprojects {
     configurations {
@@ -155,7 +157,6 @@ task('allJavadoc', type:Javadoc) {
 
 // IDE
 allprojects {
-    tasks.create('develEnv')
     idea.module {
         inheritOutputDirs = false
         outputDir = compileJava.destinationDir

@@ -16,6 +16,8 @@
 
 
 
+
+
 buildscript {
     repositories {
         jcenter()
@@ -49,7 +51,7 @@ def agentManifest = {
     attributes(
             'Premain-Class': guardsAgentMain,
             'Agent-Class': guardsAgentMain,
-            'Can-Redefine-Classes': 'true',
+            'Can-Redefine-Classes': 'false',
             'Can-Retransform-Classes': 'true',
             )
 }
