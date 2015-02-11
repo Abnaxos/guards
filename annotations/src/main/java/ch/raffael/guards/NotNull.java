@@ -37,7 +37,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Documented
 @Guard(message = "Value must not be null",
         performanceImpact = PerformanceImpact.LOW,
-        subsetOf = Nullable.class,
+        supersets = Nullable.class,
         flags = GuardFlag.TEST_NULLS)
 public @interface NotNull {
 

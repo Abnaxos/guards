@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.draft;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -29,13 +29,13 @@ import ch.raffael.guards.definition.PerformanceImpact;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "",
-        performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class,
-        subsets = NoNulls.class)
-public @interface AllowNulls {
+@Guard(message = "Value must be at least $value",
+        performanceImpact = PerformanceImpact.LOW)
+public @interface Min {
+
+    long value();
 
 }

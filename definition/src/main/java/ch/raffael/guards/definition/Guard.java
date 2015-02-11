@@ -115,10 +115,19 @@ public @interface Guard {
     PerformanceImpact performanceImpact();
 
     @GuardAnnotation
-    Class<? extends Annotation>[] subsetOf() default {};
+    Class<? extends Annotation>[] subsets() default {};
 
     @GuardAnnotation
-    Class<? extends Annotation>[] supersetOf() default {};
+    Class<? extends Annotation>[] supersets() default {};
+
+    @GuardAnnotation
+    Class<? extends Annotation>[] equalTo() default {};
+
+    @GuardAnnotation
+    Class<? extends Annotation[]>[] intersectingWith() default {};
+
+    @GuardAnnotation
+    Class<? extends Annotation>[] disjointFrom() default {};
 
     @GuardAnnotation
     Class<? extends Annotation>[] synonymousTo() default {};
@@ -126,7 +135,7 @@ public @interface Guard {
     @GuardAnnotation
     Class<? extends Annotation>[] inconsistentWith() default {};
 
-    ComplexRelation[] complexRelations() default {};
+    RelationRule[] relations() default {};
 
     String[] validate() default {};
 

@@ -36,7 +36,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Documented
 @Guard(handler = Guard.AlwaysTrue.class,
         performanceImpact = PerformanceImpact.LOW,
-        supersetOf = { Unsigned.class, Positive.class })
+        subsets = { Unsigned.class, Positive.class })
 public @interface Signed {
 
 }

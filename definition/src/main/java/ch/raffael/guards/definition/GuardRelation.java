@@ -14,28 +14,13 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.PerformanceImpact;
-
+package ch.raffael.guards.definition;
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Guard(message = "",
-        performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class,
-        subsets = NoNulls.class)
-public @interface AllowNulls {
+public enum GuardRelation {
+
+    EQUAL, SUBSET, SUPERSET, INTERSECTING, DISJOINT, UNKNOWN
 
 }

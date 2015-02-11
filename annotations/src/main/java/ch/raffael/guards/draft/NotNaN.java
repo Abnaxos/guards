@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.definition;
+package ch.raffael.guards.draft;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({})
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ComplexRelation {
-
-    @GuardAnnotation
-    Class<? extends Annotation>[] type() default {};
-
-    String[] value();
-
-    enum Relation {
-        EQUAL, SUBSET, SUPERSET, INCONSISTENT
-    }
+@Guard(message = "Value must not be NaN",
+        performanceImpact = PerformanceImpact.LOW)
+public @interface NotNaN {
 
 }

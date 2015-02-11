@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.draft;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -32,10 +32,12 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "",
+@Guard(message = "Value must not be positive or negative infinity",
         performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class,
-        subsets = NoNulls.class)
-public @interface AllowNulls {
+        validate = "allowPos && allowNeg -> Both positive and negative infinity allowed")
+public @interface NotInfinity {
+
+    boolean allowPos() default false;
+    boolean allowNeg() default false;
 
 }

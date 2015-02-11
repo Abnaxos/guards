@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.definition;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "",
-        performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class,
-        subsets = NoNulls.class)
-public @interface AllowNulls {
+public @interface RelationRule {
+
+    @GuardAnnotation
+    Class<? extends Annotation>[] type() default {};
+
+    String[] value();
 
 }

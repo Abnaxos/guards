@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.draft;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -24,18 +24,27 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.RelationRule;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "",
+@Guard(message = "Value must be at most $value",
         performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class,
-        subsets = NoNulls.class)
-public @interface AllowNulls {
+        relations = {
+                @RelationRule({
+                        "max>that.max -> superset",
+                        "max<that.max -> subset" }),
+                @RelationRule(type = Min.class, value = {
+                        "max>=that.min -> intersecting",
+                        "max<that.min -> disjoint" })
+        })
+public @interface Max {
+
+    long value();
 
 }

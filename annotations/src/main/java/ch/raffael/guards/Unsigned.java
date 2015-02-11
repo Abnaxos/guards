@@ -36,8 +36,8 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Documented
 @Guard(message = "Value must not be negative",
         performanceImpact = PerformanceImpact.LOW,
-        supersetOf = Positive.class,
-        subsetOf = Signed.class)
+        subsets = Positive.class,
+        supersets = Signed.class)
 public @interface Unsigned {
 
 }

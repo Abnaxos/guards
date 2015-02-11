@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.draft;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,7 +22,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.ComplexRelation;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
 
@@ -30,30 +29,13 @@ import ch.raffael.guards.definition.PerformanceImpact;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must be in range $min (inclusive: $minInclusive) to $max (inclusive: $maxInclusive)",
-        performanceImpact = PerformanceImpact.LOW,
-        validate = {
-                "min >= max -> error: $min must be less than $max"
-        },
-        complexRelations = {
-                @ComplexRelation({
-                        "(minInclusive ? min<=that.min : min< && max>=that.max -> superset",
-                        "min>=that.min && max<=that.max -> subset"
-                }),
-                @ComplexRelation(type=IntRange.class, value = {
+@Guard(message = "Value must be greater than $value",
+        performanceImpact = PerformanceImpact.LOW)
+public @interface FMinX {
 
-                })})
-public @interface FloatRange {
-
-    double min() default 0;
-
-    boolean minInclusive() default true;
-
-    double max() default Double.POSITIVE_INFINITY;
-
-    boolean maxInclusive() default true;
+    double value();
 
 }

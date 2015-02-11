@@ -22,13 +22,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.ComplexRelation;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.RelationRule;
 
 
 /**
  * Checks that a (numeric) value is in the specified integer range.
+ *
+ * @deprecated Use `@Max` and `@Min` instead; kept for demonstrating complex guard relations.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
@@ -40,11 +42,11 @@ import ch.raffael.guards.definition.PerformanceImpact;
         validate = {
                 "min >= max -> error: $min must be less than $max"
         },
-        complexRelations = @ComplexRelation({
-                /* implicit: "min==that.min && max==that.max -> equal", */
+        relations = @RelationRule({
                 "min<=that.min && max>=that.max -> superset",
                 "min>=that.min && max<=that.max -> subset"
                 /* implicit: "-> incompatible" */ }))
+@Deprecated
 public @interface IntRange {
 
     long min() default 0;
