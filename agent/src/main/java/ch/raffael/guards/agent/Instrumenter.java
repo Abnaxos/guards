@@ -24,6 +24,7 @@ import ch.raffael.guards.agent.asm.commons.AdviceAdapter;
 
 import static ch.raffael.guards.agent.IntFlags.containsFlag;
 import static ch.raffael.guards.agent.asm.Opcodes.ACC_ANNOTATION;
+import static ch.raffael.guards.agent.asm.Opcodes.ACC_STATIC;
 import static ch.raffael.guards.agent.asm.Opcodes.ASM5;
 import static ch.raffael.guards.agent.asm.Opcodes.V1_7;
 
@@ -33,11 +34,13 @@ import static ch.raffael.guards.agent.asm.Opcodes.V1_7;
  */
 class Instrumenter extends ClassVisitor {
 
+    private final Options options;
     private final ClassLoader loader;
 
-    Instrumenter(ClassLoader loader, ClassVisitor cv) {
+    Instrumenter(Options options, ClassLoader loader, ClassVisitor cv) {
         super(ASM5, cv);
         this.loader = loader;
+        this.options = options;
     }
 
     @Override
@@ -56,12 +59,33 @@ class Instrumenter extends ClassVisitor {
     public MethodVisitor visitMethod(int access, final String name, final String desc, String signature, String[] exceptions) {
         final Type[] argumentTypes = Type.getArgumentTypes(desc);
         final Type returnType = Type.getReturnType(desc);
+        final boolean isStatic = containsFlag(access, ACC_STATIC);
         return new AdviceAdapter(ASM5, super.visitMethod(access, name, desc, signature, exceptions), access, name, desc) {
+            boolean hasMethodAnnotations = false;
+            boolean[] hasParameterAnnotations = new boolean[argumentTypes.length];
+
+            @Override
+            public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+                if ( visible ) {
+                    hasMethodAnnotations = true;
+                }
+                return super.visitAnnotation(desc, visible);
+            }
+
+            @Override
+            public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
+                if ( visible ) {
+                    hasParameterAnnotations[parameter] = true;
+                }
+                return super.visitParameterAnnotation(parameter, desc, visible);
+            }
+
             @Override
             public void visitCode() {
                 super.visitCode();
                 checkParameters();
             }
+
             @Override
             protected void onMethodEnter() {
                 // DO NOT INSERT PARAMETER CHECK CODE HERE
@@ -79,71 +103,61 @@ class Instrumenter extends ClassVisitor {
                 //checkParameters();
                 super.onMethodEnter();
             }
-            private void checkParameters() {
-                if ( argumentTypes.length == 0 ) {
-                    return;
-                }
-                for( int i = 0; i < argumentTypes.length; i++ ) {
-                    loadArg(i);
-                    invokeDynamic("guard:arg" + i, "(" + argumentTypes[i].getDescriptor() + ")V", Indy.BOOTSTRAP_ASM_HANDLE, name, desc, i);
-                }
-            }
 
             @Override
             protected void onMethodExit(int opcode) {
                 checkReturnValue(opcode);
                 super.onMethodExit(opcode);
             }
-            private void checkReturnValue(int opcode) {
-                String guardDesc = "(" + Type.getReturnType(desc) + ")V";
-                String indyName = "guard:return";
-                switch ( opcode ) {
-                    case IRETURN: // return int
-                        assert returnType.equals(Type.INT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
-                        dup();
-                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
-                        break;
-                    case LRETURN: // return long
-                        assert returnType.equals(Type.LONG_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
-                        dup2();
-                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name , desc, -1);
-                        break;
-                    case FRETURN: // return float
-                        assert returnType.equals(Type.FLOAT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
-                        dup();
-                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
-                        break;
-                    case DRETURN: // return double
-                        assert returnType.equals(Type.DOUBLE_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
-                        dup2();
-                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
-                        break;
-                    case ARETURN: // return reference
-                        dup();
-                        invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
-                    case RETURN: // return void => no instrumentation
-                    case ATHROW: // throw exception => no instrumentation
-                        break;
-                    default:
-                        assert false : "Unexpected onMethodExit() opcode: " + opcode;
+
+            private void checkParameters() {
+                if ( argumentTypes.length == 0 ) {
+                    return;
+                }
+                for( int i = 0; i < argumentTypes.length; i++ ) {
+                    if ( options.isInstrumentAll() || hasParameterAnnotations[i] ) {
+                        loadArg(i);
+                        invokeDynamic("guard:arg" + i, "(" + argumentTypes[i].getDescriptor() + ")V", Indy.BOOTSTRAP_ASM_HANDLE, name, desc, i);
+                    }
                 }
             }
 
-            @Override
-            public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-                // TODO: remove this, I was just a proving a theory
-                //Type t = Type.getType(desc);
-                //System.out.println("annotation: " + t);
-                ////try {
-                ////    System.err.println(loader.loadClass(t.getClassName()));
-                ////}
-                ////catch ( ClassNotFoundException e ) {
-                ////    System.err.println(e);
-                ////}
-                return super.visitAnnotation(desc, visible);
+            private void checkReturnValue(int opcode) {
+                if ( options.isInstrumentAll() || hasMethodAnnotations ) {
+                    String guardDesc = "(" + Type.getReturnType(desc) + ")V";
+                    String indyName = "guard:return";
+                    switch ( opcode ) {
+                        case IRETURN: // return int
+                            assert returnType.equals(Type.INT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                            dup();
+                            invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                            break;
+                        case LRETURN: // return long
+                            assert returnType.equals(Type.LONG_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                            dup2();
+                            invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                            break;
+                        case FRETURN: // return float
+                            assert returnType.equals(Type.FLOAT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                            dup();
+                            invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                            break;
+                        case DRETURN: // return double
+                            assert returnType.equals(Type.DOUBLE_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                            dup2();
+                            invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                            break;
+                        case ARETURN: // return reference
+                            dup();
+                            invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1);
+                        case RETURN: // return void => no instrumentation
+                        case ATHROW: // throw exception => no instrumentation
+                            break;
+                        default:
+                            assert false : "Unexpected onMethodExit() opcode: " + opcode;
+                    }
+                }
             }
-
-
         };
     }
 }

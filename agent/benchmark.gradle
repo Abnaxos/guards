@@ -16,8 +16,6 @@
 
 
 
-
-
 def jmhVersion = '1.5.2'
 
 dependencies {
@@ -33,7 +31,6 @@ jmhJar {
 }
 
 compileJmhJava.dependsOn jar
-
 
 idea.module {
     testSourceDirs += sourceSets.jmh.allSource.srcDirs
@@ -70,6 +67,7 @@ task('jmh') {
         }
 
         jmhAllResults.withWriter { concat ->
+            concat << "${new Date()}\n\n"
             fileTree(dir:jmhRunDir, include:"result-*.txt").sort().each { f ->
                 f.withReader { part ->
                     def n = f.toString()
@@ -79,6 +77,7 @@ task('jmh') {
             }
         }
         jmhAllLogs.withWriter { concat ->
+            concat << "${new Date()}\n\n"
             fileTree(dir:jmhRunDir, include:"log-*.txt").sort().each { f ->
                 f.withReader { part ->
                     concat << part << '\n'

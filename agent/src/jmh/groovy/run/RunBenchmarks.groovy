@@ -16,9 +16,11 @@
 
 
 
+
+
 package run
 
-import benchmarks.HelloBenchmark
+import benchmarks.BasicBenchmark
 import ch.raffael.guards.agent.guava.base.Stopwatch
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.results.format.ResultFormatType
@@ -35,8 +37,9 @@ class RunBenchmarks {
 
     static final AGENT_ARGS = [
             ['-nopMode'],
-            ['multiGuardMethod=mh_guard', 'multiGuardMethod=invoker'],
-            ['-mutableCallSites', '+mutableCallSites']
+            ['-instrumentAll', '+instrumentAll'],
+//            ['multiGuardMethod=mh_guard', 'multiGuardMethod=invoker'],
+            ['-mutableCallSites', '+mutableCallSites'],
     ]
 
     static void main(String... cmdLineArgs) {
@@ -47,11 +50,11 @@ class RunBenchmarks {
         println "Agent path: $agentPath"
 
         def jvmArgs = [
-                '-DnoAgent=noAgent',
-//                agent(agentPath, ['+nopMode,+instrumentAll,nopMethod=mh_constant']),
-//                agent(agentPath, ['+nopMode,+instrumentAll,nopMethod=dedicated_method']),
-                agent(agentPath, ['+nopMode,nopMethod=mh_constant']),
-                agent(agentPath, ['+nopMode,nopMethod=dedicated_method']),
+//                '-DnoAgent=noAgent',
+//                agent(agentPath, ['+nopMode', 'nopMethod=mh_constant']),
+//                agent(agentPath, ['+nopMode', 'nopMethod=dedicated_method']),
+//                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=mh_constant']),
+//                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=dedicated_method']),
         ]
         jvmArgs.addAll(AGENT_ARGS.combinations().collect({ List args ->
             agent(agentPath, args)
@@ -64,7 +67,7 @@ class RunBenchmarks {
         jvmArgs.each { args ->
             def name = "${args.substring(args.indexOf('=') + 1)}"
             OptionsBuilder ob = new OptionsBuilder().with {
-                include HelloBenchmark.class.name
+                include BasicBenchmark.class.name
 
                 mode Mode.AverageTime
 
@@ -78,6 +81,7 @@ class RunBenchmarks {
 
                 jvm javaExecutable
                 jvmArgsAppend args //, '-verbose:class'
+                shouldFailOnError true
 
                 result String.format("result-%03d--%s.txt", count, name)
                 resultFormat ResultFormatType.TEXT
@@ -95,8 +99,8 @@ class RunBenchmarks {
         println "Total time: $totalSW"
     }
 
-    private static GString agent(String agentPath, List args) {
-        "-javaagent:$agentPath=${String.join(',', args)}"
+    private static String agent(String agentPath, List args) {
+        "-javaagent:$agentPath=${args.join(',')}" as String
     }
 
 }

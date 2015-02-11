@@ -67,7 +67,7 @@ public class GuardsAgent {
     private GuardsAgent() {
     }
 
-    static GuardsAgent getInstance() {
+    public static GuardsAgent getInstance() {
         return INSTANCE;
     }
 
@@ -285,7 +285,7 @@ public class GuardsAgent {
                 final Options options = getInstance().getOptions();
                 ClassReader classReader = new ClassReader(classfileBuffer);
                 ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-                Instrumenter instrumenter = new Instrumenter(loader, classWriter);
+                Instrumenter instrumenter = new Instrumenter(options, loader, classWriter);
                 classReader.accept(instrumenter, ClassReader.SKIP_FRAMES);
                 final byte[] instrumentedBytecode = classWriter.toByteArray();
                 asmDump(options, className, instrumentedBytecode);

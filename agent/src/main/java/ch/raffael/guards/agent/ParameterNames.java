@@ -17,6 +17,11 @@
 package ch.raffael.guards.agent;
 
 import java.lang.reflect.Method;
+import java.util.logging.Level;
+
+import ch.raffael.guards.Nullable;
+
+import static ch.raffael.guards.agent.Logging.LOG;
 
 
 /**
@@ -27,13 +32,13 @@ abstract class  ParameterNames {
     private static final ParameterNames INSTANCE;
     static {
         ParameterNames instance = null;
-        //try {
-        //    Class.forName("java.lang.reflect.Parameter");
-        //    instance = new JDK8();
-        //}
-        //catch ( ClassNotFoundException e ) {
-        //    // ignore
-        //}
+        try {
+            Class.forName("java.lang.reflect.Parameter");
+            instance = new JDK8().usable();
+        }
+        catch ( ClassNotFoundException e ) {
+            // ignore
+        }
         if ( instance == null ) {
             INSTANCE = new JDK7();
         }
@@ -55,11 +60,48 @@ abstract class  ParameterNames {
         }
     }
 
-    //private static class JDK8 extends ParameterNames {
-    //    @Override
-    //    String parameterName(Method method, int index) {
-    //        return method.getParameters()[index].getName();
-    //    }
-    //}
+    /**
+     * @todo Looks like we'll have to use JDK8 at runtime. If this is the case, remove reflection.
+     */
+    private static class JDK8 extends ParameterNames {
+
+        private static final Method GET_PARAMETERS;
+        private static final Method GET_NAME;
+        static {
+            Method getParameters = null;
+            Method getName = null;
+            try {
+                getParameters = Method.class.getMethod("getParameters");
+                getName = Class.forName("java.lang.reflect.Parameter").getMethod("getName");
+            }
+            catch ( Exception e ) {
+                LOG.log(Level.WARNING, "Unexpected reflection error preparing parameter names", e);
+            }
+            GET_PARAMETERS = getParameters;
+            GET_NAME = getName;
+        }
+
+        @Nullable
+        JDK8 usable() {
+            if ( GET_PARAMETERS != null && GET_NAME != null ) {
+                return this;
+            }
+            else {
+                return null;
+            }
+        }
+
+        @Override
+        String parameterName(Method method, int index) {
+            try {
+                Object[] parameters = (Object[])GET_PARAMETERS.invoke(method);
+                return (String)GET_NAME.invoke(parameters[index]);
+            }
+            catch ( Exception e ) {
+                LOG.log(Level.WARNING, "Unexpected reflection error getting parameter name", e);
+                return "arg" + index;
+            }
+        }
+    }
 
 }
