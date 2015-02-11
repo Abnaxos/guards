@@ -16,6 +16,8 @@
 
 
 
+
+
 def jmhVersion = '1.5.2'
 
 dependencies {
@@ -83,40 +85,5 @@ task('jmh') {
                 }
             }
         }
-    }
-}
-
-task('runSimpleBenchmark') {
-    dependsOn compileJmhJava
-
-    String[] agentArgs = [
-            '+dump',
-            //'nopMethod=dedicated_method',
-            '-nopMode',
-            //'multiGuardMethod=mh_guard',
-            //'-mutableCallSites',
-    ]
-
-    doFirst {
-        println '~' * 80
-        def cp = sourceSets.jmh.runtimeClasspath
-        println "Agent args: $agentArgs"
-        if (  project.properties['printcp'] == 'true' ) {
-            println "Classpath: ["
-            cp.each { f ->
-                println "    $f"
-            }
-            println ']'
-        }
-        println '~' * 80
-        javaexec {
-            main = 'verysimple.Test'
-            if ( project.properties['noagent'] != 'true' ) {
-                jvmArgs = [ "-javaagent:${pseudoAgentJar.archivePath}=${agentArgs.join(',')}" ]
-            }
-            classpath = cp
-//            args = [ "${agentArgs.join(',')}" ]
-        }
-        println '~' * 80
     }
 }

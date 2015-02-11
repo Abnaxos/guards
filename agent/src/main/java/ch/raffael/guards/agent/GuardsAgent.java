@@ -16,18 +16,27 @@
 
 package ch.raffael.guards.agent;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
+import java.lang.instrument.UnmodifiableClassException;
+import java.lang.management.ManagementFactory;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ServiceLoader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+
+import com.sun.tools.attach.VirtualMachine;
 
 import ch.raffael.guards.NoNulls;
 import ch.raffael.guards.NotNull;
@@ -35,6 +44,7 @@ import ch.raffael.guards.Nullable;
 import ch.raffael.guards.agent.asm.ClassReader;
 import ch.raffael.guards.agent.asm.ClassWriter;
 import ch.raffael.guards.agent.asm.util.TraceClassVisitor;
+import ch.raffael.guards.agent.guava.base.Joiner;
 
 import static ch.raffael.guards.agent.Logging.LOG;
 
@@ -46,7 +56,8 @@ public class GuardsAgent {
 
     private final static GuardsAgent INSTANCE = new GuardsAgent();
 
-    private final AtomicBoolean installed = new AtomicBoolean(false);
+    private final Transformer transformer = new Transformer();
+    private final AtomicReference<Instrumentation> instrumentation = new AtomicReference<>(null);
     private volatile Options options = new Options();
 
     private final Object backgroundLock = new Object();
@@ -61,22 +72,11 @@ public class GuardsAgent {
     }
 
     private void install(Instrumentation instrumentation) {
-        synchronized ( installed ) {
-            if ( installed.get() ) {
-                throw new IllegalStateException("Guards agent already initialized");
-            }
-            instrumentation.addTransformer(new Transformer(), true);
-            installed.set(true);
-            LOG.info("Guards Agent installed");
+        if ( !this.instrumentation.compareAndSet(null, instrumentation) ) {
+            throw new IllegalStateException("Guards agent already initialized");
         }
-    }
-
-    private GuardsAgent checkInitialized() {
-        if ( !installed.get() ) {
-            throw new IllegalStateException("Guards agent not initialized");
-        }
-        assert options != null;
-        return this;
+        instrumentation.addTransformer(transformer, true);
+        LOG.info("Guards Agent installed");
     }
 
     public Options getOptions() {
@@ -91,7 +91,7 @@ public class GuardsAgent {
     }
 
     public boolean isInstalled() {
-        return installed.get();
+        return instrumentation.get() != null;
     }
 
     public void configure(@Nullable @NoNulls OptionsProvider... providers) {
@@ -116,6 +116,19 @@ public class GuardsAgent {
 
     public static void agentmain(String agentArgs, Instrumentation instrumentation) {
         main(agentArgs, instrumentation);
+        LOG.info("Retransforming all classes");
+        for( Class<?> c : instrumentation.getAllLoadedClasses() ) {
+            Transformer transformer = getInstance().transformer;
+            if ( transformer.isTransformable(c) ) {
+                try {
+                    instrumentation.retransformClasses(c);
+                }
+                catch ( UnmodifiableClassException e ) {
+                    LOG.log(Level.WARNING, "Cannot retransform " + c, e);
+                }
+            }
+        }
+        LOG.info("Retransformation done");
     }
 
     private static void main(String agentArgs, Instrumentation instrumentation) {
@@ -124,70 +137,69 @@ public class GuardsAgent {
     }
 
     // THIS DOESN'T SEEM TO WORK FOR SOME REASON :(
-    //
-    //public static void installAgent(String agentArgs) {
-    //    getInstance().doInstall(agentArgs);
-    //}
-    //
-    //private void doInstall(String agentArgs) {
-    //    if ( !installed.get() ) {
-    //        try {
-    //            Logging.LOG.info("Attempting to install agent dynamically");
-    //            String jvmName = ManagementFactory.getRuntimeMXBean().getName();
-    //            LOG.info("JVM Name: " + jvmName);
-    //            int pos = jvmName.indexOf('@');
-    //            if ( pos < 0 ) {
-    //                throw new RuntimeException("Cannot extract JVM ID from name " + jvmName);
-    //            }
-    //            String jvmId = jvmName.substring(0, pos);
-    //            LOG.info("Trying JVM ID: " + jvmId);
-    //            try {
-    //                VirtualMachine jvm = VirtualMachine.attach(jvmId);
-    //                LOG.info("Agent args: " + agentArgs);
-    //                jvm.loadAgent(locateAgentLib(), agentArgs);
-    //                LOG.info("Guards agent loaded");
-    //            }
-    //            catch ( NoClassDefFoundError e ) {
-    //                throw (ClassNotFoundException)new ClassNotFoundException(e.getMessage()).initCause(e);
-    //            }
-    //        }
-    //        catch ( Exception e ) {
-    //            LOG.log(Level.SEVERE, "Cannot install agent", e);
-    //            throw new RuntimeException("Cannot install agent", e);
-    //        }
-    //    }
-    //    else {
-    //        LOG.info("Guards agent already installed, reconfiguring it");
-    //        getInstance().configure(new AgentArgsOptionsProvider(agentArgs));
-    //    }
-    //}
-    //
-    //private static String locateAgentLib() {
-    //    CodeSource codeSource = GuardsAgent.class.getProtectionDomain().getCodeSource();
-    //    if ( codeSource == null ) {
-    //        throw new RuntimeException("Cannot locate agent library: Code source is null");
-    //    }
-    //    URL url = codeSource.getLocation();
-    //    if ( url == null ) {
-    //        throw new RuntimeException("Cannot locate agent library: Code source url is null");
-    //    }
-    //    String jarFileName = url.toString();
-    //    if ( jarFileName.startsWith("jar:") && jarFileName.endsWith("!/") ) {
-    //        jarFileName = jarFileName.substring(4, jarFileName.length() - 2);
-    //    }
-    //    File jarFile;
-    //    if ( jarFileName.startsWith("file:") ) {
-    //        jarFile = new File(URI.create(jarFileName));
-    //    }
-    //    else {
-    //        throw new RuntimeException("Cannot deduce agent JAR from " + url);
-    //    }
-    //    if ( jarFile.isDirectory() && jarFile.toString().endsWith(File.separatorChar + Joiner.on(File.separatorChar).join("target", "classes", "main")) ) {
-    //        jarFile = new File(jarFile.getParentFile().getParentFile(), "pseudo-agent.jar");
-    //    }
-    //    LOG.info("Trying agent JAR: " + jarFile);
-    //    return jarFile.toString();
-    //}
+
+    public static void installAgent(String agentArgs) {
+        getInstance().doInstall(agentArgs);
+    }
+
+    private void doInstall(String agentArgs) {
+        if ( !isInstalled() ) {
+            try {
+                Logging.LOG.info("Attempting to install agent dynamically");
+                String jvmName = ManagementFactory.getRuntimeMXBean().getName();
+                LOG.info("JVM Name: " + jvmName);
+                int pos = jvmName.indexOf('@');
+                if ( pos < 0 ) {
+                    throw new RuntimeException("Cannot extract JVM ID from name " + jvmName);
+                }
+                String jvmId = jvmName.substring(0, pos);
+                LOG.info("Trying JVM ID: " + jvmId);
+                try {
+                    VirtualMachine jvm = VirtualMachine.attach(jvmId);
+                    LOG.info("Agent args: " + agentArgs);
+                    jvm.loadAgent(locateAgentLib(), agentArgs);
+                }
+                catch ( NoClassDefFoundError e ) {
+                    throw (ClassNotFoundException)new ClassNotFoundException(e.getMessage()).initCause(e);
+                }
+            }
+            catch ( Exception e ) {
+                LOG.log(Level.SEVERE, "Cannot install agent", e);
+                throw new RuntimeException("Cannot install agent", e);
+            }
+        }
+        else {
+            LOG.info("Guards agent already installed, reconfiguring it");
+            getInstance().configure(new AgentArgsOptionsProvider(agentArgs));
+        }
+    }
+
+    private static String locateAgentLib() {
+        CodeSource codeSource = GuardsAgent.class.getProtectionDomain().getCodeSource();
+        if ( codeSource == null ) {
+            throw new RuntimeException("Cannot locate agent library: Code source is null");
+        }
+        URL url = codeSource.getLocation();
+        if ( url == null ) {
+            throw new RuntimeException("Cannot locate agent library: Code source url is null");
+        }
+        String jarFileName = url.toString();
+        if ( jarFileName.startsWith("jar:") && jarFileName.endsWith("!/") ) {
+            jarFileName = jarFileName.substring(4, jarFileName.length() - 2);
+        }
+        File jarFile;
+        if ( jarFileName.startsWith("file:") ) {
+            jarFile = new File(URI.create(jarFileName));
+        }
+        else {
+            throw new RuntimeException("Cannot deduce agent JAR from " + url);
+        }
+        if ( jarFile.isDirectory() && jarFile.toString().endsWith(File.separatorChar + Joiner.on(File.separatorChar).join("target", "classes", "main")) ) {
+            jarFile = new File(jarFile.getParentFile().getParentFile(), "pseudo-agent.jar");
+        }
+        LOG.info("Trying agent JAR: " + jarFile);
+        return jarFile.toString();
+    }
 
     void submitToBackground(Runnable runnable) {
         synchronized ( backgroundLock ) {
@@ -236,13 +248,30 @@ public class GuardsAgent {
         backgroundQueue.offer(runnable);
     }
 
-    static class Transformer implements ClassFileTransformer {
+    class Transformer implements ClassFileTransformer {
 
-        private static final String[] BUILTIN_EXCLUDES = {
+        private final String[] BUILTIN_EXCLUDES = {
                 "java/", "sun/", "jdk/",
                 "ch/raffael/guards/agent/"
                 //, "ch/raffael/guards/definition/"
         };
+
+        boolean isTransformable(String internalName) {
+            for( String builtExclude : BUILTIN_EXCLUDES ) {
+                if ( internalName.startsWith(builtExclude) ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        boolean isTransformable(Class<?> c) {
+            if ( c.isPrimitive() || c.isArray()) {
+                return false;
+            }
+            String internalName = c.getName().replace('.', '/');
+            return isTransformable(internalName);
+        }
 
         @Override
         @Nullable
