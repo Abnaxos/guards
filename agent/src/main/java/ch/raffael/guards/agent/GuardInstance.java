@@ -178,7 +178,7 @@ final class GuardInstance {
                 if ( delegate == null ) {
                     ImmutableMap.Builder<String, String> builder = ImmutableBiMap.builder();
                     for( Method method : annotation.getClass().getMethods() ) {
-                        if ( method.getParameterCount() == 0 && method.getReturnType() != void.class && !NON_ANNOTATION_VALUES.contains(method.getName()) ) {
+                        if ( method.getParameterTypes().length == 0 && method.getReturnType() != void.class && !NON_ANNOTATION_VALUES.contains(method.getName()) ) {
                             Object value;
                             try {
                                 value = method.invoke(annotation);

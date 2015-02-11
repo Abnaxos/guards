@@ -37,6 +37,7 @@ public class OptionsBuilder {
     private final Set<Options.DumpFormat> dumpFormats = EnumSet.noneOf(Options.DumpFormat.class);
 
     private boolean nopMode;
+    private boolean instrumentAll;
     private Options.NopMethod nopMethod;
 
     private Options.MultiGuardMethod multiGuardMethod;
@@ -56,6 +57,7 @@ public class OptionsBuilder {
         setDumpPath(options.getDumpPath());
         dumpFormats.addAll(options.getDumpFormats());
         setNopMode(options.isNopMode());
+        setInstrumentAll(options.isInstrumentAll());
         setNopMethod(options.getNopMethod());
         setMultiGuardMethod(options.getMultiGuardMethod());
         setMutableCallSites(options.isMutableCallSites());
@@ -134,6 +136,19 @@ public class OptionsBuilder {
     @NotNull
     public OptionsBuilder withNopMode(boolean nopMode) {
         setNopMode(nopMode);
+        return this;
+    }
+
+    public boolean isInstrumentAll() {
+        return instrumentAll;
+    }
+
+    public void setInstrumentAll(boolean instrumentAll) {
+        this.instrumentAll = instrumentAll;
+    }
+
+    public OptionsBuilder withInstrumentAll(boolean instrumentAll) {
+        setInstrumentAll(instrumentAll);
         return this;
     }
 

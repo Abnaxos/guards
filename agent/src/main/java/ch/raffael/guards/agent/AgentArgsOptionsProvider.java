@@ -84,6 +84,9 @@ public class AgentArgsOptionsProvider implements OptionsProvider {
                 case "nopMode":
                     builder.setNopMode(toBoolean(value));
                     break;
+                case "instrumentAll":
+                    builder.setInstrumentAll(toBoolean(value));
+                    break;
                 case "nopMethod":
                     builder.setNopMethod(Options.NopMethod.valueOf(expectValue(name, value).toUpperCase()));
                     break;

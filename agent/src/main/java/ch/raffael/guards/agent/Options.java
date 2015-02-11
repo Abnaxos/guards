@@ -42,7 +42,8 @@ public final class Options {
     private Set<DumpFormat> dumpFormats = Sets.immutableEnumSet(Options.DumpFormat.CLASS, Options.DumpFormat.ASM);
 
     private boolean nopMode = false;
-    private NopMethod nopMethod = NopMethod.DEDICATED_METHOD;
+    private boolean instrumentAll = false;
+    private NopMethod nopMethod = NopMethod.MH_CONSTANT;
 
     private MultiGuardMethod multiGuardMethod = MultiGuardMethod.MH_GUARD;
 
@@ -59,6 +60,7 @@ public final class Options {
             dumpPath = builder.getDumpPath();
             dumpFormats = Sets.immutableEnumSet(builder.getDumpFormats());
             nopMode = builder.isNopMode();
+            instrumentAll = builder.isInstrumentAll();
             nopMethod = builder.getNopMethod();
             multiGuardMethod = builder.getMultiGuardMethod();
             mutableCallSites = builder.isMutableCallSites();
@@ -85,6 +87,10 @@ public final class Options {
 
     public boolean isNopMode() {
         return nopMode;
+    }
+
+    public boolean isInstrumentAll() {
+        return instrumentAll;
     }
 
     @NotNull

@@ -16,42 +16,78 @@
 
 
 
-import guards.PreparedShadow
-
-
-configurations {
-    benchmarkCompile {
-        extendsFrom compile, provided, included
-    }
-    benchmarkRuntime {
-        extendsFrom runtime, benchmarkCompile
-    }
-}
+def jmhVersion = '1.5.2'
 
 dependencies {
-    benchmarkCompile group:'com.google.caliper', name:'caliper', version:'1.0-beta-1'
+    jmhCompile files(jar.archivePath)
+    jmhCompile configurations.groovy
+
+    jmh group:'org.openjdk.jmh', name:'jmh-core', version:jmhVersion
+    jmh group:'org.openjdk.jmh', name:'jmh-generator-annprocess', version:jmhVersion
 }
 
-sourceSets {
-    benchmark {
-        java {
-            srcDir 'src/benchmark/java'
-            compileClasspath += sourceSets.main.output
-            compileClasspath += files(tasks[PreparedShadow.JAR_TASK].archivePath)
-            runtimeClasspath += sourceSets.main.output
-            runtimeClasspath += files(tasks[PreparedShadow.JAR_TASK].archivePath)
+jmhJar {
+    exclude 'ch/raffael/guards/**/*'
+}
+
+compileJmhJava.dependsOn jar
+
+
+idea.module {
+    testSourceDirs += sourceSets.jmh.allSource.srcDirs
+    scopes.TEST.plus += [ configurations.jmhCompile ]
+}
+
+tasks.remove(tasks.jmh)
+task('jmh') {
+    dependsOn jmhJar, jar
+
+    doFirst {
+        def javaExecutable = project.properties['jmh.java']?:"${System.getProperty('java.home')}/bin/java"
+        def agentPath = jar.archivePath
+        def label = project.properties['jmh.label'] as String
+        if ( !label ) {
+            label = 'default'
         }
-        resources {
-            srcDir 'src/benchmark/resources'
+
+        def jmhRunDir = file("$buildDir/jmh/$label")
+        def jmhAllResults = new File(jmhRunDir, "results.txt")
+        def jmhAllLogs = new File(jmhRunDir, "logs.txt")
+
+        println "JMH directory: $jmhRunDir"
+        mkdir jmhRunDir
+        jmhRunDir.listFiles().each { f -> f.delete() }
+
+        def cp = sourceSets.jmh.runtimeClasspath
+        println "JMH Classpath: $cp.files"
+        javaexec {
+            classpath = cp
+            main = 'run.RunBenchmarks'
+            workingDir = jmhRunDir
+            args = [ javaExecutable, agentPath ]
+        }
+
+        jmhAllResults.withWriter { concat ->
+            fileTree(dir:jmhRunDir, include:"result-*.txt").sort().each { f ->
+                f.withReader { part ->
+                    def n = f.toString()
+                    n = n.substring(n.indexOf('--') + 2, n.length() - 4)
+                    concat << "$n\n${'~'*n.length()}\n" << part << '\n\n'
+                }
+            }
+        }
+        jmhAllLogs.withWriter { concat ->
+            fileTree(dir:jmhRunDir, include:"log-*.txt").sort().each { f ->
+                f.withReader { part ->
+                    concat << part << '\n'
+                }
+            }
         }
     }
 }
 
-compileBenchmarkJava.dependsOn classes, PreparedShadow.JAR_TASK
-
 task('runSimpleBenchmark') {
-    dependsOn compileBenchmarkJava
-    dependsOn pseudoAgentJar
+    dependsOn compileJmhJava
 
     String[] agentArgs = [
             '+dump',
@@ -63,7 +99,7 @@ task('runSimpleBenchmark') {
 
     doFirst {
         println '~' * 80
-        def cp = sourceSets.benchmark.runtimeClasspath
+        def cp = sourceSets.jmh.runtimeClasspath
         println "Agent args: $agentArgs"
         if (  project.properties['printcp'] == 'true' ) {
             println "Classpath: ["

@@ -22,18 +22,18 @@ import java.lang.reflect.Method;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-abstract class ParameterNames {
+abstract class  ParameterNames {
 
     private static final ParameterNames INSTANCE;
     static {
         ParameterNames instance = null;
-        try {
-            Class.forName("java.lang.reflect.Parameter");
-            instance = new JDK8();
-        }
-        catch ( ClassNotFoundException e ) {
-            // ignore
-        }
+        //try {
+        //    Class.forName("java.lang.reflect.Parameter");
+        //    instance = new JDK8();
+        //}
+        //catch ( ClassNotFoundException e ) {
+        //    // ignore
+        //}
         if ( instance == null ) {
             INSTANCE = new JDK7();
         }
@@ -55,11 +55,11 @@ abstract class ParameterNames {
         }
     }
 
-    private static class JDK8 extends ParameterNames {
-        @Override
-        String parameterName(Method method, int index) {
-            return method.getParameters()[index].getName();
-        }
-    }
+    //private static class JDK8 extends ParameterNames {
+    //    @Override
+    //    String parameterName(Method method, int index) {
+    //        return method.getParameters()[index].getName();
+    //    }
+    //}
 
 }

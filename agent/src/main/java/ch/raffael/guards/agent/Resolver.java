@@ -162,12 +162,13 @@ class Resolver {
     private Constructor<?> findConstructor(@NotNull Class<? extends Annotation> guardType, @NotNull Class<? extends Handler<?>> handlerType) {
         Constructor<?> constructor = null;
         for( Constructor<?> candidate : handlerType.getConstructors() ) {
-            if ( candidate.getParameterCount() == 0 ) {
+            Class<?>[] candidateParameterTypes = candidate.getParameterTypes();
+            if ( candidateParameterTypes.length == 0 ) {
                 if ( constructor == null ) {
                     constructor = candidate;
                 }
             }
-            else if ( candidate.getParameterCount() == 1) {
+            else if ( candidateParameterTypes.length == 1 ) {
                 Class<?> paramType = candidate.getParameterTypes()[0];
                 if ( paramType.isAssignableFrom(guardType) ) {
                     assert paramType.getTypeParameters().length == 0; // just make sure; the JLS (currently) requires this
@@ -200,7 +201,7 @@ class Resolver {
             throw new IllegalArgumentException("Annotation of type " + guardType.getName() + " expected (got " + annotation.getClass() + ")");
         }
         try {
-            if ( constructor.getParameterCount() == 0 ) {
+            if ( constructor.getParameterTypes().length == 0 ) {
                 return constructor.newInstance();
             }
             else {

@@ -16,13 +16,21 @@
 
 
 
-
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath group:'me.champeau.gradle', name:'jmh-gradle-plugin', version:'0.1.3'
+    }
+}
+apply plugin: 'me.champeau.gradle.jmh'
 
 apply plugin:guards.PreparedShadow
 apply plugin:guards.Publishable
 
 dependencies {
-    included project(':runtime')
+    included project(':runtime'), project(':annotations'), project(':definition')
 
     provided findToolsJar()
 
