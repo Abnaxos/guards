@@ -19,20 +19,27 @@ package ch.raffael.guards.agent;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.agent.guava.base.MoreObjects;
+import ch.raffael.guards.agent.guava.collect.AbstractSequentialIterator;
 import ch.raffael.guards.agent.guava.collect.ImmutableList;
+import ch.raffael.guards.agent.guava.collect.Iterables;
+import ch.raffael.guards.agent.guava.primitives.Primitives;
 import ch.raffael.guards.agent.guava.reflect.TypeToken;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Guard.Handler;
+import ch.raffael.guards.definition.Guard.TypeConversions;
 import ch.raffael.guards.definition.GuardFlag;
 import ch.raffael.guards.definition.HandlerPackage;
 import ch.raffael.guards.runtime.GuardsInternalError;
@@ -115,12 +122,16 @@ class Resolver {
 
     private final Class<? extends Annotation> guardType;
     private final boolean testNulls;
+    @SuppressWarnings("UnusedDeclaration")
+    private final Class<? extends Handler<?>> handlerType;
+    private final TypeConversions conversions;
     private final Constructor<? extends Handler<?>> constructor;
     private final List<TestMethod> testMethods;
 
     @SuppressWarnings("unchecked")
     Resolver(@NotNull Class<? extends Annotation> guardType, @NotNull Class<? extends Handler<?>> handlerType) {
         this.guardType = guardType;
+        this.handlerType = handlerType;
         testNulls = Arrays.asList(guardType.getAnnotation(Guard.class).flags()).contains(GuardFlag.TEST_NULLS);
         this.constructor = (Constructor<? extends Handler<?>>)findConstructor(guardType, handlerType);
         ImmutableList.Builder<TestMethod> testMethods = ImmutableList.builder();
@@ -142,6 +153,7 @@ class Resolver {
             }
         }
         this.testMethods = testMethods.build();
+        this.conversions = MoreObjects.firstNonNull(guardType.getAnnotation(TypeConversions.class), TypeConversions.DEFAULTS);
     }
 
     /**
@@ -150,6 +162,8 @@ class Resolver {
     private Resolver(Class<? extends Annotation> guardType) {
         this.guardType = guardType;
         this.testNulls = false;
+        this.handlerType = Guard.AlwaysTrue.class;
+        this.conversions = TypeConversions.DEFAULTS;
         this.constructor = null;
         this.testMethods = null;
     }
@@ -225,24 +239,30 @@ class Resolver {
     TestMethod findTestMethod(@NotNull GuardInstance instance) {
         GuardTarget target = instance.getTarget();
         // TODO: can we optimise this? should we?
-        TypeToken<?> valueType = TypeToken.of(target.getGenericValueType());
         TestMethod testMethod = null;
-        for( TestMethod candidate : testMethods ) {
-            if ( candidate.valueType.isAssignableFrom(valueType) ) {
-                if ( testMethod == null ) {
-                    testMethod = candidate;
-                }
-                else {
-                    if ( testMethod.valueType.isAssignableFrom(candidate.valueType) ) {
-                        // the more specific one wins
-                        testMethod = candidate;
-                    }
-                    else {
-                        // ambiguity detected!
-                        // TODO: how to resolve this?
-                        throw new IllegalGuardError(target + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
-                    }
-                }
+        if ( !instance.getTarget().getValueType().isPrimitive() ) {
+            // we can safely skip this step when dealing with primitives
+            // however, we still check for primitive wrappers
+            testMethod = findForComplexType(TypeToken.of(instance.getTarget().getGenericValueType()), instance);
+        }
+        if ( testMethod == null && target.getValueType().isPrimitive() ) {
+            // try widening the primitives
+            testMethod = findWithPrimitiveConversions(target.getValueType(), instance);
+            // NOTE: we must do the conversion ourselves; this allows e.g. direct conversion from Integer to long below
+            if ( testMethod != null ) {
+                testMethod = testMethod.forValueType(target.getValueType());
+            }
+        }
+        if ( testMethod == null && conversions.unbox() && Primitives.isWrapperType(target.getValueType()) ) {
+            // try unboxing the value and then widening the primitive
+            testMethod = findWithPrimitiveConversions(Primitives.unwrap(target.getValueType()), instance);
+            if ( testNulls ) {
+                // TODO: find something better to do here? IllegalGuardError?
+                Log.warning("Unwrapping " + target.getValueType() + " on handler that checks null values");
+            }
+            // NOTE: we must do the conversion ourselves; this allows e.g. direct conversion from Integer to long
+            if ( testMethod != null ) {
+                testMethod = testMethod.forValueType(target.getValueType());
             }
         }
         if ( testMethod == null ) {
@@ -258,6 +278,69 @@ class Resolver {
                     methodHandle, Indy.alwaysTrueHandle(target.getValueType()));
         }
         return testMethod.forHandle(methodHandle);
+    }
+
+    @Nullable
+    private TestMethod findForPrimitive(@NotNull Class<?> type, @NotNull GuardInstance instance) {
+        assert type.isPrimitive();
+        TestMethod testMethod = null;
+        for( TestMethod candidate : testMethods ) {
+            if ( candidate.valueType() == type ) {
+                if ( testMethod != null ) {
+                    // ambiguity detected!
+                    // TODO: how to resolve this?
+                    throw new IllegalGuardError(instance.getTarget() + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
+                }
+                testMethod = candidate;
+            }
+        }
+        return testMethod;
+    }
+
+    @Nullable
+    private TestMethod findForComplexType(@NotNull TypeToken<?> type, @NotNull GuardInstance instance) {
+        TestMethod testMethod = null;
+        for( TestMethod candidate : testMethods ) {
+            if ( candidate.valueType.isAssignableFrom(type) ) {
+                if ( testMethod == null ) {
+                    testMethod = candidate;
+                }
+                else {
+                    if ( testMethod.valueType.isAssignableFrom(candidate.valueType) ) {
+                        // the more specific one wins
+                        testMethod = candidate;
+                    }
+                    else {
+                        // ambiguity detected!
+                        // TODO: how to resolve this?
+                        throw new IllegalGuardError(instance.getTarget() + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
+                    }
+                }
+            }
+        }
+        return testMethod;
+    }
+
+    private TestMethod findWithPrimitiveConversions(@NotNull Class<?> tryWithType, @NotNull GuardInstance instance) {
+        assert tryWithType.isPrimitive();
+        assert tryWithType != void.class;
+        TestMethod testMethod = findForPrimitive(tryWithType, instance);
+        if ( testMethod != null ) {
+            return testMethod;
+        }
+        for( PrimitiveType type : Iterables.skip(PrimitiveType.forType(tryWithType), 1) ) {
+            if ( type == PrimitiveType.LONG && !conversions.widenToLong() ) {
+                break;
+            }
+            else if ( type == PrimitiveType.DOUBLE && !conversions.widenToDouble() ) {
+                break;
+            }
+            testMethod = findForPrimitive(type.type(), instance);
+            if ( testMethod != null ) {
+                return testMethod;
+            }
+        }
+        return null;
     }
 
     static final class TestMethod {
@@ -285,6 +368,11 @@ class Resolver {
         private TestMethod forHandle(MethodHandle handle) {
             return new TestMethod(valueType, method, handle);
         }
+
+        TestMethod forValueType(Class<?> valueType) {
+            MethodType methodType = methodHandle.type();
+            return forHandle(methodHandle.asType(methodType.changeParameterType(methodType.parameterCount() - 1, valueType)));
+        }
     }
 
     private static final class AlwaysTrueResolver extends Resolver {
@@ -309,6 +397,96 @@ class Resolver {
             return new TestMethod(TypeToken.of(instance.getTarget().getGenericValueType()),
                     ALWAYS_TRUE_METHOD,
                     Indy.alwaysTrueHandle(instance.getTarget().getValueType()));
+        }
+    }
+
+    private static enum PrimitiveType implements Iterable<PrimitiveType> {
+        BYTE(byte.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return SHORT;
+            }
+        },
+        SHORT(short.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return INT;
+            }
+        }, INT(int.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return LONG;
+            }
+        },
+        LONG(long.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return null;
+            }
+        },
+        FLOAT(float.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return DOUBLE;
+            }
+        },
+        DOUBLE(double.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return null;
+            }
+        },
+        CHAR(char.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return INT;
+            }
+        },
+        BOOLEAN(boolean.class) {
+            @Nullable
+            @Override
+            PrimitiveType next() {
+                return null;
+            }
+        };
+
+        private final Class<?> type;
+
+        PrimitiveType(Class<?> type) {
+            this.type = type;
+        }
+
+        static PrimitiveType forType(Class<?> type) {
+            for( PrimitiveType t : values() ) {
+                if ( t.type() == type ) {
+                    return t;
+                }
+            }
+            throw new IllegalArgumentException("Not a primitive type: " + type);
+        }
+
+        @Nullable
+        abstract PrimitiveType next();
+
+        @NotNull
+        Class<?> type() {
+            return type;
+        }
+
+        public Iterator<PrimitiveType> iterator() {
+            return new AbstractSequentialIterator<PrimitiveType>(this) {
+                @Override
+                protected PrimitiveType computeNext(PrimitiveType previous) {
+                    return previous.next();
+                }
+            };
         }
     }
 

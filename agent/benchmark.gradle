@@ -16,6 +16,8 @@
 
 
 
+
+
 def jmhVersion = '1.5.2'
 
 dependencies {
@@ -61,7 +63,7 @@ task('jmh') {
         println "JMH Classpath: $cp.files"
         javaexec {
             classpath = cp
-            main = 'run.RunBenchmarks'
+            main = 'run.RunGuardBenchmarks'
             workingDir = jmhRunDir
             args = [ javaExecutable, agentPath ]
         }

@@ -20,9 +20,11 @@
 
 
 
+
+
 package run
 
-import benchmarks.BasicBenchmark
+import benchmarks.GuardBenchmark
 import ch.raffael.guards.agent.guava.base.Stopwatch
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.results.format.ResultFormatType
@@ -35,12 +37,12 @@ import java.util.concurrent.TimeUnit
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-class RunBenchmarks {
+class RunGuardBenchmarks {
 
     static final AGENT_ARGS = [
             ['-nopMode'],
             ['-instrumentAll', '+instrumentAll'],
-//            ['multiGuardMethod=mh_guard', 'multiGuardMethod=invoker'],
+            ['multiGuardMethod=mh_guard', 'multiGuardMethod=invoker'],
             ['-mutableCallSites', '+mutableCallSites'],
     ]
 
@@ -69,7 +71,7 @@ class RunBenchmarks {
         jvmArgs.each { args ->
             def name = "${args.substring(args.indexOf('=') + 1)}"
             OptionsBuilder ob = new OptionsBuilder().with {
-                include BasicBenchmark.class.name
+                include GuardBenchmark.class.name
 
                 mode Mode.Throughput
 

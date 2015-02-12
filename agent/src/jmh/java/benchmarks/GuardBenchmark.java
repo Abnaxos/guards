@@ -32,9 +32,24 @@ import ch.raffael.guards.runtime.ContractViolationError;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class BasicBenchmark {
+@SuppressWarnings("UnusedParameters")
+public class GuardBenchmark {
 
     public static final int REPS = 10000;
+
+    public static int guardUnsigned(int value) {
+        if ( value < 0 ) {
+            throw new ContractViolationError("Manual guard");
+        }
+        return value;
+    }
+
+    public static Object guardNotNull(Object value) {
+        if ( value == null ) {
+            throw new ContractViolationError("Manual guard");
+        }
+        return value;
+    }
 
     @SuppressWarnings("ConstantConditions")
     @Unsigned
@@ -42,34 +57,48 @@ public class BasicBenchmark {
         return -1;
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Unsigned
-    public int allAnnotatedMethod(@Unsigned int prevValue, @Unsigned int value, @NotNull Object notNull) {
+    public int guardedByAgentMethod(@Unsigned int prevValue, @Unsigned int value, @NotNull Object notNull) {
         return prevValue | value;
     }
 
-    @SuppressWarnings("ConstantConditions")
-    @Unsigned
-    public int nonAnnotatedMethod(@Unsigned int prevValue, @Unsigned int value, @NotNull Object notNull) {
+    public int manuallyGuardedMethod(int prevValue, int value, Object notNull) {
+        guardUnsigned(prevValue);
+        guardUnsigned(value);
+        guardNotNull(value);
+        return guardUnsigned(prevValue | value);
+    }
+
+    public int notGuardedMethod(int prevValue, int value, Object notNull) {
         return prevValue | value;
     }
 
     @Benchmark
     @OperationsPerInvocation(REPS)
-    public int allAnnotated(Blackhole bh, MyState state) {
+    public int guardedByAgent(Blackhole bh, MyState state) {
         int result = 0;
         for( int i = 0; i < REPS; i++ ) {
-            result = allAnnotatedMethod(result, i, "foo");
+            result = guardedByAgentMethod(result, i, "foo");
         }
         return bh.hashCode();
     }
 
     @Benchmark
     @OperationsPerInvocation(REPS)
-    public int noAnnotations(Blackhole bh, MyState state) {
+    public int manuallyGuarded(Blackhole bh, MyState state) {
         int result = 0;
         for( int i = 0; i < REPS; i++ ) {
-            result = nonAnnotatedMethod(result, i, "foo");
+            result = manuallyGuardedMethod(result, i, "foo");
+        }
+        return bh.hashCode();
+    }
+
+    @Benchmark
+    @OperationsPerInvocation(REPS)
+    public int notGuarded(Blackhole bh, MyState state) {
+        int result = 0;
+        for( int i = 0; i < REPS; i++ ) {
+            result = notGuardedMethod(result, i, "foo");
         }
         return bh.hashCode();
     }
@@ -78,7 +107,7 @@ public class BasicBenchmark {
     @State(Scope.Benchmark)
     public static class MyState {
 
-        @SuppressWarnings("ConstantConditions")
+        @SuppressWarnings("UnusedDeclaration")
         @Setup
         public void checkForAgent() {
             if ( GuardsAgent.getInstance().isInstalled() && !GuardsAgent.getInstance().getOptions().isNopMode() ) {
