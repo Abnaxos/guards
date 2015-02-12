@@ -29,40 +29,40 @@ public class NotEmptyHandler extends Guard.Handler<NotEmpty> {
     public NotEmptyHandler(NotEmpty annotation) {
         super(annotation);
     }
-    public boolean check(CharSequence string) {
+    public boolean test(CharSequence string) {
         return string.length() > 0;
     }
-    public boolean check(Iterable<?> iterable) {
+    public boolean test(Iterable<?> iterable) {
         return iterable.iterator().hasNext();
     }
-    public boolean check(Collection<?> collection) {
+    public boolean test(Collection<?> collection) {
         return !collection.isEmpty();
     }
-    public boolean check(Object[] array) {
+    public boolean test(Object[] array) {
         return array.length > 0;
     }
-    public boolean check(int[] array) {
+    public boolean test(int[] array) {
         return array.length > 0;
     }
-    public boolean check(byte[] array) {
+    public boolean test(byte[] array) {
         return array.length > 0;
     }
-    public boolean check(short[] array) {
+    public boolean test(short[] array) {
         return array.length > 0;
     }
-    public boolean check(long[] array) {
+    public boolean test(long[] array) {
         return array.length > 0;
     }
-    public boolean check(float[] array) {
+    public boolean test(float[] array) {
         return array.length > 0;
     }
-    public boolean check(double[] array) {
+    public boolean test(double[] array) {
         return array.length > 0;
     }
-    public boolean check(char[] array) {
+    public boolean test(char[] array) {
         return array.length > 0;
     }
-    public boolean check(boolean[] array) {
+    public boolean test(boolean[] array) {
         return array.length > 0;
     }
 }

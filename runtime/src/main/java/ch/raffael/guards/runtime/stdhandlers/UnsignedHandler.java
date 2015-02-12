@@ -26,28 +26,30 @@ import ch.raffael.guards.definition.NumberUnboxingHandler;
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class NotNegativeHandler extends NumberUnboxingHandler<Unsigned> {
-    private static final BigDecimal DEC_ZERO = new BigDecimal(0);
-    private static final BigInteger BIGINT_ZERO = new BigInteger("0");
-    public NotNegativeHandler(Unsigned annotation) {
+public class UnsignedHandler extends NumberUnboxingHandler<Unsigned> {
+    public UnsignedHandler(Unsigned annotation) {
         super(annotation);
     }
+    @Override
     public boolean test(int value) {
         return value >= 0;
     }
+    @Override
     public boolean test(long value) {
         return value >= 0;
     }
+    @Override
     public boolean test(float value) {
         return value >= 0;
     }
+    @Override
     public boolean test(double value) {
         return value >= 0;
     }
-    public boolean check(BigDecimal value) {
-        return DEC_ZERO.compareTo(value) >= 0;
+    public boolean test(BigInteger value) {
+        return value.compareTo(BigInteger.ZERO) >= 0;
     }
-    public boolean check(BigInteger value) {
-        return BIGINT_ZERO.compareTo(value) >= 0;
+    public boolean test(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) >= 0;
     }
 }

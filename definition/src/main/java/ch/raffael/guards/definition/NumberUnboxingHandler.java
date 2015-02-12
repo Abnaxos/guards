@@ -28,44 +28,44 @@ public abstract class NumberUnboxingHandler<T extends Annotation> extends Guard.
         super(annotation);
     }
 
-    public boolean check(Byte value) {
-        return check(value.intValue());
+    public boolean test(Byte value) {
+        return test(value.intValue());
     }
 
-    public boolean check(Short value) {
-        return check(value.intValue());
+    public boolean test(Short value) {
+        return test(value.intValue());
     }
 
-    public boolean check(Integer value) {
-        return check(value.intValue());
+    public boolean test(Integer value) {
+        return test(value.intValue());
     }
 
-    public boolean check(Long value) {
-        return check(value.intValue());
+    public boolean test(Long value) {
+        return test(value.intValue());
     }
 
-    public boolean check(Character value) {
-        return check((int)value.charValue());
+    public boolean test(Character value) {
+        return test((int)value.charValue());
     }
 
-    public boolean check(int value) {
-        return check((long)value);
+    public boolean test(int value) {
+        return test((long)value);
     }
 
-    public abstract boolean check(long value);
+    public abstract boolean test(long value);
 
-    public boolean check(Float value) {
-        return check(value.floatValue());
+    public boolean test(Float value) {
+        return test(value.floatValue());
     }
 
-    public boolean check(Double value) {
-        return check(value.doubleValue());
+    public boolean test(Double value) {
+        return test(value.doubleValue());
     }
 
-    public boolean check(float value) {
-        return check((double)value);
+    public boolean test(float value) {
+        return test((double)value);
     }
 
-    public abstract boolean check(double value);
+    public abstract boolean test(double value);
 
 }

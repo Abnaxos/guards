@@ -18,6 +18,8 @@
 
 
 
+
+
 package run
 
 import benchmarks.BasicBenchmark
@@ -50,11 +52,11 @@ class RunBenchmarks {
         println "Agent path: $agentPath"
 
         def jvmArgs = [
-//                '-DnoAgent=noAgent',
-//                agent(agentPath, ['+nopMode', 'nopMethod=mh_constant']),
-//                agent(agentPath, ['+nopMode', 'nopMethod=dedicated_method']),
-//                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=mh_constant']),
-//                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=dedicated_method']),
+                '-DnoAgent=noAgent',
+                agent(agentPath, ['+nopMode', 'nopMethod=mh_constant']),
+                agent(agentPath, ['+nopMode', 'nopMethod=dedicated_method']),
+                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=mh_constant']),
+                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=dedicated_method']),
         ]
         jvmArgs.addAll(AGENT_ARGS.combinations().collect({ List args ->
             agent(agentPath, args)
@@ -69,7 +71,7 @@ class RunBenchmarks {
             OptionsBuilder ob = new OptionsBuilder().with {
                 include BasicBenchmark.class.name
 
-                mode Mode.AverageTime
+                mode Mode.Throughput
 
                 warmupForks 1
                 forks 1

@@ -35,7 +35,7 @@ public class MatchesHandler extends Guard.Handler<Matches> {
         pattern = Pattern.compile(annotation.value(), annotation.flags());
     }
 
-    public boolean check(CharSequence value) {
+    public boolean test(CharSequence value) {
         if ( annotation.find() ) {
             return pattern.matcher(value).find();
         }

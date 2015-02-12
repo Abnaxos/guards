@@ -21,9 +21,10 @@ import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.infra.Blackhole;
 
 import ch.raffael.guards.NotNull;
-import ch.raffael.guards.Nullable;
+import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.agent.GuardsAgent;
 import ch.raffael.guards.runtime.ContractViolationError;
 
@@ -33,44 +34,44 @@ import ch.raffael.guards.runtime.ContractViolationError;
  */
 public class BasicBenchmark {
 
-    public static final int REPS = 10_000;
+    public static final int REPS = 10000;
 
     @SuppressWarnings("ConstantConditions")
-    @NotNull
-    public static Object sanityCheckMethod(@NotNull Object param) {
-        return null;
+    @Unsigned
+    public static int sanityCheckMethod(@Unsigned int input) {
+        return -1;
     }
 
     @SuppressWarnings("ConstantConditions")
-    @NotNull
-    public Object allAnnotatedMethod(@Nullable Object retval, @NotNull Object notNull) {
-        return retval;
+    @Unsigned
+    public int allAnnotatedMethod(@Unsigned int prevValue, @Unsigned int value, @NotNull Object notNull) {
+        return prevValue | value;
     }
 
-    public Object noAnnotationsMethod(Object retval, Object notNull) {
-        return retval;
+    @SuppressWarnings("ConstantConditions")
+    @Unsigned
+    public int nonAnnotatedMethod(@Unsigned int prevValue, @Unsigned int value, @NotNull Object notNull) {
+        return prevValue | value;
     }
 
     @Benchmark
     @OperationsPerInvocation(REPS)
-    public int allAnnotated(MyState state) {
-        final int reps = REPS;
+    public int allAnnotated(Blackhole bh, MyState state) {
         int result = 0;
-        for( int i = 0; i < reps; i++ ) {
-            result |= allAnnotatedMethod(new Object(), "foo").hashCode();
+        for( int i = 0; i < REPS; i++ ) {
+            result = allAnnotatedMethod(result, i, "foo");
         }
-        return result;
+        return bh.hashCode();
     }
 
     @Benchmark
     @OperationsPerInvocation(REPS)
-    public int noAnnotations(MyState state) {
-        final int reps = REPS;
+    public int noAnnotations(Blackhole bh, MyState state) {
         int result = 0;
-        for( int i = 0; i < reps; i++ ) {
-            result |= noAnnotationsMethod(new Object(), "foo").hashCode();
+        for( int i = 0; i < REPS; i++ ) {
+            result = nonAnnotatedMethod(result, i, "foo");
         }
-        return result;
+        return bh.hashCode();
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
@@ -82,7 +83,7 @@ public class BasicBenchmark {
         public void checkForAgent() {
             if ( GuardsAgent.getInstance().isInstalled() && !GuardsAgent.getInstance().getOptions().isNopMode() ) {
                 try {
-                    sanityCheckMethod("this is not null");
+                    sanityCheckMethod(1);
                     throw new RuntimeException("Expected ContractViolationError not thrown");
                 }
                 catch ( ContractViolationError e ) {
@@ -92,7 +93,7 @@ public class BasicBenchmark {
                     }
                 }
                 try {
-                    sanityCheckMethod(null);
+                    sanityCheckMethod(-1);
                     throw new RuntimeException("Expected ContractViolationError not thrown");
                 }
                 catch ( ContractViolationError e ) {
@@ -104,8 +105,8 @@ public class BasicBenchmark {
             }
             else {
                 try {
-                    sanityCheckMethod("this is not null");
-                    sanityCheckMethod(null);
+                    sanityCheckMethod(1);
+                    sanityCheckMethod(-1);
                     System.out.println("Guard violations were unblamably accepted");
                 }
                 catch ( ContractViolationError e ) {

@@ -74,10 +74,10 @@ public class IntRangeHandler extends IntUnboxingHandler<IntRange> {
     public boolean test(long value) {
         return value >= annotation.min() && value <= annotation.max();
     }
-    public boolean check(BigInteger value) {
+    public boolean test(BigInteger value) {
         return value.compareTo(bigintMin) >= 0 && value.compareTo(bigintMax) <= 0;
     }
-    public boolean check(BigDecimal value) {
+    public boolean test(BigDecimal value) {
         return value.compareTo(bigdecMin) >= 0 && value.compareTo(bigdecMax) <= 0;
     }
 }

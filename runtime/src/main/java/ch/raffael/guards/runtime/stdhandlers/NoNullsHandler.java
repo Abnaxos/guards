@@ -27,7 +27,7 @@ public class NoNullsHandler extends Guard.Handler<NoNulls> {
     public NoNullsHandler(NoNulls annotation)  {
         super(annotation);
     }
-    public boolean check(Iterable<?> iterable) {
+    public boolean test(Iterable<?> iterable) {
         for ( Object elem : iterable ) {
             if ( elem == null ) {
                 return false;
@@ -35,7 +35,7 @@ public class NoNullsHandler extends Guard.Handler<NoNulls> {
         }
         return true;
     }
-    public boolean check(Object[] array) {
+    public boolean test(Object[] array) {
         for ( Object element : array ) {
             if ( element == null ) {
                 return false;

@@ -31,19 +31,19 @@ public class PositiveHandler extends NumberUnboxingHandler<Positive> {
         super(annotation);
     }
     @Override
-    public boolean check(int value) {
+    public boolean test(int value) {
         return value > 0;
     }
     @Override
-    public boolean check(long value) {
+    public boolean test(long value) {
         return value > 0;
     }
     @Override
-    public boolean check(float value) {
+    public boolean test(float value) {
         return value > 0;
     }
     @Override
-    public boolean check(double value) {
+    public boolean test(double value) {
         return value > 0;
     }
     public boolean check(BigInteger value) {
