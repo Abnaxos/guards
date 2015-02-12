@@ -8,7 +8,7 @@ statement
     ;
 
 effect
-    : expression '->'
+    : expression? '->'
     // the rest of the statement is the effect, to be evaluated separately depending on the context:
     //  *  ComplexRelation: 'equal', 'subset', 'superset', 'inconsistent'
     //  *  validate: Error message
@@ -64,6 +64,7 @@ factor
     : '(' conditional ')'
     | literal
     | Identifier
+    | '@' Identifier // force reference to built-in value if some other value shadows it
     ;
 
 literal
