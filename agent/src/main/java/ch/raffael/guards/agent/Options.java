@@ -45,7 +45,7 @@ public final class Options {
     private boolean instrumentAll = false;
     private NopMethod nopMethod = NopMethod.MH_CONSTANT;
 
-    private MultiGuardMethod multiGuardMethod = MultiGuardMethod.MH_GUARD;
+    private InvocationMethod invocationMethod = InvocationMethod.MH_GUARD;
 
     private boolean mutableCallSites = false;
 
@@ -62,7 +62,7 @@ public final class Options {
             nopMode = builder.isNopMode();
             instrumentAll = builder.isInstrumentAll();
             nopMethod = builder.getNopMethod();
-            multiGuardMethod = builder.getMultiGuardMethod();
+            invocationMethod = builder.getInvocationMethod();
             mutableCallSites = builder.isMutableCallSites();
         }
     }
@@ -98,21 +98,18 @@ public final class Options {
         return nopMethod;
     }
 
+    public InvocationMethod getInvocationMethod() {
+        return invocationMethod;
+    }
+
     /**
      * Use `MutableCallSite` instead of `ConstantCallSite` for guard invocations. `MutableCallSite`
      * would be an elegant solution to switch guards on and off at runtime by just switching the
      * call site to *nop* or back to a real call site.
      *
      * **[Performance]** First simplistic benchmarks seem to indicate that using `MutableCallSite`
-     * is actually a viable option. Some results indicated that it's even faster -- which is, IMHO,
-     * impossible; make better benchmarks!
-     *
-     * @return
+     * is actually a viable option.
      */
-    public MultiGuardMethod getMultiGuardMethod() {
-        return multiGuardMethod;
-    }
-
     public boolean isMutableCallSites() {
         return mutableCallSites;
     }
@@ -169,7 +166,7 @@ public final class Options {
         DEDICATED_METHOD
     }
 
-    public static enum MultiGuardMethod {
+    public static enum InvocationMethod {
         /**
          * Use a chain of `MethodHandle::guardWithTest` to invoke the guards.
          *

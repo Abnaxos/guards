@@ -40,7 +40,7 @@ public class OptionsBuilder {
     private boolean instrumentAll;
     private Options.NopMethod nopMethod;
 
-    private Options.MultiGuardMethod multiGuardMethod;
+    private Options.InvocationMethod invocationMethod;
 
     private boolean mutableCallSites;
 
@@ -59,7 +59,7 @@ public class OptionsBuilder {
         setNopMode(options.isNopMode());
         setInstrumentAll(options.isInstrumentAll());
         setNopMethod(options.getNopMethod());
-        setMultiGuardMethod(options.getMultiGuardMethod());
+        setInvocationMethod(options.getInvocationMethod());
         setMutableCallSites(options.isMutableCallSites());
     }
 
@@ -166,16 +166,16 @@ public class OptionsBuilder {
         return this;
     }
 
-    public Options.MultiGuardMethod getMultiGuardMethod() {
-        return multiGuardMethod;
+    public Options.InvocationMethod getInvocationMethod() {
+        return invocationMethod;
     }
 
-    public void setMultiGuardMethod(Options.MultiGuardMethod multiGuardMethod) {
-        this.multiGuardMethod = multiGuardMethod;
+    public void setInvocationMethod(Options.InvocationMethod invocationMethod) {
+        this.invocationMethod = invocationMethod;
     }
 
-    public OptionsBuilder withMultiGuardMethod(Options.MultiGuardMethod multiGuardMethod) {
-        setMultiGuardMethod(multiGuardMethod);
+    public OptionsBuilder withInvocationMethod(Options.InvocationMethod invocationMethod) {
+        setInvocationMethod(invocationMethod);
         return this;
     }
 

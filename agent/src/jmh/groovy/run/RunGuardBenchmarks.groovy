@@ -22,6 +22,8 @@
 
 
 
+
+
 package run
 
 import benchmarks.GuardBenchmark
@@ -39,32 +41,40 @@ import java.util.concurrent.TimeUnit
  */
 class RunGuardBenchmarks {
 
-    static final AGENT_ARGS = [
-            ['-nopMode'],
-            ['-instrumentAll', '+instrumentAll'],
-            ['multiGuardMethod=mh_guard', 'multiGuardMethod=invoker'],
-            ['-mutableCallSites', '+mutableCallSites'],
-    ]
+    private final String javaExecutable
+    private final String agentPath
+
+    RunGuardBenchmarks(String javaExecutable, String agentPath) {
+        this.javaExecutable = javaExecutable
+        this.agentPath = agentPath
+    }
 
     static void main(String... cmdLineArgs) {
-        def javaExecutable = cmdLineArgs[0]
-        def agentPath = cmdLineArgs[1]
+        new RunGuardBenchmarks(cmdLineArgs[0], cmdLineArgs[1]).runBenchmarks()
+    }
 
+    private void runBenchmarks() {
         println "Java executable: $javaExecutable"
         println "Agent path: $agentPath"
 
         def jvmArgs = [
                 '-DnoAgent=noAgent',
-                agent(agentPath, ['+nopMode', 'nopMethod=mh_constant']),
-                agent(agentPath, ['+nopMode', 'nopMethod=dedicated_method']),
-                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=mh_constant']),
-                agent(agentPath, ['+nopMode', '+instrumentAll', 'nopMethod=dedicated_method']),
-        ]
-        jvmArgs.addAll(AGENT_ARGS.combinations().collect({ List args ->
-            agent(agentPath, args)
-        }))
+                agent('+nopMode', 'nopMethod=mh_constant'),
+                agent('+nopMode', 'nopMethod=dedicated_method'),
+                agent('+nopMode', '+instrumentAll', 'nopMethod=mh_constant'),
+                agent('+nopMode', '+instrumentAll', 'nopMethod=dedicated_method'),
 
-        println "Found ${jvmArgs.size()} Benchmarks to run"
+                [['-nopMode'],
+                 ['-instrumentAll', '+instrumentAll'],
+                 ['invocationMethod=mh_guard', 'invocationMethod=invoker'],
+                 ['-mutableCallSites', '+mutableCallSites'],
+                ].combinations().collect({ List args -> agent(args) }),
+        ].flatten()
+
+        for ( args in jvmArgs ) {
+            println "Found benchmark invocation: $args"
+        }
+        println "Found ${jvmArgs.size()} benchmark invocations to run"
 
         int count = 0
         Stopwatch totalSW = Stopwatch.createStarted()
@@ -103,7 +113,11 @@ class RunGuardBenchmarks {
         println "Total time: $totalSW"
     }
 
-    private static String agent(String agentPath, List args) {
+    private String agent(List args) {
+        "-javaagent:$agentPath=${args.join(',')}" as String
+    }
+
+    private String agent(String... args) {
         "-javaagent:$agentPath=${args.join(',')}" as String
     }
 

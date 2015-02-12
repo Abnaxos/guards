@@ -185,8 +185,8 @@ final class Linker {
             if ( guardInstances.isEmpty() ) {
                 return Indy.resolveToNop(type);
             }
-            if ( options.getMultiGuardMethod() == Options.MultiGuardMethod.INVOKER) {
-                handle = TestInvokers.invoker(guardInstances);
+            if ( options.getInvocationMethod() == Options.InvocationMethod.INVOKER) {
+                handle = TestInvokers.invoker(guardInstances).asType(MethodType.methodType(void.class, type));
             }
             else {
                 handle = null;

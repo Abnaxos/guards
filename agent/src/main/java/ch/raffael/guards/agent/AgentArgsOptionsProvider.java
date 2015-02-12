@@ -90,8 +90,8 @@ public class AgentArgsOptionsProvider implements OptionsProvider {
                 case "nopMethod":
                     builder.setNopMethod(Options.NopMethod.valueOf(expectValue(name, value).toUpperCase()));
                     break;
-                case "multiGuardMethod":
-                    builder.setMultiGuardMethod(Options.MultiGuardMethod.valueOf(expectValue(name, value).toUpperCase()));
+                case "invocationMethod":
+                    builder.setInvocationMethod(Options.InvocationMethod.valueOf(expectValue(name, value).toUpperCase()));
                     break;
                 case "mutableCallSites":
                     builder.setMutableCallSites(toBoolean(value));
