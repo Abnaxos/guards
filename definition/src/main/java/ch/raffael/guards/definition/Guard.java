@@ -115,10 +115,10 @@ public @interface Guard {
     PerformanceImpact performanceImpact();
 
     @GuardAnnotation
-    Class<? extends Annotation>[] subsets() default {};
+    Class<? extends Annotation>[] supersetOf() default {};
 
     @GuardAnnotation
-    Class<? extends Annotation>[] supersets() default {};
+    Class<? extends Annotation>[] subsetOf() default {};
 
     @GuardAnnotation
     Class<? extends Annotation>[] equalTo() default {};

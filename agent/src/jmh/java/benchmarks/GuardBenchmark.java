@@ -80,7 +80,7 @@ public class GuardBenchmark {
         for( int i = 0; i < REPS; i++ ) {
             result = guardedByAgentMethod(result, i, "foo");
         }
-        return bh.hashCode();
+        return result;
     }
 
     @Benchmark
@@ -90,7 +90,7 @@ public class GuardBenchmark {
         for( int i = 0; i < REPS; i++ ) {
             result = manuallyGuardedMethod(result, i, "foo");
         }
-        return bh.hashCode();
+        return result;
     }
 
     @Benchmark
@@ -100,7 +100,7 @@ public class GuardBenchmark {
         for( int i = 0; i < REPS; i++ ) {
             result = notGuardedMethod(result, i, "foo");
         }
-        return bh.hashCode();
+        return result;
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
@@ -117,7 +117,7 @@ public class GuardBenchmark {
                 }
                 catch ( ContractViolationError e ) {
                     System.out.println("Sanity Check: " + e);
-                    if ( !e.getMessage().contains(":return\n") ) {
+                    if ( !e.getMessage().contains(":return[-1]\n") ) {
                         throw new RuntimeException("Thrown ContractViolationError did not meet expectations");
                     }
                 }
@@ -127,7 +127,7 @@ public class GuardBenchmark {
                 }
                 catch ( ContractViolationError e ) {
                     System.out.println("Sanity Check: " + e);
-                    if ( e.getMessage().contains(":return\n") ) {
+                    if ( !e.getMessage().contains(":input[0]\n") ) {
                         throw new RuntimeException("Thrown ContractViolationError did not meet expectations");
                     }
                 }

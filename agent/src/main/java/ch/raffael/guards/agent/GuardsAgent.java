@@ -136,8 +136,6 @@ public class GuardsAgent {
         INSTANCE.install(instrumentation);
     }
 
-    // THIS DOESN'T SEEM TO WORK FOR SOME REASON :(
-
     public static void installAgent(String agentArgs) {
         getInstance().doInstall(agentArgs);
     }
@@ -256,7 +254,17 @@ public class GuardsAgent {
                 //, "ch/raffael/guards/definition/"
         };
 
-        boolean isTransformable(String internalName) {
+        boolean isTransformable(ClassLoader loader, String internalName) {
+            if ( loader == null ) {
+                // NOTE: JDK8 supports transforming classes from the bootstrap class loader; in
+                // JDK7, you need to add the agent's classes to the bootstrap classpath to make
+                // this work (-Xbootclasspath/a:/path/to/agent.jar -javaagent:/path/to/agent.jar)
+                //
+                // However, I think it's perfectly OK to categorically exclude bootstrap classes.
+                //
+                // todo: Add an option for this
+                return false;
+            }
             for( String builtExclude : BUILTIN_EXCLUDES ) {
                 if ( internalName.startsWith(builtExclude) ) {
                     return false;
@@ -270,16 +278,14 @@ public class GuardsAgent {
                 return false;
             }
             String internalName = c.getName().replace('.', '/');
-            return isTransformable(internalName);
+            return isTransformable(c.getClassLoader(), internalName);
         }
 
         @Override
         @Nullable
         public byte[] transform(@Nullable ClassLoader loader, @NotNull final String className, @Nullable Class<?> classBeingRedefined, @Nullable ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-            for( String builtExclude : BUILTIN_EXCLUDES ) {
-                if ( className.startsWith(builtExclude) ) {
-                    return null;
-                }
+            if ( !isTransformable(loader, className) ) {
+                return null;
             }
             try {
                 final Options options = getInstance().getOptions();
