@@ -16,8 +16,6 @@
 
 
 
-
-
 def jmhVersion = '1.5.2'
 
 dependencies {
@@ -38,6 +36,12 @@ idea.module {
     testSourceDirs += sourceSets.jmh.allSource.srcDirs
     scopes.TEST.plus += [ configurations.jmhCompile ]
 }
+afterEvaluate {
+    // I don't know why, but for some reason, src/jmh/java is included in the root's project
+    // test source dirs. Remove it, because this causes problems with IDEA.
+    rootProject.idea.module.testSourceDirs -= sourceSets.jmh.allSource.srcDirs
+}
+
 
 tasks.remove(tasks.jmh)
 task('jmh') {
