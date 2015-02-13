@@ -38,7 +38,7 @@ import ch.raffael.guards.definition.RelationRule;
 @Documented
 @Guard(message = "Value must be at most $value",
         performanceImpact = PerformanceImpact.LOW,
-        supersets = Signed.class,
+        subsetOf = Signed.class,
         relations = {
                 @RelationRule({
                         "value > that.value -> subset",

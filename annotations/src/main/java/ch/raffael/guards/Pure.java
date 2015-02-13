@@ -22,20 +22,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.PerformanceImpact;
-
 
 /**
+ * Specifies that this method does not change the state of the object in any ways.
+ *
+ * It's the same as `@Contract(pure=true)` using IDEA annotations.
+ *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "",
-        performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class,
-        supersetOf = NoNulls.class)
-public @interface AllowNulls {
+public @interface Pure {
 
 }

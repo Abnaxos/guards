@@ -36,7 +36,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Documented
 @Guard(message = "Iterable may not contain null elements",
         performanceImpact = PerformanceImpact.HIGH,
-        supersets = AllowNulls.class)
+        subsetOf = AllowNulls.class)
 public @interface NoNulls {
 
 }

@@ -36,7 +36,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Documented
 @Guard(handler = Guard.AlwaysTrue.class,
         performanceImpact = PerformanceImpact.LOW,
-        subsets = NotNull.class)
+        supersetOf = NotNull.class)
 public @interface Nullable {
 
 }

@@ -28,16 +28,16 @@ import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
- * Check that a {@link Collection}, {@link Iterable}, {@link CharSequence} or array is not
- * empty.
+ * Check that a {@link Collection}, {@link Iterable}, {@link CharSequence} or array is not empty.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(message = "Value may not be empty",
-        performanceImpact = PerformanceImpact.LOW)
+        performanceImpact = PerformanceImpact.LOW,
+        supersetOf = { NoNulls.class, AllowNulls.class })
 public @interface NotEmpty {
 
 }
