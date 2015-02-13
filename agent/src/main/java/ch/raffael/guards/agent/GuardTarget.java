@@ -31,13 +31,26 @@ final class GuardTarget {
 
     private final Method method;
     private final int parameterIndex;
+    private final String parameterName;
     private final boolean sensitive;
     private final Class<?> valueType;
     private final Type genericValueType;
 
-    GuardTarget(Method method, int parameterIndex) {
+    GuardTarget(Method method, int parameterIndex, String parameterName) {
         this.method = method;
         this.parameterIndex = parameterIndex;
+        if ( parameterName == null || parameterName.isEmpty() ) {
+            if ( parameterIndex > 0 ) {
+                this.parameterName = "arg" + parameterIndex;
+            }
+            else {
+                this.parameterName = "return";
+            }
+        }
+        else {
+            this.parameterName = parameterName;
+        }
+
         if ( parameterIndex < 0 ) {
             sensitive = method.getAnnotation(Sensitive.class) != null;
             valueType = method.getReturnType();
@@ -72,6 +85,10 @@ final class GuardTarget {
 
     public int getParameterIndex() {
         return parameterIndex;
+    }
+
+    public String getParameterName() {
+        return parameterName;
     }
 
     boolean isSensitive() {
@@ -110,26 +127,12 @@ final class GuardTarget {
     }
 
     public StringBuilder appendShortString(StringBuilder buf) {
-        buf.append(method.getDeclaringClass().getSimpleName()).append(".").append(method.getName()).append("[");
-        if ( parameterIndex < 0 ) {
-            buf.append("return");
-        }
-        else {
-            buf.append(ParameterNames.get(method, parameterIndex));
-        }
-        buf.append("]");
-        return buf;
+        return buf.append(method.getDeclaringClass().getSimpleName()).append(".")
+                .append(method.getName()).append(":").append(parameterName);
     }
 
     public StringBuilder appendFullString(StringBuilder buf) {
-        buf.append(method);
-        if ( parameterIndex < 0 ) {
-            buf.append(":return");
-        }
-        else {
-            buf.append(":").append(ParameterNames.get(method, parameterIndex));
-        }
-        return buf;
+        return buf.append(method).append(":").append(parameterName).append('[').append(parameterIndex).append(']');
     }
 
     @Override

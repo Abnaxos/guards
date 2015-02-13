@@ -34,6 +34,7 @@ import java.util.Map;
 import ch.raffael.guards.IntRange;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.agent.guava.base.Optional;
 import ch.raffael.guards.agent.guava.collect.Lists;
 import ch.raffael.guards.definition.Guard;
 
@@ -106,18 +107,18 @@ final class Linker {
         return annotation.annotationType().getAnnotation(Guard.class) != null;
     }
 
-    CallSite bootstrap(MethodHandles.Lookup caller, String name, MethodType type, String targetName, String targetDescriptor, int targetIndex) {
+    CallSite bootstrap(MethodHandles.Lookup caller, MethodType type, String targetMethodName, String targetMethodDescriptor, int parameterIndex, String parameterName) {
         //assert type.returnType() == void.class;
         //assert type.parameterCount() == 1;
         //assert parameterIndex >= -1;
-        MethodType targetType = MethodType.fromMethodDescriptorString(targetDescriptor, caller.lookupClass().getClassLoader());
-        MethodGuards guards = callSiteCache.get(new MethodPointer(targetName, targetType));
+        MethodType targetType = MethodType.fromMethodDescriptorString(targetMethodDescriptor, caller.lookupClass().getClassLoader());
+        MethodGuards guards = callSiteCache.get(new MethodPointer(targetMethodName, targetType));
         if ( guards == null ) {
             return Indy.resolveToNop(type.parameterType(0));
             //throw new GuardsInternalError("Guards requested for non-guarded method " + Diagnostics.toString(caller.lookupClass(), name, guardedMethodType));
         }
         else {
-            return guards.getCallSite(targetIndex);
+            return guards.getCallSite(parameterIndex, parameterName);
         }
     }
 
@@ -126,38 +127,34 @@ final class Linker {
         private final Options options = GuardsAgent.getInstance().getOptions();
 
         private final Method method;
-        private volatile CallSite[] callSites = null;
+        private final CallSiteHolder[] callSites;
         private MethodGuards(Method method) {
             this.method = method;
+            callSites = new CallSiteHolder[method.getParameterTypes().length + 1];
+            for( int i = 0; i < callSites.length; i++ ) {
+                callSites[i] = new CallSiteHolder();
+            }
         }
-        private CallSite getCallSite(@IntRange(min = -1) int parameterIndex) {
-            if ( callSites == null ) {
-                synchronized ( this ) {
-                    if ( callSites == null ) {
-                        Class<?>[] parameterTypes = method.getParameterTypes();
-                        callSites = new CallSite[parameterTypes.length + 1];
-                        if ( method.getReturnType().equals(void.class) ) {
-                            callSites[0] = null;
-                        }
-                        else {
-                            callSites[0] = createCallSite(-1);
-                        }
-                        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-                        for( int i = 0; i < parameterTypes.length; i++ ) {
-                            callSites[i + 1] = createCallSite(i);
-                        }
+        private CallSite getCallSite(@IntRange(min = -1) int parameterIndex, String parameterName) {
+            CallSiteHolder holder = callSites[parameterIndex + 1];
+            if ( holder.callSite == null ) {
+                synchronized ( holder ) {
+                    if ( holder.callSite == null ) {
+                        CallSite callSite = createCallSite(parameterIndex, parameterName);
+                        holder.callSite = Optional.fromNullable(callSite);
+                        return callSite;
+                    }
+                    else {
+                        return holder.callSite.orNull();
                     }
                 }
             }
-            if ( parameterIndex < 0 ) {
-                return callSites[0];
-            }
             else {
-                return callSites[parameterIndex + 1];
+                return holder.callSite.orNull();
             }
         }
 
-        private CallSite createCallSite(int parameterIndex) {
+        private CallSite createCallSite(int parameterIndex, String parameterName) {
             Class<?> type;
             Annotation[] annotations;
             if ( parameterIndex < 0 ) {
@@ -178,7 +175,7 @@ final class Linker {
             ArrayList<GuardInstance> guardInstances = new ArrayList<>(annotations.length);
             for( Annotation annotation : annotations ) {
                 if ( isGuard(annotation) ) {
-                    guardInstances.add(new GuardInstance(new GuardTarget(method, parameterIndex), annotation));
+                    guardInstances.add(new GuardInstance(new GuardTarget(method, parameterIndex, parameterName), annotation));
                 }
             }
             MethodHandle handle;
@@ -237,5 +234,10 @@ final class Linker {
             return name + methodType;
         }
     }
+
+    private static final class CallSiteHolder {
+        private volatile Optional<CallSite> callSite;
+    }
+
 
 }

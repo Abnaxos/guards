@@ -52,7 +52,8 @@ public final class Indy {
                             getType(MethodType.class),
                             getType(String.class),
                             getType(String.class),
-                            Type.INT_TYPE
+                            Type.INT_TYPE,
+                            getType(String.class)
                     }).getDescriptor());
 
     //private static final MethodHandle NOP_HANDLE =
@@ -156,14 +157,14 @@ public final class Indy {
                 GUARD_VIOLATION_HANDLE.bindTo(guard).asType(methodType(void.class, type)));
     }
 
-    public static CallSite bootstrap(MethodHandles.Lookup caller, String name, MethodType type, String targetName, String targetDescriptor, int targetIndex) {
+    public static CallSite bootstrap(MethodHandles.Lookup caller, String ignoredName, MethodType type, String targetMethodName, String targetMethodDescriptor, int parameterIndex, String parameterName) {
         assert type.returnType() == void.class;
         assert type.parameterCount() == 1;
         if ( GuardsAgent.getInstance().getOptions().isNopMode() ) {
             return new ConstantCallSite(nopHandle(type.parameterType(0)));
         }
         else {
-            return LINKERS.get(caller.lookupClass()).bootstrap(caller, name, type, targetName, targetDescriptor, targetIndex);
+            return LINKERS.get(caller.lookupClass()).bootstrap(caller, type, targetMethodName, targetMethodDescriptor, parameterIndex, parameterName);
         }
     }
 
