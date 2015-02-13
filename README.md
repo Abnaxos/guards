@@ -1,26 +1,18 @@
-ch.raffael.guards
-=================
+Guards
+======
 
-Guards is a code-instrumenting Java agent that instruments classes to check annotated parameters or methods for certain conditions. Think of it as sort of "contracts light": It checks parameter and method return values for validity (not null, not negative, etc.), but it can't correlate those values or check the class' state.
+This project provides guards for method parameters and return values using Java annotations. For one side, it provides plugins to check for the correctness of guard declarations in the code, on the other side it provides a Java agent that will instrument the code at runtime so AssertionErrors are thrown if those contracts are violated.
 
-The agent can operate in two modes:
+The real power of those contracts will come with static code analysis. There will also be a javac plugin which just checks for correctness and an IDEA plugin, which will integrate it with the currently present static analysis for `@Nullable` and `@NotNull` -- possibly providing more such analysis in the future.
 
- *  In *assert* mode (the default), the agent will generate `assert` statements for the parameter and return value checks.
+It will also provide compatibility features with IDEA's own `@Nullable`/`@NotNull`/`@Contract` annotations and, of course, JSR305.
 
- *  In *exception* mode, the agent will generate code to throw `IllegalArgumentException`s for method arguments and `IllegalStateException`s for method return values.
+You may also add your own guards. Your code will be guarded with them and the javac and IDEA plugins will pick them up and assist you during coding as much as possible.
 
-See package [`ch.raffael.guards`](http://projects.raffael.ch/guards/api/index.html?ch/raffael/guards/package-summary.html) for examples.
+Note that there are many old JavaDocs that are out-of-date. Some fundamental concepts have been changed. Specifically, the original concept was to implicitly inherit guards. This has been dropped for the following reasons:
 
-For information on how to implement your own guards, see package [`ch.raffael.guards.definition`](http://projects.raffael.ch/guards/api/index.html?ch/raffael/guards/definition/package-summary.html).
+ *  Analysis are too complex for class-loading time
 
+ *  The documentative character of the guards is only intact if the annotations are visible where they're in effect. Implicitly inherited guards are much less visible.
 
-Using the agent
----------------
-
-Start java with the argument `-javaagent:/path/to/guards-agent.jar[=option1,option2,...]`. The following options are available:
-
- * **mode=MODE:** Set the mode of the agent. Valid values are *"assert"* (the default) and *"exception"*.
-
- * **dumpPath=PATH:** Set a path to dump the instrumented bytecode to. By default, the agent doesn't write any dumps.
-
- * **dumpFormat=FORMAT:** Set the format of the dumps of the instrumented bytecode. Valid values are *"bytecode"* (the default) and *"asm"*.
+ *  Managing guard inheritance has therefore been moved to the IDE, very much as IDEA nowadays handles `@NotNull`/`@Nullable` -- just with many more guards. The IDEA and javac plugins will be essential component of the project as a whole (instead of some bells and whistles, as they were with the original concept).
