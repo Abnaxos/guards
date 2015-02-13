@@ -51,20 +51,22 @@ binary
     ;
 
 unary
-    : methodCall
+    : dereference
     | ('~'|'+'|'-') unary
     ;
 
-methodCall
+dereference
     :   factor
-    |   methodCall '.' Identifier '(' (conditional (',' conditional)* )? ')'
+    |   dereference '.' Identifier
+    |   dereference '.' Identifier '(' (conditional (',' conditional)* )? ')'
     ;
 
 factor
-    : '(' conditional ')'
-    | literal
-    | Identifier
-    | '@' Identifier // force reference to built-in value if some other value shadows it
+    :   ( '(' expression ')'
+        | literal
+        | Identifier
+        | '@' Identifier // force reference to built-in value if some other value shadows it
+        )
     ;
 
 literal
