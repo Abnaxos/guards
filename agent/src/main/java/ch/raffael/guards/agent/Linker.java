@@ -23,7 +23,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -56,9 +56,15 @@ final class Linker {
     static Linker create(@NotNull Class<?> type) {
         Map<MethodPointer, MethodGuards> methodGuards = new HashMap<>();
         for( Method method : type.getDeclaredMethods() ) {
-            MethodGuards guards = guardsForMethod(method);
+            MethodGuards guards = guardsForMember(GuardableMember.of(method));
             if ( guards != null ) {
                 methodGuards.put(new MethodPointer(method), guards);
+            }
+        }
+        for( Constructor constructor : type.getDeclaredConstructors() ) {
+            MethodGuards guards = guardsForMember(GuardableMember.of(constructor));
+            if ( guards != null ) {
+                methodGuards.put(new MethodPointer(constructor), guards);
             }
         }
         if ( methodGuards.isEmpty() ) {
@@ -70,13 +76,13 @@ final class Linker {
     }
 
     @Nullable
-    private static MethodGuards guardsForMethod(@NotNull Method method) {
-        if ( Modifier.isAbstract(method.getModifiers()) ) {
+    private static MethodGuards guardsForMember(@NotNull GuardableMember member) {
+        if ( Modifier.isAbstract(member.getMember().getModifiers()) ) {
             return null;
         }
-        boolean hasGuards = hasGuards(method) || hasGuards(method.getParameterAnnotations());
+        boolean hasGuards = hasGuards(member.getAnnotations()) || hasGuards(member.getParameterAnnotations());
         if ( hasGuards ) {
-            return new MethodGuards(method);
+            return new MethodGuards(member);
         }
         else {
             return null;
@@ -85,17 +91,15 @@ final class Linker {
 
     private static boolean hasGuards(Annotation[][] parameterAnnotations) {
         for( Annotation[] annotations : parameterAnnotations ) {
-            for( Annotation annotation : annotations ) {
-                if ( isGuard(annotation) ) {
-                    return true;
-                }
+            if ( hasGuards(annotations) ) {
+                return true;
             }
         }
         return false;
     }
 
-    private static boolean hasGuards(AnnotatedElement element) {
-        for( Annotation annotation : element.getAnnotations() ) {
+    private static boolean hasGuards(Annotation[] annotations) {
+        for( Annotation annotation : annotations ) {
             if ( isGuard(annotation) ) {
                 return true;
             }
@@ -126,11 +130,11 @@ final class Linker {
 
         private final Options options = GuardsAgent.getInstance().getOptions();
 
-        private final Method method;
+        private final GuardableMember guardable;
         private final CallSiteHolder[] callSites;
-        private MethodGuards(Method method) {
-            this.method = method;
-            callSites = new CallSiteHolder[method.getParameterTypes().length + 1];
+        private MethodGuards(GuardableMember guardable) {
+            this.guardable = guardable;
+            callSites = new CallSiteHolder[guardable.getParameterTypes().length + 1];
             for( int i = 0; i < callSites.length; i++ ) {
                 callSites[i] = new CallSiteHolder();
             }
@@ -158,12 +162,12 @@ final class Linker {
             Class<?> type;
             Annotation[] annotations;
             if ( parameterIndex < 0 ) {
-                type = method.getReturnType();
-                annotations = method.getAnnotations();
+                type = guardable.getReturnType();
+                annotations = guardable.getAnnotations();
             }
             else {
-                type = method.getParameterTypes()[parameterIndex];
-                Annotation[][] allAnnotations = method.getParameterAnnotations();
+                type = guardable.getParameterTypes()[parameterIndex];
+                Annotation[][] allAnnotations = guardable.getParameterAnnotations();
                 if ( parameterIndex >= allAnnotations.length ) {
                     return Indy.resolveToNop(type);
                 }
@@ -175,7 +179,7 @@ final class Linker {
             ArrayList<GuardInstance> guardInstances = new ArrayList<>(annotations.length);
             for( Annotation annotation : annotations ) {
                 if ( isGuard(annotation) ) {
-                    guardInstances.add(new GuardInstance(new GuardTarget(method, parameterIndex, parameterName), annotation));
+                    guardInstances.add(new GuardInstance(new GuardTarget(guardable, parameterIndex, parameterName), annotation));
                 }
             }
             MethodHandle handle;
@@ -211,6 +215,9 @@ final class Linker {
         }
         private MethodPointer(Method method) {
             this(method.getName(), MethodType.methodType(method.getReturnType(), method.getParameterTypes()));
+        }
+        private MethodPointer(Constructor constructor) {
+            this("<init>", MethodType.methodType(void.class, constructor.getParameterTypes()));
         }
         @Override
         public boolean equals(Object o) {

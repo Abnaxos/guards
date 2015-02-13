@@ -17,7 +17,6 @@
 package ch.raffael.guards.agent;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import ch.raffael.guards.Sensitive;
@@ -29,15 +28,15 @@ import ch.raffael.guards.runtime.GuardsInternalError;
  */
 final class GuardTarget {
 
-    private final Method method;
+    private final GuardableMember member;
     private final int parameterIndex;
     private final String parameterName;
     private final boolean sensitive;
     private final Class<?> valueType;
     private final Type genericValueType;
 
-    GuardTarget(Method method, int parameterIndex, String parameterName) {
-        this.method = method;
+    GuardTarget(GuardableMember member, int parameterIndex, String parameterName) {
+        this.member = member;
         this.parameterIndex = parameterIndex;
         if ( parameterName == null || parameterName.isEmpty() ) {
             if ( parameterIndex > 0 ) {
@@ -52,16 +51,16 @@ final class GuardTarget {
         }
 
         if ( parameterIndex < 0 ) {
-            sensitive = method.getAnnotation(Sensitive.class) != null;
-            valueType = method.getReturnType();
-            genericValueType = method.getGenericReturnType();
+            sensitive = member.getAnnotation(Sensitive.class) != null;
+            valueType = member.getReturnType();
+            genericValueType = member.getGenericReturnType();
         }
         else {
-            if ( parameterIndex >= method.getParameterTypes().length ) {
-                throw new GuardsInternalError("Parameter index out of bounds: " + parameterIndex + ">=" + method.getParameterTypes().length);
+            if ( parameterIndex >= member.getParameterTypes().length ) {
+                throw new GuardsInternalError("Parameter index out of bounds: " + parameterIndex + ">=" + member.getParameterTypes().length);
             }
             boolean sensitive = false;
-            Annotation[][] allParameterAnnotations = method.getParameterAnnotations();
+            Annotation[][] allParameterAnnotations = member.getParameterAnnotations();
             if ( parameterIndex < allParameterAnnotations.length ) {
                 Annotation[] targetAnnotations = allParameterAnnotations[parameterIndex];
                 if ( targetAnnotations != null ) {
@@ -74,13 +73,13 @@ final class GuardTarget {
                 }
             }
             this.sensitive = sensitive;
-            this.valueType = method.getParameterTypes()[parameterIndex];
-            this.genericValueType = method.getGenericParameterTypes()[parameterIndex];
+            this.valueType = member.getParameterTypes()[parameterIndex];
+            this.genericValueType = member.getGenericParameterTypes()[parameterIndex];
         }
     }
 
-    public Method getMethod() {
-        return method;
+    public GuardableMember getMember() {
+        return member;
     }
 
     public int getParameterIndex() {
@@ -112,12 +111,12 @@ final class GuardTarget {
             return false;
         }
         GuardTarget that = (GuardTarget)o;
-        return parameterIndex == that.parameterIndex && method.equals(that.method);
+        return parameterIndex == that.parameterIndex && member.equals(that.member);
     }
 
     @Override
     public int hashCode() {
-        int result = method.hashCode();
+        int result = member.hashCode();
         result = 31 * result + parameterIndex;
         return result;
     }
@@ -127,12 +126,12 @@ final class GuardTarget {
     }
 
     public StringBuilder appendShortString(StringBuilder buf) {
-        return buf.append(method.getDeclaringClass().getSimpleName()).append(".")
-                .append(method.getName()).append(":").append(parameterName);
+        return buf.append(member.getDeclaringClass().getSimpleName()).append(".")
+                .append(member.getName()).append("():").append(parameterName);
     }
 
     public StringBuilder appendFullString(StringBuilder buf) {
-        return buf.append(method).append(":").append(parameterName).append('[').append(parameterIndex).append(']');
+        return buf.append(member).append(":").append(parameterName).append('[').append(parameterIndex).append(']');
     }
 
     @Override
