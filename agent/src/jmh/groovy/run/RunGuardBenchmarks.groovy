@@ -15,6 +15,8 @@
  */
 
 
+
+
 package run
 
 import benchmarks.GuardBenchmark
@@ -34,14 +36,16 @@ class RunGuardBenchmarks {
 
     private final String javaExecutable
     private final String agentPath
+    private final String label
 
-    RunGuardBenchmarks(String javaExecutable, String agentPath) {
+    RunGuardBenchmarks(String javaExecutable, String agentPath, String label) {
         this.javaExecutable = javaExecutable
         this.agentPath = agentPath
+        this.label = label
     }
 
     static void main(String... cmdLineArgs) {
-        new RunGuardBenchmarks(cmdLineArgs[0], cmdLineArgs[1]).runBenchmarks()
+        new RunGuardBenchmarks(cmdLineArgs[0], cmdLineArgs[1], cmdLineArgs[2]).runBenchmarks()
     }
 
     private void runBenchmarks() {
@@ -55,8 +59,7 @@ class RunGuardBenchmarks {
                 agent('+nopMode', '+instrumentAll', 'nopMethod=mh_constant'),
                 agent('+nopMode', '+instrumentAll', 'nopMethod=dedicated_method'),
 
-                [['-nopMode'],
-                 ['-instrumentAll', '+instrumentAll'],
+                [['-instrumentAll', '+instrumentAll'],
                  ['invocationMethod=mh_guard', 'invocationMethod=invoker'],
                  ['-mutableCallSites', '+mutableCallSites'],
                 ].combinations().collect({ List args -> agent(args) }),
@@ -68,9 +71,15 @@ class RunGuardBenchmarks {
         println "Found ${jvmArgs.size()} benchmark invocations to run"
 
         int count = 0
+        def countFile = File.createTempFile('guards-benchmark', '.counter')
+        countFile.deleteOnExit()
         Stopwatch totalSW = Stopwatch.createStarted()
         jvmArgs.each { args ->
+            countFile.write('0')
             def name = "${args.substring(args.indexOf('=') + 1)}"
+            if ( !name ) {
+                name = 'defaults'
+            }
             OptionsBuilder ob = new OptionsBuilder().with {
                 include GuardBenchmark.class.name
 
@@ -82,10 +91,8 @@ class RunGuardBenchmarks {
                 warmupIterations 10
                 timeUnit TimeUnit.NANOSECONDS
 
-                param 'reps', '100000'
-
                 jvm javaExecutable
-                jvmArgsAppend args //, '-verbose:class'
+                jvmArgsAppend args, "-DrunName=$name", "-DrunNo=$label:$count/${jvmArgs.size()}", "-DcountFile=${countFile.toString()}"
                 shouldFailOnError true
 
                 result String.format("result-%03d--%s.txt", count, name)
@@ -94,7 +101,7 @@ class RunGuardBenchmarks {
 
                 return it
             }
-            println String.format('Running #%03d: %s', count, name)
+            println String.format('Running %s #%03d: %s', label, count, name)
             Stopwatch sw = Stopwatch.createStarted()
             new Runner(ob.build()).run()
             sw.stop()
@@ -102,6 +109,7 @@ class RunGuardBenchmarks {
             count++
         }
         println "Total time: $totalSW"
+        countFile.delete()
     }
 
     private String agent(List args) {
@@ -109,7 +117,7 @@ class RunGuardBenchmarks {
     }
 
     private String agent(String... args) {
-        "-javaagent:$agentPath=${args.join(',')}" as String
+        agent(args as List)
     }
 
 }

@@ -28,29 +28,34 @@ import ch.raffael.guards.definition.RelationRule;
 
 
 /**
- * Checks that a (numeric) value is in the specified integer range.
- *
- * @deprecated Use `@Max` and `@Min` instead; kept for demonstrating complex guard relations.
- *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Integer value must be within the range [$min,$max]",
+@Guard(message = "Value must be at most $value",
         performanceImpact = PerformanceImpact.LOW,
-        validate = {
-                "min >= max -> error: $min must be less than $max"
-        },
-        relations = @RelationRule({
-                "min<=that.min && max>=that.max -> superset",
-                "min>=that.min && max<=that.max -> subset"
-                /* implicit: "-> incompatible" */ }))
-@Deprecated
-public @interface IntRange {
+        relations = {
+                @RelationRule({
+                        "max>that.max -> subset",
+                        "max<that.max -> superset" }),
+                @RelationRule(type = Min.class, value = {
+                        "max>=that.min -> intersecting",
+                        "-> disjoint" }),
+                @RelationRule(type = Signed.class, value = {
+                        "max == maxValue -> equal",
+                        "max >= 0 -> intersecting",
+                        "-> disjoint"}),
+                @RelationRule(type = Unsigned.class, value = {
+                        "max == maxValue -> superset",
+                        "max >= 0 -> intersecting",
+                        "-> disjoint"}),
+                @RelationRule(type = Positive.class, value = {
+                        "max == maxValue -> superset",
+                        "max >= 1 -> intersecting",
+                        "-> disjoint" })})
+public @interface Max {
 
-    long min() default 0;
-
-    long max() default Long.MAX_VALUE;
+    long value();
 
 }

@@ -16,6 +16,8 @@
 
 
 
+
+
 def jmhVersion = '1.5.2'
 
 dependencies {
@@ -48,6 +50,7 @@ task('jmh') {
     dependsOn jmhJar, jar
 
     doFirst {
+        def startDate = new Date()
         def javaExecutable = project.properties['jmh.java']?:"${System.getProperty('java.home')}/bin/java"
         def agentPath = jar.archivePath
         def label = project.properties['jmh.label'] as String
@@ -65,15 +68,16 @@ task('jmh') {
 
         def cp = sourceSets.jmh.runtimeClasspath
         println "JMH Classpath: $cp.files"
+        println "JMH Label: $label"
         javaexec {
             classpath = cp
             main = 'run.RunGuardBenchmarks'
             workingDir = jmhRunDir
-            args = [ javaExecutable, agentPath ]
+            args = [ javaExecutable, agentPath, label ]
         }
 
         jmhAllResults.withWriter { concat ->
-            concat << "${new Date()}\n\n"
+            concat << "Start: $startDate\nEnd: ${new Date()}\n\n"
             fileTree(dir:jmhRunDir, include:"result-*.txt").sort().each { f ->
                 f.withReader { part ->
                     def n = f.toString()
@@ -83,7 +87,7 @@ task('jmh') {
             }
         }
         jmhAllLogs.withWriter { concat ->
-            concat << "${new Date()}\n\n"
+            concat << "Start: $startDate\nEnd: ${new Date()}\n\n"
             fileTree(dir:jmhRunDir, include:"log-*.txt").sort().each { f ->
                 f.withReader { part ->
                     concat << part << '\n'

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.draft;
+package benchmarks;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -24,27 +24,20 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.RelationRule;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
+@Guard(performanceImpact = PerformanceImpact.LOW)
 @Documented
-@Guard(message = "Value must be at most $value",
-        performanceImpact = PerformanceImpact.LOW,
-        relations = {
-                @RelationRule({
-                        "max>that.max -> superset",
-                        "max<that.max -> subset" }),
-                @RelationRule(type = Min.class, value = {
-                        "max>=that.min -> intersecting",
-                        "max<that.min -> disjoint" })
-        })
-public @interface Max {
-
-    long value();
+public @interface Exclude2 {
+    public class Handler extends Guard.Handler<Exclude2> {
+        public static boolean test(int value) {
+            return value != -2;
+        }
+    }
 
 }

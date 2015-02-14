@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import ch.raffael.guards.IntRange;
+import ch.raffael.guards.Min;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.agent.guava.base.Optional;
@@ -139,7 +139,7 @@ final class Linker {
                 callSites[i] = new CallSiteHolder();
             }
         }
-        private CallSite getCallSite(@IntRange(min = -1) int parameterIndex, String parameterName) {
+        private CallSite getCallSite(@Min(-1) int parameterIndex, String parameterName) {
             CallSiteHolder holder = callSites[parameterIndex + 1];
             if ( holder.callSite == null ) {
                 synchronized ( holder ) {

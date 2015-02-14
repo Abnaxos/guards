@@ -163,7 +163,7 @@ final class GuardInstance {
         // TODO: error message substitution
         String message = guardType.configuration.message().trim();
         if ( message.isEmpty() ) {
-            buf.append(guardType.annotationType.getName());
+            buf.append(annotation);
         }
         else {
             substituteAnnotationValues(buf, message, value);
@@ -195,6 +195,8 @@ final class GuardInstance {
                         else {
                             builder.put("return", String.valueOf(value));
                         }
+                        builder.put("annotationType", "@" + guardType.annotationType().getName());
+                        builder.put("this", annotation.toString());
                     }
                     delegate = builder.build();
                 }

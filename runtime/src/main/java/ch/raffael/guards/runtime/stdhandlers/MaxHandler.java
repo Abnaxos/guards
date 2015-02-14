@@ -14,28 +14,40 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.draft;
+package ch.raffael.guards.runtime.stdhandlers;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
+import ch.raffael.guards.Min;
 import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.PerformanceImpact;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Guard(message = "Value must be at least $value",
-        performanceImpact = PerformanceImpact.LOW)
-public @interface Min {
+public class MaxHandler extends Guard.Handler<Min> {
 
-    long value();
+    private final int maxInt;
+    private final long max;
+
+    public MaxHandler(Min annotation) {
+        super(annotation);
+        max = annotation.value();
+        maxInt = max > Integer.MAX_VALUE ? (int)max : Integer.MAX_VALUE;
+    }
+
+    public boolean test(int value) {
+        return value <= maxInt;
+    }
+
+    public boolean test(long value) {
+        return value <= max;
+    }
+
+    public boolean test(float value) {
+        return value <= max;
+    }
+
+    public boolean test(double value) {
+        return value <= max;
+    }
 
 }
