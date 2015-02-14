@@ -34,7 +34,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "The value must greater than zero.",
+@Guard(message = "Value must greater than zero",
         performanceImpact = PerformanceImpact.LOW,
         subsetOf = { Unsigned.class, Signed.class })
 public @interface Positive {

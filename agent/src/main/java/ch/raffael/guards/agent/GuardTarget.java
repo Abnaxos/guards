@@ -127,7 +127,7 @@ final class GuardTarget {
 
     public StringBuilder appendShortString(StringBuilder buf) {
         return buf.append(member.getDeclaringClass().getSimpleName()).append(".")
-                .append(member.getName()).append("():").append(parameterName);
+                .append(member.getName()).append('(').append(parameterName).append(')');
     }
 
     public StringBuilder appendFullString(StringBuilder buf) {

@@ -34,7 +34,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Iterable may not contain null elements",
+@Guard(message = "Collection may not contain null elements",
         performanceImpact = PerformanceImpact.HIGH,
         subsetOf = AllowNulls.class)
 public @interface NoNulls {

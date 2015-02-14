@@ -117,16 +117,21 @@ final class GuardInstance {
         //}
         buf.append(": ");
         appendMessage(buf, value);
+        buf.append("\n  Value : ");
         if ( target.isSensitive() ) {
-            buf.append("\n  ").append(Sensitive.SENSITIVE_MSG);
+            buf.append(Sensitive.SENSITIVE_MSG);
         }
         else {
-            buf.append("\n  Value : ");
             if ( value == null ) {
                 buf.append("null");
             }
             else {
-                buf.append("(").append(value.getClass().getName()).append(") ");
+                if ( target.getValueType().isPrimitive() ) {
+                    buf.append("(").append(target.getValueType().getName()).append(")");
+                }
+                else {
+                    buf.append("(").append(value.getClass().getName()).append(")");
+                }
                 buf.append(value);
             }
         }
@@ -189,15 +194,15 @@ final class GuardInstance {
                             }
                             builder.put(method.getName(), String.valueOf(value));
                         }
-                        if ( target.isSensitive() ) {
-                            builder.put("return", Sensitive.SENSITIVE_MSG);
-                        }
-                        else {
-                            builder.put("return", String.valueOf(value));
-                        }
-                        builder.put("annotationType", "@" + guardType.annotationType().getName());
-                        builder.put("this", annotation.toString());
                     }
+                    if ( target.isSensitive() ) {
+                        builder.put("", Sensitive.SENSITIVE_MSG);
+                    }
+                    else {
+                        builder.put("", String.valueOf(value));
+                    }
+                    builder.put("annotationType", "@" + guardType.annotationType().getName());
+                    builder.put("this", annotation.toString());
                     delegate = builder.build();
                 }
                 return delegate;

@@ -32,8 +32,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "",
-        performanceImpact = PerformanceImpact.LOW,
+@Guard(performanceImpact = PerformanceImpact.LOW,
         handler = Guard.AlwaysTrue.class,
         supersetOf = NoNulls.class)
 public @interface AllowNulls {

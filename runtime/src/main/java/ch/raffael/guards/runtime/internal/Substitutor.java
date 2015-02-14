@@ -64,7 +64,7 @@ public final class Substitutor {
             }
             else if ( mode == Mode.SUBSTITUTION ) {
                 if ( c == '}' ) {
-                    String key = string.substring(substitutionStart + 1, i + 1);
+                    String key = string.substring(substitutionStart + 1, i);
                     String substitution = replacements.get(key);
                     if ( substitution == null ) {
                         buf.append('{').append(key).append('}');

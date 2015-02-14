@@ -33,7 +33,7 @@ import ch.raffael.guards.definition.RelationRule;
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must be at least $value",
+@Guard(message = "Value must be at least {value}",
         performanceImpact = PerformanceImpact.LOW,
         relations = {
                 @RelationRule({

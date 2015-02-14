@@ -31,7 +31,7 @@ public class MinHandler extends Guard.Handler<Min> {
     public MinHandler(Min annotation) {
         super(annotation);
         min = annotation.value();
-        minInt = min < Integer.MIN_VALUE ? (int)min : Integer.MIN_VALUE;
+        minInt = min > Integer.MIN_VALUE ? (int)min : Integer.MIN_VALUE;
     }
 
     public boolean test(int value) {

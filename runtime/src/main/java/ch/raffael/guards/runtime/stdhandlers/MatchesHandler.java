@@ -16,7 +16,6 @@
 
 package ch.raffael.guards.runtime.stdhandlers;
 
-import java.lang.reflect.Type;
 import java.util.regex.Pattern;
 
 import ch.raffael.guards.Matches;
@@ -30,12 +29,12 @@ public class MatchesHandler extends Guard.Handler<Matches> {
 
     private final Pattern pattern;
 
-    public MatchesHandler(Matches annotation, Type valueType) {
+    public MatchesHandler(Matches annotation) {
         super(annotation);
         pattern = Pattern.compile(annotation.value(), annotation.flags());
     }
 
-    public boolean test(CharSequence value) {
+    public boolean test(String value) {
         if ( annotation.find() ) {
             return pattern.matcher(value).find();
         }

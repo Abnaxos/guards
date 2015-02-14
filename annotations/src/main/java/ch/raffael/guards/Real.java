@@ -34,7 +34,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "The value must be a real number.",
+@Guard(message = "The value must be a real number",
         performanceImpact = PerformanceImpact.LOW)
 public @interface Real {
 

@@ -34,7 +34,12 @@ public @interface Sensitive {
 
     final String SENSITIVE_MSG = "(concealed for security)";
 
-    final Sensitive SENSITIVE = new Sensitive() {
+    @SuppressWarnings("ClassExplicitlyAnnotation")
+    public static class SensitiveImpl implements Sensitive {
+        private static final SensitiveImpl INSTANCE = new SensitiveImpl();
+        public static SensitiveImpl getInstance() {
+            return INSTANCE;
+        }
         @Override
         public Class<? extends Annotation> annotationType() {
             return Sensitive.class;
@@ -51,6 +56,6 @@ public @interface Sensitive {
         public String toString() {
             return "@" + Sensitive.class.getName() + "()";
         }
-    };
+    }
 
 }
