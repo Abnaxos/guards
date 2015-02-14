@@ -16,6 +16,9 @@
 
 package ch.raffael.guards.runtime.stdhandlers;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import ch.raffael.guards.Min;
 import ch.raffael.guards.definition.Guard;
 
@@ -50,4 +53,11 @@ public class MinHandler extends Guard.Handler<Min> {
         return value >= min;
     }
 
+    public boolean test(BigInteger value) {
+        return value.compareTo(BigInteger.valueOf(min)) >= 0;
+    }
+
+    public boolean test(BigDecimal value) {
+        return value.compareTo(BigDecimal.valueOf(min)) >= 0;
+    }
 }

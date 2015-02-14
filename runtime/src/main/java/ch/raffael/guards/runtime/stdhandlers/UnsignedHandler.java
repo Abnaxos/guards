@@ -20,35 +20,38 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import ch.raffael.guards.Unsigned;
-import ch.raffael.guards.definition.NumberUnboxingHandler;
+import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class UnsignedHandler extends NumberUnboxingHandler<Unsigned> {
+public class UnsignedHandler extends Guard.Handler<Unsigned> {
+
     public UnsignedHandler(Unsigned annotation) {
         super(annotation);
     }
-    @Override
+
     public boolean test(int value) {
         return value >= 0;
     }
-    @Override
+
     public boolean test(long value) {
         return value >= 0;
     }
-    @Override
+
     public boolean test(float value) {
         return value >= 0;
     }
-    @Override
+
     public boolean test(double value) {
         return value >= 0;
     }
+
     public boolean test(BigInteger value) {
         return value.compareTo(BigInteger.ZERO) >= 0;
     }
+
     public boolean test(BigDecimal value) {
         return value.compareTo(BigDecimal.ZERO) >= 0;
     }

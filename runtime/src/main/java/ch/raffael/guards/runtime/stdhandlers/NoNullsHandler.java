@@ -16,6 +16,8 @@
 
 package ch.raffael.guards.runtime.stdhandlers;
 
+import java.util.Collection;
+
 import ch.raffael.guards.NoNulls;
 import ch.raffael.guards.definition.Guard;
 
@@ -27,14 +29,26 @@ public class NoNullsHandler extends Guard.Handler<NoNulls> {
     public NoNullsHandler(NoNulls annotation)  {
         super(annotation);
     }
-    public boolean test(Iterable<?> iterable) {
-        for ( Object elem : iterable ) {
+
+    // TODO: Include Iterator/Iterable?
+    //public boolean test(Iterable<?> iterable) {
+    //    for ( Object elem : iterable ) {
+    //        if ( elem == null ) {
+    //            return false;
+    //        }
+    //    }
+    //    return true;
+    //}
+
+    public boolean test(Collection<?> collection) {
+        for ( Object elem : collection ) {
             if ( elem == null ) {
                 return false;
             }
         }
         return true;
     }
+
     public boolean test(Object[] array) {
         for ( Object element : array ) {
             if ( element == null ) {

@@ -20,33 +20,41 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import ch.raffael.guards.Unsigned;
-import ch.raffael.guards.definition.NumberUnboxingHandler;
+import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class NotNegativeHandler extends NumberUnboxingHandler<Unsigned> {
+public class NotNegativeHandler extends Guard.Handler<Unsigned> {
+
     private static final BigDecimal DEC_ZERO = new BigDecimal(0);
     private static final BigInteger BIGINT_ZERO = new BigInteger("0");
+
     public NotNegativeHandler(Unsigned annotation) {
         super(annotation);
     }
+
     public boolean test(int value) {
         return value >= 0;
     }
+
     public boolean test(long value) {
         return value >= 0;
     }
+
     public boolean test(float value) {
         return value >= 0;
     }
+
     public boolean test(double value) {
         return value >= 0;
     }
+
     public boolean check(BigDecimal value) {
         return DEC_ZERO.compareTo(value) >= 0;
     }
+
     public boolean check(BigInteger value) {
         return BIGINT_ZERO.compareTo(value) >= 0;
     }

@@ -17,23 +17,22 @@
 package ch.raffael.guards.runtime.stdhandlers;
 
 import ch.raffael.guards.Real;
-import ch.raffael.guards.definition.FloatUnboxingHandler;
+import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class RealHandler extends FloatUnboxingHandler<Real> {
+public class RealHandler extends Guard.Handler<Real> {
     public RealHandler(Real annotation) {
         super(annotation);
     }
-    @Override
+
     public boolean test(float value) {
         return value != Float.NaN
                 && value != Float.POSITIVE_INFINITY
                 && value != Float.NEGATIVE_INFINITY;
     }
-    @Override
     public boolean test(double value) {
         return value != Double.NaN
                 && value != Double.POSITIVE_INFINITY

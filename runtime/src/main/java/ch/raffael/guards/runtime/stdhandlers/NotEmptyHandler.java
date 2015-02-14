@@ -26,42 +26,56 @@ import ch.raffael.guards.definition.Guard;
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
 public class NotEmptyHandler extends Guard.Handler<NotEmpty> {
+
     public NotEmptyHandler(NotEmpty annotation) {
         super(annotation);
     }
+
     public boolean test(CharSequence string) {
         return string.length() > 0;
     }
-    public boolean test(Iterable<?> iterable) {
-        return iterable.iterator().hasNext();
-    }
+
+    // TODO: include Iterable/Iterator?
+    //public boolean test(Iterable<?> iterable) {
+    //    return iterable.iterator().hasNext();
+    //}
+
     public boolean test(Collection<?> collection) {
         return !collection.isEmpty();
     }
+
     public boolean test(Object[] array) {
         return array.length > 0;
     }
+
     public boolean test(int[] array) {
         return array.length > 0;
     }
+
     public boolean test(byte[] array) {
         return array.length > 0;
     }
+
     public boolean test(short[] array) {
         return array.length > 0;
     }
+
     public boolean test(long[] array) {
         return array.length > 0;
     }
+
     public boolean test(float[] array) {
         return array.length > 0;
     }
+
     public boolean test(double[] array) {
         return array.length > 0;
     }
+
     public boolean test(char[] array) {
         return array.length > 0;
     }
+
     public boolean test(boolean[] array) {
         return array.length > 0;
     }
