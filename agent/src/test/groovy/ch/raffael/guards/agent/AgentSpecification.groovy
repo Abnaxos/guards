@@ -16,19 +16,63 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
+import ch.raffael.guards.agent.DynaGuards.Recorder
+import ch.raffael.guards.agent.guava.reflect.TypeToken
 import spock.lang.Specification
+import spock.util.mop.Use
+
+import static groovy.lang.Closure.DELEGATE_FIRST
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
+@Use([ClassToTypeToken, TypeTokenToTypeToken])
 class AgentSpecification extends Specification {
+
+    protected DynaGuards guards = null
 
     def setupSpec() {
         if ( !GuardsAgent.getInstance().installed ) {
-            throw new RuntimeException("Guards Agent not installed")
+            GuardsAgent.installAgent(null)
+        }
+    }
+
+    protected guards(@DelegatesTo(value = DynaGuards, strategy = DELEGATE_FIRST) Closure config) {
+        if ( guards == null ) {
+            guards = new DynaGuards(Mock(Recorder))
+        }
+        DynaGuards.with(guards, config)
+        return guards
+    }
+
+    static TypeToken type(Class type) {
+        TypeToken.of(type)
+    }
+
+    static TypeToken type(TypeToken type) {
+        type
+    }
+
+    protected Recorder getGuardInvocations() {
+        guards.recorder
+    }
+
+    @Category(Class)
+    static class ClassToTypeToken {
+        TypeToken getType() {
+            return TypeToken.of(this)
+        }
+    }
+
+    @Category(TypeToken)
+    static class TypeTokenToTypeToken {
+        TypeToken getType() {
+            this
         }
     }
 

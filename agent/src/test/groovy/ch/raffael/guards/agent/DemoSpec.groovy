@@ -16,17 +16,33 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-class BasicSpec extends AgentSpecification {
+class DemoSpec extends AgentSpecification {
 
-    def "Just a simple test"() {
+    def "simple"() {
+      given:
+        guards {
+            guard.test(int)
+            method('foo').param(Integer).guard()
+        }
+
       when:
-        println 'foo'
+        guards.invoke {
+            foo(42)
+            foo(23)
+        }
+
       then:
-        true
+        with(guardInvocations) {
+            1 * invocation(_, int.type, 42)
+            1 * invocation(_, int.type, 23)
+        }
+        0 * _
     }
 
 }

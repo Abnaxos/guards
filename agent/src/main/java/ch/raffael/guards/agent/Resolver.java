@@ -248,10 +248,6 @@ class Resolver {
         if ( testMethod == null && target.getValueType().isPrimitive() ) {
             // try widening the primitives
             testMethod = findWithPrimitiveConversions(target.getValueType(), instance);
-            // NOTE: we must do the conversion ourselves; this allows e.g. direct conversion from Integer to long below
-            if ( testMethod != null ) {
-                testMethod = testMethod.forValueType(target.getValueType());
-            }
         }
         if ( testMethod == null && conversions.unbox() && Primitives.isWrapperType(target.getValueType()) ) {
             // try unboxing the value and then widening the primitive
@@ -260,14 +256,12 @@ class Resolver {
                 // TODO: find something better to do here? IllegalGuardError?
                 Log.warning("Unwrapping " + target.getValueType() + " on handler that checks null values");
             }
-            // NOTE: we must do the conversion ourselves; this allows e.g. direct conversion from Integer to long
-            if ( testMethod != null ) {
-                testMethod = testMethod.forValueType(target.getValueType());
-            }
         }
         if ( testMethod == null ) {
             throw new IllegalGuardError(target + ": No matching test method found for " + guardType.getName());
         }
+        // make sure our value types match
+        testMethod = testMethod.forValueType(target.getValueType());
         MethodHandle methodHandle = testMethod.methodHandle();
         if ( !Modifier.isStatic(testMethod.method.getModifiers()) ) {
             methodHandle = methodHandle.bindTo(createHandler(instance.getAnnotation()));
@@ -371,7 +365,12 @@ class Resolver {
 
         TestMethod forValueType(Class<?> valueType) {
             MethodType methodType = methodHandle.type();
-            return forHandle(methodHandle.asType(methodType.changeParameterType(methodType.parameterCount() - 1, valueType)));
+            if ( !methodType.parameterType(methodType.parameterCount() - 1).equals(valueType) ) {
+                return forHandle(methodHandle.asType(methodType.changeParameterType(methodType.parameterCount() - 1, valueType)));
+            }
+            else {
+                return this;
+            }
         }
     }
 

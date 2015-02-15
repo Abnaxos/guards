@@ -120,35 +120,35 @@ public class GuardBenchmark {
         return prevValue | value;
     }
 
-    //@Benchmark
-    //@OperationsPerInvocation(REPS)
-    //public int notGuarded(MyState state) {
-    //    int result = 0;
-    //    for( int i = 0; i < REPS; i++ ) {
-    //        result = notGuardedMethod(result, i, "foo");
-    //    }
-    //    return result;
-    //}
-    //
-    //@Benchmark
-    //@OperationsPerInvocation(REPS)
-    //public int manuallyGuarded(MyState state) {
-    //    int result = 0;
-    //    for( int i = 0; i < REPS; i++ ) {
-    //        result = manuallyGuardedMethod(result, i, "foo");
-    //    }
-    //    return result;
-    //}
-    //
-    //@Benchmark
-    //@OperationsPerInvocation(REPS)
-    //public int manuallyMultiGuarded(MyState state) {
-    //    int result = 0;
-    //    for( int i = 0; i < REPS; i++ ) {
-    //        result = manuallyMultiGuardedMethod(result, i, "foo");
-    //    }
-    //    return result;
-    //}
+    @Benchmark
+    @OperationsPerInvocation(REPS)
+    public int notGuarded(MyState state) {
+        int result = 0;
+        for( int i = 0; i < REPS; i++ ) {
+            result = notGuardedMethod(result, i, "foo");
+        }
+        return result;
+    }
+
+    @Benchmark
+    @OperationsPerInvocation(REPS)
+    public int manuallyGuarded(MyState state) {
+        int result = 0;
+        for( int i = 0; i < REPS; i++ ) {
+            result = manuallyGuardedMethod(result, i, "foo");
+        }
+        return result;
+    }
+
+    @Benchmark
+    @OperationsPerInvocation(REPS)
+    public int manuallyMultiGuarded(MyState state) {
+        int result = 0;
+        for( int i = 0; i < REPS; i++ ) {
+            result = manuallyMultiGuardedMethod(result, i, "foo");
+        }
+        return result;
+    }
 
     @Benchmark
     @OperationsPerInvocation(REPS)
