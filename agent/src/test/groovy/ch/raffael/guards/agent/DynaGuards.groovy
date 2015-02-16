@@ -16,6 +16,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
 import ch.raffael.guards.agent.guava.reflect.TypeToken
@@ -35,28 +37,28 @@ class DynaGuards {
     final Recorder recorder
     private methods
 
-    private final Map<String, GuardSpec> guardSpecs = [:].withDefault { String name -> new GuardSpec(name) }
-    private final Map<String, MethodSpec> methodSpecs = [:].withDefault {[:]}.withDefault { String name -> new MethodSpec(name)}
+    private final Map<String, GuardBuilder> guardBuilders = [:].withDefault { String name -> new GuardBuilder(name) }
+    private final Map<String, MethodBuilder> methodBuilders = [:].withDefault {[:]}.withDefault { String name -> new MethodBuilder(name)}
     private int testCounter = 0
 
     DynaGuards(Recorder recorder) {
         this.recorder = recorder
     }
 
-    def guard(@DelegatesTo(value = GuardSpec, strategy = DELEGATE_FIRST) Closure config = null) {
+    def guard(@DelegatesTo(value = GuardBuilder, strategy = DELEGATE_FIRST) Closure config = null) {
         guard(DEFAULT_GUARD, config)
     }
 
-    def guard(String name, @DelegatesTo(value = GuardSpec, strategy = DELEGATE_FIRST) Closure config = null) {
-        with(guardSpecs[name], config)
+    def guard(String name, @DelegatesTo(value = GuardBuilder, strategy = DELEGATE_FIRST) Closure config = null) {
+        with(guardBuilders[name], config)
     }
 
-    def GuardSpec getGuard() {
+    def GuardBuilder getGuard() {
         guard(DEFAULT_GUARD)
     }
 
     def method(String name, Closure config = null) {
-        with(methodSpecs[name], config)
+        with(methodBuilders[name], config)
     }
 
     def getMethods() {
@@ -67,11 +69,11 @@ class DynaGuards {
             out.println "import ch.raffael.guards.definition.*"
             out.println "import ch.raffael.guards.agent.guava.reflect.TypeToken"
             out.println "import ch.raffael.guards.agent.guava.reflect.TypeToken"
-            guardSpecs.values().each { spec -> spec.toSource(out) }
+            guardBuilders.values().each { builder -> builder.toSource(out) }
             out.println()
             out.println "class METHODS {"
             out.println "static ch.raffael.guards.agent.DynaGuards.Recorder RECORDER"
-            methodSpecs.values().each { spec -> spec.toSource(out) }
+            methodBuilders.values().each { builder -> builder.toSource(out) }
             out.println "}"
             out.println "new METHODS()"
             out.flush()
@@ -110,11 +112,11 @@ class DynaGuards {
         }
     }
 
-    class GuardSpec {
+    class GuardBuilder {
         final String name
-        final Map<String, TestSpec> tests = [:]
+        final Map<String, TestBuilder> tests = [:]
 
-        GuardSpec(String name) {
+        GuardBuilder(String name) {
             this.name = name
         }
 
@@ -131,7 +133,7 @@ class DynaGuards {
         }
 
         def test(String name, TypeToken type) {
-            tests.get(name, new TestSpec(name, type))
+            tests.get(name, new TestBuilder(name, type))
         }
 
         private toSource(PrintWriter out) {
@@ -146,11 +148,11 @@ class DynaGuards {
 
     }
 
-    class TestSpec {
+    class TestBuilder {
         final String name
         final TypeToken type
 
-        TestSpec(String name, TypeToken type) {
+        TestBuilder(String name, TypeToken type) {
             this.name = name
             this.type = type
         }
@@ -163,28 +165,28 @@ class DynaGuards {
 
     }
 
-    class MethodSpec {
+    class MethodBuilder {
         final String name
-        private final Map<String, ParamSpec> params = [:]
+        private final Map<String, ParamBuilder> params = [:]
         private int paramCounter = 0
 
-        MethodSpec(String name) {
+        MethodBuilder(String name) {
             this.name = name
         }
 
-        def param(TypeToken type, @DelegatesTo(value = ParamSpec, strategy = DELEGATE_FIRST) Closure config = null) {
+        def param(TypeToken type, @DelegatesTo(value = ParamBuilder, strategy = DELEGATE_FIRST) Closure config = null) {
             param(type, "arg${paramCounter++}", config)
         }
 
-        def param(TypeToken type, String name, @DelegatesTo(value = ParamSpec, strategy = DELEGATE_FIRST) Closure config = null) {
-            with(params.get(name, new ParamSpec(name, type)), config)
+        def param(TypeToken type, String name, @DelegatesTo(value = ParamBuilder, strategy = DELEGATE_FIRST) Closure config = null) {
+            with(params.get(name, new ParamBuilder(name, type)), config)
         }
 
-        def param(Class type, @DelegatesTo(value = ParamSpec, strategy = DELEGATE_FIRST) Closure config = null) {
+        def param(Class type, @DelegatesTo(value = ParamBuilder, strategy = DELEGATE_FIRST) Closure config = null) {
             param(TypeToken.of(type), "arg${paramCounter++}", config)
         }
 
-        def param(Class type, String name, @DelegatesTo(value = ParamSpec, strategy = DELEGATE_FIRST) Closure config = null) {
+        def param(Class type, String name, @DelegatesTo(value = ParamBuilder, strategy = DELEGATE_FIRST) Closure config = null) {
             param(TypeToken.of(type), name, config)
         }
 
@@ -204,21 +206,21 @@ class DynaGuards {
         }
     }
 
-    class ParamSpec {
+    class ParamBuilder {
         final String name
         final TypeToken type
-        final Set<GuardSpec> guards = []
+        final Set<GuardBuilder> guards = []
 
-        ParamSpec(String name, TypeToken type) {
+        ParamBuilder(String name, TypeToken type) {
             this.name = name
             this.type = type
         }
 
         def guard(String name = DEFAULT_GUARD) {
-            if ( !DynaGuards.this.guardSpecs.containsKey(name) ) {
+            if ( !DynaGuards.this.guardBuilders.containsKey(name) ) {
                 throw new IllegalArgumentException("No such guard: $name")
             }
-            guards << DynaGuards.this.guardSpecs[name]
+            guards << DynaGuards.this.guardBuilders[name]
         }
 
         protected toSource(PrintWriter out) {
