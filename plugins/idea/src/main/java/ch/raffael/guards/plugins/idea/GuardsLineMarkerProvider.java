@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
@@ -38,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvider {
 
-    private static final Icon GUARDED_ICON = new ImageIcon(GuardsLineMarkerProvider.class.getResource("shield.png"));
+    private static final Icon GUARDED_ICON = Icons.GUARDS_GENERAL;
 
     //@Override
     //public void annotate(@NotNull PsiElement element, AnnotationHolder holder) {
