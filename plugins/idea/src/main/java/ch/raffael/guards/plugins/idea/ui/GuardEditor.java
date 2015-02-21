@@ -99,28 +99,8 @@ public class GuardEditor {
                 p = new Point((visibleArea.x + visibleArea.width) / 2, (visibleArea.y + visibleArea.height) / 2);
             }
             popupLocation = new RelativePoint(editor.getContentComponent(), p);
-            new AnAction("previous") {
-                @Override
-                public void actionPerformed(@NotNull AnActionEvent e) {
-                    if ( focus.getIndex() > -1 ) {
-                        GuardEditor ge = new GuardEditor(
-                                focus.forIndex(focus.getIndex() - 1), project, editor, e.getDataContext());
-                        popup.cancel();
-                        ge.show();
-                    }
-                }
-            }.registerCustomShortcutSet(CustomShortcutSet.fromString("alt LEFT", "shift TAB", "PAGE_UP"), popup.getContent());
-            new AnAction("next") {
-                @Override
-                public void actionPerformed(final @NotNull AnActionEvent e) {
-                    if ( focus.getIndex() < focus.getParameters().size() - 1 ) {
-                        GuardEditor ge = new GuardEditor(
-                                focus.forIndex(focus.getIndex() + 1), project, editor, e.getDataContext());
-                        popup.cancel();
-                        ge.show();
-                    }
-                }
-            }.registerCustomShortcutSet(CustomShortcutSet.fromString("alt RIGHT", "TAB", "PAGE_DOWN"), popup.getContent());
+            new CycleGuardedElementAction(false).registerCustomShortcutSet(CustomShortcutSet.fromString("alt LEFT", "shift TAB", "PAGE_UP"), popup.getContent());
+            new CycleGuardedElementAction(true).registerCustomShortcutSet(CustomShortcutSet.fromString("alt RIGHT", "TAB", "PAGE_DOWN"), popup.getContent());
         }
         else {
             popup = popupFactory.createActionGroupPopup(null, buildElementsGroup(), dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, true);
@@ -225,6 +205,30 @@ public class GuardEditor {
             result.add(guardsGroup.asPopup());
         }
         return result;
+    }
+
+    private class CycleGuardedElementAction extends AnAction {
+
+        private final boolean forward;
+
+        public CycleGuardedElementAction(boolean forward) {
+            super();
+            this.forward = forward;
+        }
+
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent e) {
+            int newIndex = focus.getIndex() + (forward ? 1 : -1);
+            if ( newIndex < -1 ) {
+                newIndex = focus.getParameters().size() - 1;
+            }
+            else if ( newIndex >= focus.getParameters().size() ) {
+                newIndex = -1;
+            }
+            GuardEditor ge = new GuardEditor(focus.forIndex(newIndex), project, editor, e.getDataContext());
+            popup.cancel();
+            ge.show();
+        }
     }
 
 }
