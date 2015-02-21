@@ -18,19 +18,30 @@ package ch.raffael.guards.plugins.idea;
 
 import com.intellij.codeInspection.InspectionToolProvider;
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.StoragePathMacros;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static ch.raffael.guards.plugins.idea.GuardsApplicationComponent.PLUGIN_ID;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsPlugin implements ApplicationComponent, InspectionToolProvider {
+@State(name = PLUGIN_ID + ".UiState",
+        storages = @Storage(file = StoragePathMacros.APP_CONFIG + "/guards.xml"))
+public class GuardsApplicationComponent implements ApplicationComponent, InspectionToolProvider, PersistentStateComponent<UiState> {
 
     public static final boolean DEBUG = true;
 
     public static final String PLUGIN_ID = "ch.raffael.guards";
 
-    public GuardsPlugin() {
+    private UiState uiState = new UiState();
+
+    public GuardsApplicationComponent() {
     }
 
     public void initComponent() {
@@ -41,7 +52,7 @@ public class GuardsPlugin implements ApplicationComponent, InspectionToolProvide
 
     @NotNull
     public String getComponentName() {
-        return PLUGIN_ID + "." + GuardsPlugin.class.getSimpleName();
+        return PLUGIN_ID + "." + GuardsApplicationComponent.class.getSimpleName();
     }
 
     @Override
@@ -50,4 +61,20 @@ public class GuardsPlugin implements ApplicationComponent, InspectionToolProvide
                 GuardsInheritanceInspection.class
         };
     }
+
+    public UiState getUiState() {
+        return uiState;
+    }
+
+    @Nullable
+    @Override
+    public UiState getState() {
+        return uiState;
+    }
+
+    @Override
+    public void loadState(UiState state) {
+        this.uiState = state;
+    }
+
 }

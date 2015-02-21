@@ -19,30 +19,25 @@ package ch.raffael.guards.plugins.idea;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowAnchor;
-import com.intellij.openapi.wm.ToolWindowManager;
 import org.jetbrains.annotations.NotNull;
+
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsPluginProject implements ProjectComponent {
-
-    private final static String GUARDS_VIEW_ID = GuardsView.class.getName();
+public class GuardsProjectComponent implements ProjectComponent {
 
     private final Project project;
 
     private PsiElementTracker tracker;
-    private GuardsView guardsView;
     private ToolWindow toolWindow;
 
-    public GuardsPluginProject(Project project) {
+    public GuardsProjectComponent(Project project) {
         this.project = project;
     }
 
     public void initComponent() {
-        guardsView = new GuardsView();
     }
 
     public void disposeComponent() {
@@ -61,20 +56,16 @@ public class GuardsPluginProject implements ProjectComponent {
     }
 
     private void initToolWindow() {
-        tracker = new PsiElementTracker(project, guardsView);
+        tracker = new PsiElementTracker(project);
         tracker.start();
-        ToolWindowManager twm = ToolWindowManager.getInstance(project);
-        toolWindow = twm.getToolWindow(GUARDS_VIEW_ID);
-        if ( toolWindow == null ) {
-            toolWindow = twm.registerToolWindow(GUARDS_VIEW_ID, guardsView.getComponent(), ToolWindowAnchor.RIGHT);
-            toolWindow.setTitle("Guards");
-            toolWindow.setStripeTitle("Guards");
-            toolWindow.setIcon(Icons.GUARDS_GENERAL);
-        }
-    }
-
-    public GuardsView getGuardsView() {
-        return guardsView;
+        //ToolWindowManager twm = ToolWindowManager.getInstance(project);
+        //toolWindow = twm.getToolWindow(GUARDS_VIEW_ID);
+        //if ( toolWindow == null ) {
+        //    toolWindow = twm.registerToolWindow(GUARDS_VIEW_ID, guardsView.getComponent(), ToolWindowAnchor.RIGHT);
+        //    toolWindow.setTitle("Guards");
+        //    toolWindow.setStripeTitle("Guards");
+        //    toolWindow.setIcon(Icons.GUARDS_GENERAL);
+        //}
     }
 
 }

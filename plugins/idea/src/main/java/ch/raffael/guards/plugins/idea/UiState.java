@@ -16,28 +16,27 @@
 
 package ch.raffael.guards.plugins.idea;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
-
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public final class Icons {
+public class UiState {
 
-    //private static final ConcurrentMap<Object, Supplier<Icon>> ICONS = new MapMaker().concurrencyLevel(1).makeMap();
+    private int popupWidth;
+    private int popupHeight;
 
-    private Icons() {
+    public int getPopupWidth() {
+        return popupWidth;
     }
 
-    //private static Icon getIcon(Object key) {
-    //
-    //}
-
-    private static Icon load(String resPath) {
-        return new ImageIcon(Icons.class.getResource(resPath));
+    public void setPopupWidth(int popupWidth) {
+        this.popupWidth = popupWidth;
     }
 
-    public static final Icon GUARDS_GENERAL = load("shield.png");
+    public int getPopupHeight() {
+        return popupHeight;
+    }
 
+    public void setPopupHeight(int popupHeight) {
+        this.popupHeight = popupHeight;
+    }
 }

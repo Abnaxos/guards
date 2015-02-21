@@ -37,7 +37,7 @@ public class GuardsModule implements ModuleComponent {
 
     @NotNull
     public String getComponentName() {
-        return GuardsPlugin.PLUGIN_ID + ".GuardsModule";
+        return GuardsApplicationComponent.PLUGIN_ID + ".GuardsModule";
     }
 
     public void projectOpened() {

@@ -25,7 +25,7 @@ import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static ch.raffael.guards.plugins.idea.GuardsPlugin.DEBUG;
+import static ch.raffael.guards.plugins.idea.GuardsApplicationComponent.DEBUG;
 
 
 /**

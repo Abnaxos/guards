@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
+package ch.raffael.guards.plugins.idea.ui;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -24,13 +24,14 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import org.jetbrains.annotations.NotNull;
+
+import ch.raffael.guards.NotNull;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class DisplayGuardsAction extends AnAction {
+public class EditGuardsAction extends AnAction {
 
     //public void actionPerformed(@NotNull AnActionEvent e) {
     //    System.out.println("COMPONENT: " + e.getData(CommonDataKeys.PROJECT).getComponent(GuardsPluginProject.class));
@@ -84,17 +85,28 @@ public class DisplayGuardsAction extends AnAction {
         if ( project == null ) {
             return;
         }
-        PsiElement element = e.getData(CommonDataKeys.PSI_ELEMENT);
-        if ( element == null ) {
-            Editor editor = e.getData(CommonDataKeys.EDITOR);
-            if ( editor != null ) {
-                PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
-                if ( psiFile != null ) {
-                    element = psiFile.findElementAt(editor.getCaretModel().getOffset());
-                }
+        Editor editor = e.getData(CommonDataKeys.EDITOR);
+        PsiElement element = null;
+        if ( editor != null ) {
+            PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+            if ( psiFile != null ) {
+                element = psiFile.findElementAt(editor.getCaretModel().getOffset());
             }
         }
-        PsiGuardTarget target = new PsiGuardTarget(element);
-        project.getComponent(GuardsPluginProject.class).getGuardsView().updateElement(target);
+        if ( element == null) {
+            element = e.getData(CommonDataKeys.PSI_ELEMENT);
+        }
+        if ( element == null ) {
+            return;
+        }
+        final GuardFocus focus = GuardFocus.find(element);
+        if ( focus == null ) {
+            return;
+        }
+        GuardEditor guardEditor = GuardEditor.find(e.getDataContext());
+        if ( guardEditor == null ) {
+            return;
+        }
+        guardEditor.show();
     }
 }

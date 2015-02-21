@@ -44,21 +44,21 @@
   <application-components>
     <!-- Add your application components here -->
     <component>
-      <implementation-class>ch.raffael.guards.plugins.idea.GuardsPlugin</implementation-class>
+      <implementation-class>ch.raffael.guards.plugins.idea.GuardsApplicationComponent</implementation-class>
     </component>
   </application-components>
 
   <project-components>
     <!-- Add your project components here -->
     <component>
-      <implementation-class>ch.raffael.guards.plugins.idea.GuardsPluginProject</implementation-class>
+      <implementation-class>ch.raffael.guards.plugins.idea.GuardsProjectComponent</implementation-class>
     </component>
   </project-components>
 
   <actions>
     <!-- Add your actions here -->
     <action id="ch.raffael.guards.displayGuards"
-            class="ch.raffael.guards.plugins.idea.DisplayGuardsAction" text="Display Guards">
+            class="ch.raffael.guards.plugins.idea.ui.EditGuardsAction" text="Display Guards">
       <keyboard-shortcut keymap="$default" first-keystroke="alt G"/>
     </action>
   </actions>

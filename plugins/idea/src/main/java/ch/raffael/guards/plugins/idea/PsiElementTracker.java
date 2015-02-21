@@ -43,6 +43,7 @@ import com.intellij.util.messages.MessageBusConnection;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.plugins.idea.ui.GuardFocus;
 
 
 /**
@@ -51,7 +52,6 @@ import ch.raffael.guards.Nullable;
 public class PsiElementTracker extends CaretAdapter implements FileEditorManagerListener, CaretListener {
 
     private final Project project;
-    private final GuardsView guardsView;
 
     private Editor currentEditor;
     private MessageBusConnection msgBus;
@@ -59,9 +59,8 @@ public class PsiElementTracker extends CaretAdapter implements FileEditorManager
     private PsiElement currentElement = null;
     private RangeHighlighter currentHighlight = null;
 
-    public PsiElementTracker(Project project, GuardsView guardsView) {
+    public PsiElementTracker(Project project) {
         this.project = project;
-        this.guardsView = guardsView;
     }
 
     @Override
@@ -115,14 +114,17 @@ public class PsiElementTracker extends CaretAdapter implements FileEditorManager
             currentEditor.getMarkupModel().removeHighlighter(currentHighlight);
             currentHighlight = null;
         }
-        PsiGuardTarget target = new PsiGuardTarget(elementUnderCursor());
-        if ( target.getVisual() != null ) {
-            TextRange textRange = target.getVisual().getTextRange();
-            currentHighlight = currentEditor.getMarkupModel().addRangeHighlighter(
-                    textRange.getStartOffset(), textRange.getEndOffset(),
-                    HighlighterLayer.ELEMENT_UNDER_CARET,
-                    TextAttributes.fromFlyweight(AttributesFlyweight.create(null, null, 0, JBColor.YELLOW, EffectType.ROUNDED_BOX, null)),
-                    HighlighterTargetArea.EXACT_RANGE);
+        PsiElement startElement = elementUnderCursor();
+        GuardFocus focus = GuardFocus.find(startElement);
+        if ( focus != null ) {
+            TextRange range = focus.findTextRange(currentEditor, project, startElement);
+            if ( range != null ) {
+                currentHighlight = currentEditor.getMarkupModel().addRangeHighlighter(
+                        range.getStartOffset(), range.getEndOffset(),
+                        HighlighterLayer.ELEMENT_UNDER_CARET,
+                        TextAttributes.fromFlyweight(AttributesFlyweight.create(null, null, 0, JBColor.YELLOW, EffectType.ROUNDED_BOX, null)),
+                        HighlighterTargetArea.EXACT_RANGE);
+            }
         }
     }
 

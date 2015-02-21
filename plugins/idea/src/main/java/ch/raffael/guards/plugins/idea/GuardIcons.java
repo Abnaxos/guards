@@ -14,23 +14,30 @@
  * limitations under the License.
  */
 
+package ch.raffael.guards.plugins.idea;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 
-configurations {
-    ideaClasses
-}
-sourceSets.main.compileClasspath += configurations.ideaClasses
-sourceSets.test.compileClasspath += configurations.ideaClasses
-sourceSets.test.runtimeClasspath += configurations.ideaClasses
+/**
+ * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
+ */
+public final class GuardIcons {
 
-dependencies {
-    compile project(':runtime')
-    compile project(':analysis')
+    //private static final ConcurrentMap<Object, Supplier<Icon>> ICONS = new MapMaker().concurrencyLevel(1).makeMap();
 
-    compile group:'com.github.monkeysintown', name:'jgraphx', version:'3.1.2.1'
-
-    ideaClasses fileTree("${project['idea.home']}/lib") {
-        include '*.jar'
+    private GuardIcons() {
     }
+
+    //private static Icon getIcon(Object key) {
+    //
+    //}
+
+    private static Icon load(String resPath) {
+        return new ImageIcon(GuardIcons.class.getResource(resPath));
+    }
+
+    public static final Icon Guard = load("guards.png");
 
 }

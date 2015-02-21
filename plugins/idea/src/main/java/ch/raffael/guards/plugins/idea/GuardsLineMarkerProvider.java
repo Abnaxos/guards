@@ -37,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvider {
 
-    private static final Icon GUARDED_ICON = Icons.GUARDS_GENERAL;
+    private static final Icon GUARDED_ICON = GuardIcons.Guard;
 
     //@Override
     //public void annotate(@NotNull PsiElement element, AnnotationHolder holder) {
