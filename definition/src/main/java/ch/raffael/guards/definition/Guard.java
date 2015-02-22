@@ -141,6 +141,11 @@ public @interface Guard {
 
     GuardFlag[] flags() default {};
 
+    OrderingTendency orderingTendency() default OrderingTendency.PRIMARY;
+    Class<? extends Annotation>[] before() default {};
+    Class<? extends Annotation>[] after() default {};
+
+
     /**
      * Base class for handlers. This is also the point where we could add nor features in the
      * future, like e.g. consistency checking, merging guard annotations with checking whether
