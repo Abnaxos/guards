@@ -19,13 +19,9 @@ package ch.raffael.guards.plugins.idea;
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static ch.raffael.guards.plugins.idea.GuardsApplicationComponent.DEBUG;
 
 
 /**
@@ -36,18 +32,20 @@ public class GuardsInheritanceInspection extends AbstractBaseJavaLocalInspection
     @Nullable
     @Override
     public ProblemDescriptor[] checkMethod(@NotNull PsiMethod method, @NotNull InspectionManager manager, boolean isOnTheFly) {
-        ProblemsHolder problems = new ProblemsHolder(InspectionManager.getInstance(method.getProject()), method.getContainingFile(), isOnTheFly);
-        for( PsiAnnotation annotation : method.getModifierList().getAnnotations() ) {
-            GuardInfo guardInfo = GuardInfo.forPsiAnnotation(annotation);
-            if ( guardInfo.isGuard() ) {
-                if ( DEBUG ) {
-                    //manager.createProblemDescriptor()
-                    //problems.registerProblem(annotation, "Guard: " + guardInfo, ProblemHighlightType.INFORMATION);
-                }
-                System.out.println(guardInfo);
-            }
-        }
-        return problems.getResultsArray();
+        return ProblemDescriptor.EMPTY_ARRAY;
+        //ProblemsHolder problems = new ProblemsHolder(InspectionManager.getInstance(method.getProject()), method.getContainingFile(), isOnTheFly);
+        //for( PsiAnnotation annotation : method.getModifierList().getAnnotations() ) {
+        //
+        //    GuardModel guardInfo = GuardInfo.forPsiAnnotation(annotation);
+        //    if ( guardInfo.isGuard() ) {
+        //        if ( DEBUG ) {
+        //            //manager.createProblemDescriptor()
+        //            //problems.registerProblem(annotation, "Guard: " + guardInfo, ProblemHighlightType.INFORMATION);
+        //        }
+        //        System.out.println(guardInfo);
+        //    }
+        //}
+        //return problems.getResultsArray();
     }
 
 }

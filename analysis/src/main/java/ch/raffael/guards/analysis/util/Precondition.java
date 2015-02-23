@@ -14,38 +14,13 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
-
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
-import org.jetbrains.annotations.NotNull;
-
+package ch.raffael.guards.analysis.util;
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class    GuardsModule implements ModuleComponent {
+public interface Precondition<T> {
 
-    public GuardsModule(Module module) {
-    }
+    boolean apply(T value);
 
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return GuardsApplicationComponent.PLUGIN_ID + ".GuardsModule";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
-
-    public void moduleAdded() {
-    }
 }

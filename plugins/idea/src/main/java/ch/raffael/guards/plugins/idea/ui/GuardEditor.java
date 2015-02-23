@@ -36,6 +36,8 @@ import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.JBPopupListener;
@@ -56,6 +58,8 @@ import com.intellij.ui.awt.RelativePoint;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.plugins.idea.GuardIcons;
+import ch.raffael.guards.plugins.idea.model.GuardModelManager;
+import ch.raffael.guards.plugins.idea.model.PsiGuardModel;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -69,6 +73,7 @@ public class GuardEditor {
 
     private final Project project;
     private final Editor editor;
+    private final Module module;
     private final GuardFocus focus;
 
     private final ListPopup popup;
@@ -78,6 +83,7 @@ public class GuardEditor {
         this.focus = focus;
         this.project = project;
         this.editor = editor;
+        this.module = ModuleUtilCore.findModuleForPsiElement(focus.getElement());
         if ( editor != null ) {
             popup = popupFactory.createActionGroupPopup(null, buildElementGroup(focus.getElement()), dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, true);
             final TextRange elementRange = focus.visualRange(editor, project);
@@ -173,14 +179,24 @@ public class GuardEditor {
 
     private ActionGroup buildAddGuardActions(PsiModifierListOwner element) {
         SimpleActionGroup addGroup = new SimpleActionGroup("Add Guard", AllIcons.General.Add);
-        for( int i = 0; i < 3; i++ ) {
-            addGroup.add(new AnAction("@AddGuard" + i, null, GuardIcons.Guard) {
-                @Override
-                public void actionPerformed(@NotNull AnActionEvent e) {
-                    // FIXME: implement this
-                }
-            });
+        if ( module != null ) {
+            for( PsiGuardModel model : GuardModelManager.get(module).getContext().findAllGuards() ) {
+                addGroup.add(new AnAction("@" + model.getName(), null, GuardIcons.Guard) {
+                    @Override
+                    public void actionPerformed(@NotNull AnActionEvent e) {
+                        // FIXME: Not Implemented
+                    }
+                });
+            }
         }
+        //for( int i = 0; i < 3; i++ ) {
+        //    addGroup.add(new AnAction("@AddGuard" + i, null, GuardIcons.Guard) {
+        //        @Override
+        //        public void actionPerformed(@NotNull AnActionEvent e) {
+        //            // FIXME: implement this
+        //        }
+        //    });
+        //}
         return addGroup.asPopup();
     }
 

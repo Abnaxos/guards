@@ -14,38 +14,26 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
-
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
-import org.jetbrains.annotations.NotNull;
-
+package ch.raffael.guards.analysis;
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class    GuardsModule implements ModuleComponent {
+public class LoadException extends RuntimeException {
 
-    public GuardsModule(Module module) {
+    public LoadException() {
+        super();
     }
 
-    public void initComponent() {
+    public LoadException(String message) {
+        super(message);
     }
 
-    public void disposeComponent() {
+    public LoadException(Throwable cause) {
+        super(cause);
     }
 
-    @NotNull
-    public String getComponentName() {
-        return GuardsApplicationComponent.PLUGIN_ID + ".GuardsModule";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
-
-    public void moduleAdded() {
+    public LoadException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

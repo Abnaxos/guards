@@ -14,38 +14,23 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
+package ch.raffael.guards.analysis;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
-import org.jetbrains.annotations.NotNull;
+import ch.raffael.guards.NotNull;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class    GuardsModule implements ModuleComponent {
+public abstract class TypeModel {
 
-    public GuardsModule(Module module) {
+    private final String name;
+
+    public TypeModel(@NotNull String name) {
+        this.name = name;
     }
 
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return GuardsApplicationComponent.PLUGIN_ID + ".GuardsModule";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
-
-    public void moduleAdded() {
+    public String getName() {
+        return name;
     }
 }

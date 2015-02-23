@@ -14,19 +14,36 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
+package ch.raffael.guards.plugins.idea.model;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
-import org.jetbrains.annotations.NotNull;
+
+import ch.raffael.guards.NotNull;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class    GuardsModule implements ModuleComponent {
+public class GuardModelManager implements ModuleComponent {
 
-    public GuardsModule(Module module) {
+    private final Module module;
+
+    public GuardModelManager(Module module) {
+        this.module = module;
+    }
+
+    @NotNull
+    public static GuardModelManager get(Module module) {
+        return checkNotNull(module.getComponent(GuardModelManager.class),
+                "No GuardModelManager found for module " + module);
+    }
+
+    @NotNull
+    public PsiGuardContext getContext() {
+        return new PsiGuardContext(module);
     }
 
     public void initComponent() {
@@ -37,7 +54,7 @@ public class    GuardsModule implements ModuleComponent {
 
     @NotNull
     public String getComponentName() {
-        return GuardsApplicationComponent.PLUGIN_ID + ".GuardsModule";
+        return GuardModelManager.class.getName();
     }
 
     public void projectOpened() {
@@ -48,4 +65,5 @@ public class    GuardsModule implements ModuleComponent {
 
     public void moduleAdded() {
     }
+
 }

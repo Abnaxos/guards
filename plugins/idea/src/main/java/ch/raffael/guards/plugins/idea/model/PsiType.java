@@ -14,38 +14,19 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
+package ch.raffael.guards.plugins.idea.model;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
-import org.jetbrains.annotations.NotNull;
+import ch.raffael.guards.NotEmpty;
+import ch.raffael.guards.NotNull;
+import ch.raffael.guards.analysis.Type;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class    GuardsModule implements ModuleComponent {
+public class PsiType extends Type {
 
-    public GuardsModule(Module module) {
-    }
-
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return GuardsApplicationComponent.PLUGIN_ID + ".GuardsModule";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
-
-    public void moduleAdded() {
+    PsiType(@NotNull @NotEmpty String name) {
+        super(name);
     }
 }

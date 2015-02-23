@@ -16,9 +16,68 @@
 
 package ch.raffael.guards.analysis;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import ch.raffael.guards.NotNull;
+
+
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardModel {
+public abstract class GuardModel {
+
+    private final Context<?> context;
+    private final Object loadLock = new Object();
+    private volatile boolean loaded = false;
+
+    private final String name;
+
+    private String message;
+    private final Set<Type> supportedTypes = new HashSet<>();
+
+    protected GuardModel(@NotNull Context<?> context, @NotNull String name) {
+        this.context = context;
+        this.name = name;
+    }
+
+    public Context<?> getContext() {
+        return context;
+    }
+
+    @NotNull
+    public String getName() {
+        return name;
+    }
+
+    @NotNull
+    public String getName(NameStyle style) {
+        if ( style == NameStyle.SHORT ) {
+            int pos = name.lastIndexOf('.');
+            if ( pos >= 0 ) {
+                return name.substring(pos + 1);
+            }
+        }
+        return name;
+    }
+
+    protected abstract void load() throws LoadException;
+
+    private void ensureLoaded() {
+        if ( !loaded ) {
+            synchronized ( loadLock ) {
+                if ( !loaded ) {
+                    load();
+                    loaded = true;
+                }
+            }
+        }
+    }
+
+    private void ensureNotLoaded() {
+        if ( loaded ) {
+            throw new IllegalStateException("Guard " + this + " has already been loaded");
+        }
+    }
 
 }

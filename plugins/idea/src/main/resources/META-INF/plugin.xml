@@ -69,11 +69,17 @@
                      shortName="GuardsInheritance" displayName="Guards Inheritance Issues" groupName="Guards"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="ch.raffael.guards.plugins.idea.GuardsInheritanceInspection"/>
+    <!--<iconProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons" order="first"/>-->
+    <iconLayerProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons"/>
   </extensions>
 
   <module-components>
     <component>
       <implementation-class>ch.raffael.guards.plugins.idea.GuardsModule</implementation-class>
+    </component>
+    <component>
+      <implementation-class>ch.raffael.guards.plugins.idea.model.GuardModelManager
+      </implementation-class>
     </component>
   </module-components>
 </idea-plugin>
