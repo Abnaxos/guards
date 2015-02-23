@@ -24,6 +24,8 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Positioning;
+import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -37,6 +39,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
 @Relations(supersetOf = { Unsigned.class, Positive.class })
+@Positioning(tendency = PositioningTendency.LEADING)
 public @interface Signed {
 
 }

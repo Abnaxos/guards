@@ -27,6 +27,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Message;
+import ch.raffael.guards.definition.Positioning;
+import ch.raffael.guards.definition.PositioningTendency;
 
 
 /**
@@ -39,6 +41,7 @@ import ch.raffael.guards.definition.Message;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Min(-1)
+@Positioning(tendency = PositioningTendency.LEADING)
 @Message("The value must be signed or -1 if not found")
 public @interface UnsignedOrNotFound {
 

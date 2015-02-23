@@ -17,8 +17,14 @@
 package ch.raffael.guards.definition;
 
 /**
+ *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 public enum PositioningTendency {
-    PRIMARY, LEADING, TRAILING
+    PRIMARY, CUSTOM, LEADING, TRAILING,
+    /**
+     * The default tendency. {@link #CUSTOM} for derived guards, {@link #TRAILING} for all other
+     * guards.
+     */
+    DEFAULT
 }

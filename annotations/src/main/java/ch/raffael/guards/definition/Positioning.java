@@ -25,6 +25,11 @@ import java.lang.annotation.Target;
 
 
 /**
+ * Describes a positioning tendency for guards. Guards will be positioned by IDE support and the
+ * agent when applying the guards. It describes "slots" where the annotations will be placed. It
+ * also provides means to group several annotations together, like {@link ch.raffael.guards.Min @Min}
+ * always right next to {@link ch.raffael.guards.Max @Max}.
+ *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target(ElementType.ANNOTATION_TYPE)
@@ -39,5 +44,13 @@ public @interface Positioning {
 
     Class<? extends Annotation>[] after() default {};
 
+    /**
+     * Special value for {@link Positioning#before() before} and {@link Positioning#after() after}
+     * to indicate that the annotation should be placed before all/after all other annotations in
+     * its {@link Positioning#tendency() tendency} group.
+     */
+    @Target({})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface All {}
 
 }

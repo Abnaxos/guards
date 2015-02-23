@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Positioning;
+import ch.raffael.guards.definition.PositioningTendency;
 
 
 /**
@@ -36,6 +38,7 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
+@Positioning(tendency = PositioningTendency.LEADING)
 @Message("The value must be a real number")
 public @interface Real {
 

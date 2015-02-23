@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Positioning;
+import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 import ch.raffael.guards.definition.Relations.Rules;
 
@@ -45,16 +47,17 @@ import ch.raffael.guards.definition.Relations.Rules;
                 "-> disjoint" }),
         @Rules(type = Signed.class, value = {
                 "value == minValue -> equal",
-                "-> subset"}),
+                "-> subset" }),
         @Rules(type = Unsigned.class, value = {
                 "value > 0 -> subset",
                 "value == 0 -> equal",
-                "-> superset"}),
+                "-> superset" }),
         @Rules(type = Positive.class, value = {
                 "value > 1 -> subset",
                 "value == 1 -> equal",
                 "-> superset" })
 })
+@Positioning(tendency = PositioningTendency.LEADING, before = Max.class)
 @Message("Value must be at least {value}")
 public @interface Min {
 
