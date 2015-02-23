@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.definition;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,23 +22,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.Message;
-import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.Relations;
-
 
 /**
- * Check that an {@link Iterable} or array does not contain any `null` values.
- *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.PACKAGE, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.HIGH)
-@Relations(subsetOf = AllowNulls.class)
-@Message("Collection may not contain null elements")
-public @interface NoNulls {
+public @interface HandlerPackage {
+
+    String value();
 
 }

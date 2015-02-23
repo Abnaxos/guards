@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 
 
@@ -31,11 +32,11 @@ import ch.raffael.guards.definition.PerformanceImpact;
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "The value must be a real number",
-        performanceImpact = PerformanceImpact.LOW)
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Message("The value must be a real number")
 public @interface Real {
 
 }

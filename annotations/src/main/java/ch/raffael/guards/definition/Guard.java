@@ -97,6 +97,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@GuardAnnotation
 public @interface Guard {
 
     /**
@@ -114,37 +115,7 @@ public @interface Guard {
 
     PerformanceImpact performanceImpact();
 
-    @GuardAnnotation
-    Class<? extends Annotation>[] supersetOf() default {};
-
-    @GuardAnnotation
-    Class<? extends Annotation>[] subsetOf() default {};
-
-    @GuardAnnotation
-    Class<? extends Annotation>[] equalTo() default {};
-
-    @GuardAnnotation
-    Class<? extends Annotation[]>[] intersectingWith() default {};
-
-    @GuardAnnotation
-    Class<? extends Annotation>[] disjointFrom() default {};
-
-    @GuardAnnotation
-    Class<? extends Annotation>[] synonymousTo() default {};
-
-    @GuardAnnotation
-    Class<? extends Annotation>[] inconsistentWith() default {};
-
-    RelationRule[] relations() default {};
-
-    String[] validate() default {};
-
-    GuardFlag[] flags() default {};
-
-    OrderingTendency orderingTendency() default OrderingTendency.PRIMARY;
-    Class<? extends Annotation>[] before() default {};
-    Class<? extends Annotation>[] after() default {};
-
+    boolean testNulls() default false;
 
     /**
      * Base class for handlers. This is also the point where we could add nor features in the
@@ -195,32 +166,6 @@ public @interface Guard {
         public @interface Test {
         }
 
-        /**
-         * Declare automatic type conversions. Possible type conversions are:
-         *
-         *  *  `byte` -> `short` -> `int` -> `long`
-         *  *  `char` -> `int` -> `long`
-         *  *  `float` -> `double`
-         */
-        @Target(ElementType.METHOD)
-        @Retention(RetentionPolicy.RUNTIME)
-        @Documented
-        @Future
-        public @interface ConvertFrom {
-
-            /**
-             * The primitive types to convert.
-             */
-            Class<?>[] value();
-
-            /**
-             * Enable unboxing. Not that you shouldn't use that when `checkNullValues` is `true`.
-             * The conversion will simply throw a `NullPointerException` if trying to unbox `null`
-             * values.
-             */
-            boolean unboxing();
-        }
-
     }
 
     /**
@@ -251,6 +196,7 @@ public @interface Guard {
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
+    @Deprecated
     public @interface TypeConversions {
 
         TypeConversions DEFAULTS = new TypeConversions() {

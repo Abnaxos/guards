@@ -42,7 +42,7 @@ import ch.raffael.guards.Immutable;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.Unsigned;
-import ch.raffael.guards.UnsignedOrSpecial;
+import ch.raffael.guards.plugins.idea.ElementIndex;
 
 
 /**
@@ -86,7 +86,7 @@ public final class GuardFocus {
         index = -1;
     }
 
-    private GuardFocus(@NotNull GuardFocus that, @UnsignedOrSpecial int index) {
+    private GuardFocus(@NotNull GuardFocus that, @ElementIndex int index) {
         origin = that.origin;
         methodVisuals = that.methodVisuals;
         parameterVisuals = that.parameterVisuals;
@@ -196,7 +196,7 @@ public final class GuardFocus {
         return parameters.get(parameterIndexVarArgs(index));
     }
 
-    @UnsignedOrSpecial
+    @ElementIndex
     public int getIndex() {
         return index;
     }
@@ -207,7 +207,7 @@ public final class GuardFocus {
     }
 
     @NotNull
-    public PsiModifierListOwner getElement(@UnsignedOrSpecial int index) {
+    public PsiModifierListOwner getElement(@ElementIndex int index) {
         if ( index < 0 ) {
             return getMethod();
         }
@@ -255,7 +255,7 @@ public final class GuardFocus {
     }
 
     @NotNull
-    public GuardFocus forIndex(@UnsignedOrSpecial int index) {
+    public GuardFocus forIndex(@ElementIndex int index) {
         if ( index != this.index ) {
             return new GuardFocus(this, index);
         }

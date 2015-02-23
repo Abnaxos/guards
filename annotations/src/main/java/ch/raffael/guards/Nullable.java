@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Relations;
 
 
 /**
@@ -31,12 +32,11 @@ import ch.raffael.guards.definition.PerformanceImpact;
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(handler = Guard.AlwaysTrue.class,
-        performanceImpact = PerformanceImpact.LOW,
-        supersetOf = NotNull.class)
+@Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
+@Relations(supersetOf = NotNull.class)
 public @interface Nullable {
 
 }

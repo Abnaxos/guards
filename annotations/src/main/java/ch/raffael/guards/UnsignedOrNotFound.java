@@ -14,36 +14,32 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.draft;
+package ch.raffael.guards;
 
-import java.lang.annotation.Annotation;
+/**
+ * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
+ */
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.RelationRule;
+import ch.raffael.guards.definition.Message;
 
 
 /**
+ * The number must be unsigned (>=0) or -1 if not found. The `indexOf(...)` methods are a good
+ * example of where to use this.
+ *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.CLASS)
-@Guard(message = "Class not annotated with $value",
-        performanceImpact = PerformanceImpact.MEDIUM,
-        validate = "allOf.isEmpty() && anyOf.isEmpty && noneOf.isEmpty -> warning: No annotation restrictions specified",
-        relations = @RelationRule("todo"))
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface AnnotatedWith {
-
-    Class<? extends Annotation>[] allOf() default { };
-
-    Class<? extends Annotation>[] anyOf() default { };
-
-    Class<? extends Annotation>[] noneOf() default { };
+@Min(-1)
+@Message("The value must be signed or -1 if not found")
+public @interface UnsignedOrNotFound {
 
 }

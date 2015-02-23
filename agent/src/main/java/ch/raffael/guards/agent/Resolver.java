@@ -25,7 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -40,7 +39,6 @@ import ch.raffael.guards.agent.guava.reflect.TypeToken;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Guard.Handler;
 import ch.raffael.guards.definition.Guard.TypeConversions;
-import ch.raffael.guards.definition.GuardFlag;
 import ch.raffael.guards.definition.HandlerPackage;
 import ch.raffael.guards.runtime.GuardsInternalError;
 import ch.raffael.guards.runtime.IllegalGuardError;
@@ -132,7 +130,7 @@ class Resolver {
     Resolver(@NotNull Class<? extends Annotation> guardType, @NotNull Class<? extends Handler<?>> handlerType) {
         this.guardType = guardType;
         this.handlerType = handlerType;
-        testNulls = Arrays.asList(guardType.getAnnotation(Guard.class).flags()).contains(GuardFlag.TEST_NULLS);
+        testNulls = (guardType.getAnnotation(Guard.class).testNulls());
         this.constructor = (Constructor<? extends Handler<?>>)findConstructor(guardType, handlerType);
         ImmutableList.Builder<TestMethod> testMethods = ImmutableList.builder();
         for( Method method : handlerType.getMethods() ) {

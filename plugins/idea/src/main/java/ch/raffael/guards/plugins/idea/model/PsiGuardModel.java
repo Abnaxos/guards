@@ -53,6 +53,11 @@ public class PsiGuardModel extends GuardModel {
         return super.getName(style);
     }
 
+    @NotNull
+    public PsiClass getPsiClass() {
+        return psiClass;
+    }
+
     @Override
     protected void load() throws LoadException {
         // FIXME: Not implemented

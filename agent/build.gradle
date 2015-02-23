@@ -30,7 +30,7 @@ apply plugin:guards.PreparedShadow
 apply plugin:guards.Publishable
 
 dependencies {
-    included project(':runtime'), project(':annotations'), project(':definition')
+    included project(':runtime'), project(':annotations')
 
     provided findToolsJar()
 

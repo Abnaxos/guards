@@ -23,7 +23,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Relations;
 
 
 /**
@@ -31,13 +33,12 @@ import ch.raffael.guards.definition.PerformanceImpact;
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must not be negative",
-        performanceImpact = PerformanceImpact.LOW,
-        supersetOf = Positive.class,
-        subsetOf = Signed.class)
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations(supersetOf = Positive.class, subsetOf = Signed.class)
+@Message("Value must not be negative")
 public @interface Unsigned {
 
 }

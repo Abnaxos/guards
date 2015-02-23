@@ -184,7 +184,7 @@ public class GuardEditor {
         SimpleActionGroup addGroup = new SimpleActionGroup("Add Guard", AllIcons.General.Add);
         if ( module != null ) {
             for( PsiGuardModel model : GuardModelManager.get(module).getContext().findAllGuards() ) {
-                addGroup.add(new AnAction("@" + model.getName(), null, GuardIcons.Guard) {
+                addGroup.add(new AnAction("@" + model.getName(), null, model.getPsiClass().getIcon(0)) {
                     @Override
                     public void actionPerformed(@NotNull AnActionEvent e) {
                         // FIXME: Not Implemented

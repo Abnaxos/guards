@@ -19,21 +19,14 @@ package ch.raffael.guards.plugins.idea;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import com.intellij.codeInsight.AnnotationUtil;
 import com.intellij.ide.IconLayerProvider;
-import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.util.Iconable;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifierListOwner;
-import com.intellij.psi.PsiParameter;
 import org.jetbrains.annotations.Nullable;
 
 import ch.raffael.guards.NotNull;
-import ch.raffael.guards.definition.Guard;
+
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isGuarded;
 
 
 /**
@@ -51,60 +44,12 @@ public final class GuardIcons implements IconLayerProvider {
     @Nullable
     @Override
     public Icon getLayerIcon(@NotNull Iconable element, boolean isLocked) {
-        // TODO: proper language check
-        if ( !(element instanceof PsiElement) || !((PsiElement)element).getLanguage().is(JavaLanguage.INSTANCE) ) {
+        if ( element instanceof PsiElement && isGuarded((PsiElement)element) ) {
+            return GuardLayer;
+        }
+        else {
             return null;
         }
-        if ( element instanceof PsiClass ) {
-            PsiClass psiClass = (PsiClass)element;
-            if ( psiClass.isAnnotationType() && AnnotationUtil.isAnnotated(psiClass, Guard.class.getName(), false) ) {
-                return GuardLayer;
-            }
-        }
-        else if ( element instanceof PsiMethod ) {
-            if ( isGuarded((PsiModifierListOwner)element) ) {
-                return GuardLayer;
-            }
-            for( PsiParameter param : ((PsiMethod)element).getParameterList().getParameters() ) {
-                if ( isGuarded(param) ) {
-                    return GuardLayer;
-                }
-            }
-        }
-        else if (element instanceof PsiField ) {
-            if ( isGuarded((PsiModifierListOwner)element) ) {
-                return GuardLayer;
-            }
-        }
-        else if ( element instanceof PsiParameter ) {
-            if ( isGuarded((PsiParameter)element) ) {
-                return GuardLayer;
-            }
-        }
-        return null;
-    }
-
-    private boolean isGuarded(PsiModifierListOwner element) {
-        if ( element.getModifierList() == null ) {
-            return false;
-        }
-        for( PsiAnnotation annotation : element.getModifierList().getAnnotations() ) {
-            if ( annotation.getNameReferenceElement() == null ) {
-                continue;
-            }
-            PsiElement resolved = annotation.getNameReferenceElement().resolve();
-            if ( !(resolved instanceof PsiClass) ) {
-                continue;
-            }
-            if ( isGuardAnnoation((PsiClass)resolved) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isGuardAnnoation(PsiClass psiClass) {
-        return AnnotationUtil.isAnnotated(psiClass, ch.raffael.guards.definition.Guard.class.getName(), false);
     }
 
     @Nullable

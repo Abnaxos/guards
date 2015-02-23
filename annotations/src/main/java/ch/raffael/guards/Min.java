@@ -23,36 +23,39 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.RelationRule;
+import ch.raffael.guards.definition.Relations;
+import ch.raffael.guards.definition.Relations.Rules;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must be at least {value}",
-        performanceImpact = PerformanceImpact.LOW,
-        relations = {
-                @RelationRule({
-                        "value > that.value -> subset",
-                        "value < that.value -> superset" }),
-                @RelationRule(type = Max.class, value = {
-                        "value <= that.value -> intersecting",
-                        "-> disjoint" }),
-                @RelationRule(type = Signed.class, value = {
-                        "value == minValue -> equal",
-                        "-> subset"}),
-                @RelationRule(type = Unsigned.class, value = {
-                        "value > 0 -> subset",
-                        "value == 0 -> equal",
-                        "-> superset"}),
-                @RelationRule(type = Positive.class, value = {
-                        "value > 1 -> subset",
-                        "value == 1 -> equal",
-                        "-> superset" })})
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations(rules = {
+        @Rules({
+                "value > that.value -> subset",
+                "value < that.value -> superset" }),
+        @Rules(type = Max.class, value = {
+                "value <= that.value -> intersecting",
+                "-> disjoint" }),
+        @Rules(type = Signed.class, value = {
+                "value == minValue -> equal",
+                "-> subset"}),
+        @Rules(type = Unsigned.class, value = {
+                "value > 0 -> subset",
+                "value == 0 -> equal",
+                "-> superset"}),
+        @Rules(type = Positive.class, value = {
+                "value > 1 -> subset",
+                "value == 1 -> equal",
+                "-> superset" })
+})
+@Message("Value must be at least {value}")
 public @interface Min {
 
     long value();

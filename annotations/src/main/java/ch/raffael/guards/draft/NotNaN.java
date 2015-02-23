@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 
 
@@ -32,8 +33,8 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must not be NaN",
-        performanceImpact = PerformanceImpact.LOW)
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Message("Value must not be NaN")
 public @interface NotNaN {
 
 }

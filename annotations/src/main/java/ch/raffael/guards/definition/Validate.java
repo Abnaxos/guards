@@ -24,22 +24,17 @@ import java.lang.annotation.Target;
 
 
 /**
- * Marks a test method should also receive `null` values.
- *
- * Usually, `null` values will not be passed on to the test method, `null` is always
- * considered a valid value for the guard. This is usually the right thing to do as there
- * is a {@link ch.raffael.guards.NotNull @NotNull} annotation to disable `null` values.
- *
- * However, there may be exceptions to this, notably the
- * {@link ch.raffael.guards.NotNull @NotNull} annotation itself.
- *
- * Test methods annotated with `@CheckNulls` will also receive `null` values.
+ * The message on a guard violation. This is useful in derived Guards for overriding the original
+ * message when the guard fails.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface CheckNulls {
+@GuardAnnotation
+public @interface Validate {
+
+    String[] value();
 
 }

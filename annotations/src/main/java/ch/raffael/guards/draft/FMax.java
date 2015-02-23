@@ -26,8 +26,10 @@ import ch.raffael.guards.Positive;
 import ch.raffael.guards.Signed;
 import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.RelationRule;
+import ch.raffael.guards.definition.Relations;
+import ch.raffael.guards.definition.Relations.Rules;
 
 
 /**
@@ -36,31 +38,30 @@ import ch.raffael.guards.definition.RelationRule;
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must be at most $value",
-        performanceImpact = PerformanceImpact.LOW,
-        subsetOf = Signed.class,
-        relations = {
-                @RelationRule({
-                        "value > that.value -> subset",
-                        "value < that.value -> superset" }),
-                @RelationRule(type = FMaxX.class, value = {
-                        "value > that.value -> subset",
-                        "value <= that.value -> superset" }),
-                @RelationRule(type = FMin.class, value = {
-                        "value >= that.value -> intersects",
-                        "-> disjoint" }),
-                @RelationRule(type = FMinX.class, value = {
-                        "value > that.value -> intersects",
-                        "-> disjoint" }),
-                @RelationRule(type = Positive.class, value = {
-                        "value == 0 -> superset",
-                        "value > 0 -> subset",
-                        " -> disjoint" }),
-                @RelationRule(type = Unsigned.class, value = {
-                        "value == 0 -> equal",
-                        "value > 0 -> subset",
-                        "-> disjoint" }),
-        })
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations(subsetOf = Signed.class, rules = {
+        @Rules({
+                "value > that.value -> subset",
+                "value < that.value -> superset" }),
+        @Rules(type = FMaxX.class, value = {
+                "value > that.value -> subset",
+                "value <= that.value -> superset" }),
+        @Rules(type = FMin.class, value = {
+                "value >= that.value -> intersects",
+                "-> disjoint" }),
+        @Rules(type = FMinX.class, value = {
+                "value > that.value -> intersects",
+                "-> disjoint" }),
+        @Rules(type = Positive.class, value = {
+                "value == 0 -> superset",
+                "value > 0 -> subset",
+                " -> disjoint" }),
+        @Rules(type = Unsigned.class, value = {
+                "value == 0 -> equal",
+                "value > 0 -> subset",
+                "-> disjoint" }),
+})
+@Message("Value must be at most {value}")
 public @interface FMax {
 
     double value();

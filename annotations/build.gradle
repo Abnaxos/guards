@@ -19,5 +19,4 @@
 apply plugin:guards.Publishable
 
 dependencies {
-    provided project(':definition')
 }

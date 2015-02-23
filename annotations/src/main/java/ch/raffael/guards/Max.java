@@ -23,37 +23,40 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.RelationRule;
+import ch.raffael.guards.definition.Relations;
+import ch.raffael.guards.definition.Relations.Rules;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must be at most {value}",
-        performanceImpact = PerformanceImpact.LOW,
-        relations = {
-                @RelationRule({
-                        "max>that.max -> subset",
-                        "max<that.max -> superset" }),
-                @RelationRule(type = Min.class, value = {
-                        "max>=that.min -> intersecting",
-                        "-> disjoint" }),
-                @RelationRule(type = Signed.class, value = {
-                        "max == maxValue -> equal",
-                        "max >= 0 -> intersecting",
-                        "-> disjoint"}),
-                @RelationRule(type = Unsigned.class, value = {
-                        "max == maxValue -> superset",
-                        "max >= 0 -> intersecting",
-                        "-> disjoint"}),
-                @RelationRule(type = Positive.class, value = {
-                        "max == maxValue -> superset",
-                        "max >= 1 -> intersecting",
-                        "-> disjoint" })})
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations(rules = {
+        @Rules({
+                "max>that.max -> subset",
+                "max<that.max -> superset" }),
+        @Rules(type = Min.class, value = {
+                "max>=that.min -> intersecting",
+                "-> disjoint" }),
+        @Rules(type = Signed.class, value = {
+                "max == maxValue -> equal",
+                "max >= 0 -> intersecting",
+                "-> disjoint" }),
+        @Rules(type = Unsigned.class, value = {
+                "max == maxValue -> superset",
+                "max >= 0 -> intersecting",
+                "-> disjoint" }),
+        @Rules(type = Positive.class, value = {
+                "max == maxValue -> superset",
+                "max >= 1 -> intersecting",
+                "-> disjoint" })
+})
+@Message("Value must be at most {value}")
 public @interface Max {
 
     long value();

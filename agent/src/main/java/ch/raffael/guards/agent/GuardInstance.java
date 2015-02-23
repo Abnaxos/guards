@@ -165,7 +165,6 @@ final class GuardInstance {
     }
 
     private void appendMessage(StringBuilder buf, Object value) {
-        // TODO: error message substitution
         String message = guardType.configuration.message().trim();
         if ( message.isEmpty() ) {
             buf.append(annotation);

@@ -16,8 +16,6 @@
 
 
 
-
-
-include 'annotations', 'definition', 'runtime', 'agent'
+include 'annotations', 'runtime', 'agent'
 
 include 'analysis', 'plugins:idea'

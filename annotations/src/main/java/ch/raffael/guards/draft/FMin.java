@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 
 
@@ -32,8 +33,8 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must be at least $value",
-        performanceImpact = PerformanceImpact.LOW)
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Message("Value must be at least {value}")
 public @interface FMin {
 
     double value();

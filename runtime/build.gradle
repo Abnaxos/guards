@@ -20,5 +20,4 @@ apply plugin:guards.Publishable
 
 dependencies {
     compile project(':annotations')
-    compile project(':definition')
 }

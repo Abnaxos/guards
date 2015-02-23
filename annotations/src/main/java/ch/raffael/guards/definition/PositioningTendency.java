@@ -16,33 +16,9 @@
 
 package ch.raffael.guards.definition;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Guard(message = "Feature not implemented: $value",
-        performanceImpact = PerformanceImpact.LOW,
-        flags = GuardFlag.METHOD_CALL_GUARD)
-public @interface Future {
-
-    String value() default "(no comment)";
-
-    final class Handler extends Guard.Handler<Future> {
-
-        private Handler(Future annotation) {
-            super(annotation);
-        }
-
-        private boolean test() {
-            return false;
-        }
-
-    }
-
+public enum PositioningTendency {
+    PRIMARY, LEADING, TRAILING
 }

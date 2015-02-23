@@ -23,7 +23,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Validate;
 
 
 /**
@@ -32,9 +34,9 @@ import ch.raffael.guards.definition.PerformanceImpact;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(message = "Value must not be positive or negative infinity",
-        performanceImpact = PerformanceImpact.LOW,
-        validate = "allowPos && allowNeg -> Both positive and negative infinity allowed")
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Validate("allowPos && allowNeg -> Both positive and negative infinity allowed")
+@Message("Value must not be positive or negative infinity")
 public @interface NotInfinity {
 
     boolean allowPos() default false;
