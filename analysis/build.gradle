@@ -18,6 +18,8 @@
 
 
 
+
+
 apply plugin:guards.PreparedShadow
 
 def antlr4Version = '4.5'
@@ -64,6 +66,8 @@ tasks.create('antlr4') {
 sourceSets.main.java.srcDir antlr4Final
 
 preparedShadowJar {
+    exclude 'org/abego/**'
+
     relocate 'org.antlr.v4.runtime', 'ch.raffael.guards.analysis.expr.antlr4rt'
 }
 

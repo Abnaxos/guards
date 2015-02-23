@@ -16,6 +16,8 @@
 
 
 
+
+
 configurations {
     ideaClasses
 }
@@ -23,14 +25,32 @@ sourceSets.main.compileClasspath += configurations.ideaClasses
 sourceSets.test.compileClasspath += configurations.ideaClasses
 sourceSets.test.runtimeClasspath += configurations.ideaClasses
 
+archivesBaseName = 'guards-idea-plugin'
+
 dependencies {
     compile project(':runtime')
     compile project(':analysis')
-
-    compile group:'com.github.monkeysintown', name:'jgraphx', version:'3.1.2.1'
 
     ideaClasses fileTree("${project['idea.home']}/lib") {
         include '*.jar'
     }
 
+}
+
+jar {
+    configurations.compile.each { dep ->
+        if ( dep.directory ) {
+            from fileTree(dep)
+        }
+        else {
+            from zipTree(dep)
+        }
+    }
+}
+
+task('installIdeaPlugin', type:Copy){
+    dependsOn jar
+
+    destinationDir = file(project.properties['idea.plugin.installPath']?:"${System.getProperty('user.home')}/.IntelliJIdea14/config/plugins")
+    from tasks.jar.archivePath
 }

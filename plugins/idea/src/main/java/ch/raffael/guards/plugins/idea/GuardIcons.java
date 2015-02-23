@@ -26,6 +26,7 @@ import com.intellij.openapi.util.Iconable;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiParameter;
@@ -68,6 +69,11 @@ public final class GuardIcons implements IconLayerProvider {
                 if ( isGuarded(param) ) {
                     return GuardLayer;
                 }
+            }
+        }
+        else if (element instanceof PsiField ) {
+            if ( isGuarded((PsiModifierListOwner)element) ) {
+                return GuardLayer;
             }
         }
         else if ( element instanceof PsiParameter ) {

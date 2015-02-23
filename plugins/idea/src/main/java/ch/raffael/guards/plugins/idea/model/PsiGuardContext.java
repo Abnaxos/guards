@@ -42,6 +42,7 @@ import ch.raffael.guards.definition.Guard;
  */
 public class PsiGuardContext extends Context<PsiGuardModel> {
 
+    @NotNull
     private final Module module;
     private final JavaPsiFacade javaPsiFacade;
 

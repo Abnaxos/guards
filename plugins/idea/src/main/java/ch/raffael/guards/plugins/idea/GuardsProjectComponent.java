@@ -56,8 +56,8 @@ public class GuardsProjectComponent implements ProjectComponent {
     }
 
     private void initToolWindow() {
-        tracker = new PsiElementTracker(project);
-        tracker.start();
+        //tracker = new PsiElementTracker(project);
+        //tracker.start();
         //ToolWindowManager twm = ToolWindowManager.getInstance(project);
         //toolWindow = twm.getToolWindow(GUARDS_VIEW_ID);
         //if ( toolWindow == null ) {

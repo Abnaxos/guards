@@ -31,6 +31,7 @@ import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.Separator;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.VisualPosition;
+import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.markup.AttributesFlyweight;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
@@ -52,7 +53,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiParameter;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.awt.RelativePoint;
 
 import ch.raffael.guards.NotNull;
@@ -90,7 +90,10 @@ public class GuardEditor {
             assert elementRange != null;
             final RangeHighlighter highlight = editor.getMarkupModel().addRangeHighlighter(
                     elementRange.getStartOffset(), elementRange.getEndOffset(), HighlighterLayer.SELECTION,
-                    TextAttributes.fromFlyweight(AttributesFlyweight.create(null, JBColor.BLUE, 0, null, null, null)),
+                    TextAttributes.fromFlyweight(AttributesFlyweight.create(
+                            editor.getColorsScheme().getColor(EditorColors.SELECTION_FOREGROUND_COLOR),
+                            editor.getColorsScheme().getColor(EditorColors.SELECTION_BACKGROUND_COLOR),
+                            0, null, null, null)),
                     HighlighterTargetArea.EXACT_RANGE);
             popup.addListener(new JBPopupListener.Adapter() {
                 @Override
