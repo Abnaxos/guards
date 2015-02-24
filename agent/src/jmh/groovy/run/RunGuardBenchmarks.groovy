@@ -17,6 +17,8 @@
 
 
 
+
+
 package run
 
 import benchmarks.GuardBenchmark
@@ -54,14 +56,14 @@ class RunGuardBenchmarks {
 
         def jvmArgs = [
                 '-DnoAgent=noAgent',
-                agent('+nopMode', 'nopMethod=mh_constant'),
-                agent('+nopMode', 'nopMethod=dedicated_method'),
-                agent('+nopMode', '+instrumentAll', 'nopMethod=mh_constant'),
-                agent('+nopMode', '+instrumentAll', 'nopMethod=dedicated_method'),
+                agent('+XnopMode', 'XnopMethod=mh_constant'),
+                agent('+XnopMode', 'XnopMethod=dedicated_method'),
+                agent('+XnopMode', '+XinstrumentAll', 'XnopMethod=mh_constant'),
+                agent('+XnopMode', '+XinstrumentAll', 'XnopMethod=dedicated_method'),
 
-                [['-instrumentAll', '+instrumentAll'],
-                 ['invocationMethod=mh_guard', 'invocationMethod=invoker'],
-                 ['-mutableCallSites', '+mutableCallSites'],
+                [['-XinstrumentAll', '+XinstrumentAll'],
+                 ['XinvocationMethod=mh_guard', 'XinvocationMethod=invoker'],
+                 ['-XmutableCallSites', '+XmutableCallSites'],
                 ].combinations().collect({ List args -> agent(args) }),
         ].flatten()
 

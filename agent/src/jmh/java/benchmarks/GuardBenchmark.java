@@ -203,7 +203,7 @@ public class GuardBenchmark {
         @Setup
         public void sanityCheck() {
             // run some tests for sanity-checking the agent
-            if ( GuardsAgent.getInstance().isInstalled() && !GuardsAgent.getInstance().getOptions().isNopMode() ) {
+            if ( GuardsAgent.getInstance().isInstalled() && !GuardsAgent.getInstance().getOptions().isXNopMode() ) {
                 try {
                     sanityCheckMethod(1);
                     throw new RuntimeException("Expected ContractViolationError not thrown");

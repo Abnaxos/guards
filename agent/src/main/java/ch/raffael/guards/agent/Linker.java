@@ -142,6 +142,7 @@ final class Linker {
         private CallSite getCallSite(@Min(-1) int parameterIndex, String parameterName) {
             CallSiteHolder holder = callSites[parameterIndex + 1];
             if ( holder.callSite == null ) {
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
                 synchronized ( holder ) {
                     if ( holder.callSite == null ) {
                         CallSite callSite = createCallSite(parameterIndex, parameterName);
@@ -186,7 +187,7 @@ final class Linker {
             if ( guardInstances.isEmpty() ) {
                 return Indy.resolveToNop(type);
             }
-            if ( options.getInvocationMethod() == Options.InvocationMethod.INVOKER) {
+            if ( options.getXInvocationMethod() == Options.InvocationMethod.INVOKER) {
                 handle = TestInvokers.invoker(guardInstances).asType(MethodType.methodType(void.class, type));
             }
             else {
@@ -196,7 +197,7 @@ final class Linker {
                 }
                 assert handle != null;
             }
-            if ( options.isMutableCallSites() ) {
+            if ( options.isXMutableCallSites() ) {
                 return new MutableCallSite(handle);
             }
             else {

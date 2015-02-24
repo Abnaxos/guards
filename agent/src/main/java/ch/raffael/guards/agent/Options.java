@@ -35,19 +35,20 @@ public final class Options {
 
     public static final Options DEFAULTS = new Options();
 
-    private boolean devel = false;
-
     private boolean dump = false;
     private Path dumpPath = Paths.get("guardsAsmDumps");
     private Set<DumpFormat> dumpFormats = Sets.immutableEnumSet(Options.DumpFormat.CLASS, Options.DumpFormat.ASM);
 
-    private boolean nopMode = false;
-    private boolean instrumentAll = false;
-    private NopMethod nopMethod = NopMethod.MH_CONSTANT;
+    private boolean xDevel = false;
 
-    private InvocationMethod invocationMethod = InvocationMethod.MH_GUARD;
+    private boolean xUpgradeBytecode = true;
+    private boolean xNopMode = false;
+    private boolean xInstrumentAll = false;
+    private NopMethod xNopMethod = NopMethod.MH_CONSTANT;
 
-    private boolean mutableCallSites = false;
+    private InvocationMethod xInvocationMethod = InvocationMethod.MH_GUARD;
+
+    private boolean xMutableCallSites = false;
 
     public Options() {
         this(null);
@@ -55,20 +56,17 @@ public final class Options {
 
     public Options(@Nullable OptionsBuilder builder) {
         if ( builder != null ) {
-            devel = builder.isDevel();
             dump = builder.isDump();
             dumpPath = builder.getDumpPath();
             dumpFormats = Sets.immutableEnumSet(builder.getDumpFormats());
-            nopMode = builder.isNopMode();
-            instrumentAll = builder.isInstrumentAll();
-            nopMethod = builder.getNopMethod();
-            invocationMethod = builder.getInvocationMethod();
-            mutableCallSites = builder.isMutableCallSites();
+            xDevel = builder.isXDevel();
+            xUpgradeBytecode = builder.isXUpgradeBytecode();
+            xNopMode = builder.isXNopMode();
+            xInstrumentAll = builder.isXInstrumentAll();
+            xNopMethod = builder.getXNopMethod();
+            xInvocationMethod = builder.getXInvocationMethod();
+            xMutableCallSites = builder.isXMutableCallSites();
         }
-    }
-
-    public boolean isDevel() {
-        return devel;
     }
 
     public boolean isDump() {
@@ -85,21 +83,29 @@ public final class Options {
         return dumpFormats;
     }
 
-    public boolean isNopMode() {
-        return nopMode;
+    public boolean isXDevel() {
+        return xDevel;
     }
 
-    public boolean isInstrumentAll() {
-        return instrumentAll;
+    public boolean isXUpgradeBytecode() {
+        return xUpgradeBytecode;
+    }
+
+    public boolean isXNopMode() {
+        return xNopMode;
+    }
+
+    public boolean isXInstrumentAll() {
+        return xInstrumentAll;
     }
 
     @NotNull
-    public NopMethod getNopMethod() {
-        return nopMethod;
+    public NopMethod getXNopMethod() {
+        return xNopMethod;
     }
 
-    public InvocationMethod getInvocationMethod() {
-        return invocationMethod;
+    public InvocationMethod getXInvocationMethod() {
+        return xInvocationMethod;
     }
 
     /**
@@ -110,8 +116,8 @@ public final class Options {
      * **[Performance]** First simplistic benchmarks seem to indicate that using `MutableCallSite`
      * is actually a viable option.
      */
-    public boolean isMutableCallSites() {
-        return mutableCallSites;
+    public boolean isXMutableCallSites() {
+        return xMutableCallSites;
     }
 
     public static enum DumpFormat {

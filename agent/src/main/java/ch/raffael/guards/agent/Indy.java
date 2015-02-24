@@ -123,7 +123,7 @@ public final class Indy {
     @NotNull
     private static MethodHandle nopHandle(@Nullable Class<?> type) {
         MethodHandle nop = null;
-        switch ( GuardsAgent.getInstance().getOptions().getNopMethod() ) {
+        switch ( GuardsAgent.getInstance().getOptions().getXNopMethod() ) {
             case MH_CONSTANT:
                 nop = constant(Void.class, null).asType(methodType(void.class));
                 break;
@@ -160,7 +160,7 @@ public final class Indy {
     public static CallSite bootstrap(MethodHandles.Lookup caller, String ignoredName, MethodType type, String targetMethodName, String targetMethodDescriptor, int parameterIndex, String parameterName) {
         assert type.returnType() == void.class;
         assert type.parameterCount() == 1;
-        if ( GuardsAgent.getInstance().getOptions().isNopMode() ) {
+        if ( GuardsAgent.getInstance().getOptions().isXNopMode() ) {
             return new ConstantCallSite(nopHandle(type.parameterType(0)));
         }
         else {

@@ -30,19 +30,20 @@ import ch.raffael.guards.Nullable;
  */
 public class OptionsBuilder {
 
-    private boolean devel = false;
-
     private boolean dump = false;
     private Path dumpPath = null;
     private final Set<Options.DumpFormat> dumpFormats = EnumSet.noneOf(Options.DumpFormat.class);
 
-    private boolean nopMode;
-    private boolean instrumentAll;
-    private Options.NopMethod nopMethod;
+    private boolean xDevel = false;
 
-    private Options.InvocationMethod invocationMethod;
+    private boolean xUpgradeBytecode;
+    private boolean xNopMode;
+    private boolean xInstrumentAll;
+    private Options.NopMethod xNopMethod;
 
-    private boolean mutableCallSites;
+    private Options.InvocationMethod xInvocationMethod;
+
+    private boolean xMutableCallSites;
 
     public OptionsBuilder() {
         this(null);
@@ -52,31 +53,18 @@ public class OptionsBuilder {
         if ( options == null ) {
             options = Options.DEFAULTS;
         }
-        setDevel(options.isDevel());
+        setXDevel(options.isXDevel());
         setDump(options.isDump());
         setDumpPath(options.getDumpPath());
         dumpFormats.addAll(options.getDumpFormats());
-        setNopMode(options.isNopMode());
-        setInstrumentAll(options.isInstrumentAll());
-        setNopMethod(options.getNopMethod());
-        setInvocationMethod(options.getInvocationMethod());
-        setMutableCallSites(options.isMutableCallSites());
+        setXUpgradeBytecode(options.isXUpgradeBytecode());
+        setXNopMode(options.isXNopMode());
+        setXInstrumentAll(options.isXInstrumentAll());
+        setXNopMethod(options.getXNopMethod());
+        setXInvocationMethod(options.getXInvocationMethod());
+        setXMutableCallSites(options.isXMutableCallSites());
     }
 
-
-    public boolean isDevel() {
-        return devel;
-    }
-
-    public void setDevel(boolean devel) {
-        this.devel = devel;
-    }
-
-    @NotNull
-    public OptionsBuilder withDevel(boolean devel) {
-        setDevel(devel);
-        return this;
-    }
 
     public boolean isDump() {
         return dump;
@@ -125,70 +113,97 @@ public class OptionsBuilder {
         return this;
     }
 
-    public boolean isNopMode() {
-        return nopMode;
+    public boolean isXDevel() {
+        return xDevel;
     }
 
-    public void setNopMode(boolean nopMode) {
-        this.nopMode = nopMode;
-    }
-
-    @NotNull
-    public OptionsBuilder withNopMode(boolean nopMode) {
-        setNopMode(nopMode);
-        return this;
-    }
-
-    public boolean isInstrumentAll() {
-        return instrumentAll;
-    }
-
-    public void setInstrumentAll(boolean instrumentAll) {
-        this.instrumentAll = instrumentAll;
-    }
-
-    public OptionsBuilder withInstrumentAll(boolean instrumentAll) {
-        setInstrumentAll(instrumentAll);
-        return this;
-    }
-
-    public Options.NopMethod getNopMethod() {
-        return nopMethod;
-    }
-
-    public void setNopMethod(@NotNull Options.NopMethod nopMethod) {
-        this.nopMethod = nopMethod;
+    public void setXDevel(boolean xDevel) {
+        this.xDevel = xDevel;
     }
 
     @NotNull
-    public OptionsBuilder withNopMethod(@NotNull Options.NopMethod nopMethod) {
-        setNopMethod(nopMethod);
+    public OptionsBuilder withXDevel(boolean devel) {
+        setXDevel(devel);
         return this;
     }
 
-    public Options.InvocationMethod getInvocationMethod() {
-        return invocationMethod;
+    public boolean isXUpgradeBytecode() {
+        return xUpgradeBytecode;
     }
 
-    public void setInvocationMethod(Options.InvocationMethod invocationMethod) {
-        this.invocationMethod = invocationMethod;
+    public void setXUpgradeBytecode(boolean xUpgradeBytecode) {
+        this.xUpgradeBytecode = xUpgradeBytecode;
     }
 
-    public OptionsBuilder withInvocationMethod(Options.InvocationMethod invocationMethod) {
-        setInvocationMethod(invocationMethod);
+    public OptionsBuilder withXUpgradeBytecode(boolean xUpgradeBytecode) {
+        setXUpgradeBytecode(xUpgradeBytecode);
         return this;
     }
 
-    public boolean isMutableCallSites() {
-        return mutableCallSites;
+    public boolean isXNopMode() {
+        return xNopMode;
     }
 
-    public void setMutableCallSites(boolean mutableCallSites) {
-        this.mutableCallSites = mutableCallSites;
+    public void setXNopMode(boolean xNopMode) {
+        this.xNopMode = xNopMode;
     }
 
-    public OptionsBuilder withMutableCallSites(boolean mutableCallSites) {
-        setMutableCallSites(mutableCallSites);
+    @NotNull
+    public OptionsBuilder withXNopMode(boolean nopMode) {
+        setXNopMode(nopMode);
+        return this;
+    }
+
+    public boolean isXInstrumentAll() {
+        return xInstrumentAll;
+    }
+
+    public void setXInstrumentAll(boolean xInstrumentAll) {
+        this.xInstrumentAll = xInstrumentAll;
+    }
+
+    public OptionsBuilder withXInstrumentAll(boolean instrumentAll) {
+        setXInstrumentAll(instrumentAll);
+        return this;
+    }
+
+    public Options.NopMethod getXNopMethod() {
+        return xNopMethod;
+    }
+
+    public void setXNopMethod(@NotNull Options.NopMethod xNopMethod) {
+        this.xNopMethod = xNopMethod;
+    }
+
+    @NotNull
+    public OptionsBuilder withXNopMethod(@NotNull Options.NopMethod nopMethod) {
+        setXNopMethod(nopMethod);
+        return this;
+    }
+
+    public Options.InvocationMethod getXInvocationMethod() {
+        return xInvocationMethod;
+    }
+
+    public void setXInvocationMethod(Options.InvocationMethod xInvocationMethod) {
+        this.xInvocationMethod = xInvocationMethod;
+    }
+
+    public OptionsBuilder withXInvocationMethod(Options.InvocationMethod invocationMethod) {
+        setXInvocationMethod(invocationMethod);
+        return this;
+    }
+
+    public boolean isXMutableCallSites() {
+        return xMutableCallSites;
+    }
+
+    public void setXMutableCallSites(boolean xMutableCallSites) {
+        this.xMutableCallSites = xMutableCallSites;
+    }
+
+    public OptionsBuilder withXMutableCallSites(boolean xMutableCallSites) {
+        setXMutableCallSites(xMutableCallSites);
         return this;
     }
 

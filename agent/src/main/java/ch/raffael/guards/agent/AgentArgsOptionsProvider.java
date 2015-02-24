@@ -67,9 +67,6 @@ public class AgentArgsOptionsProvider implements OptionsProvider {
                 }
             }
             switch ( name ) {
-                case "devel":
-                    builder.setDevel(toBoolean(value));
-                    break;
                 case "dump":
                     builder.setDump(toBoolean(value));
                     break;
@@ -81,20 +78,26 @@ public class AgentArgsOptionsProvider implements OptionsProvider {
                         builder.withDumpFormat(Options.DumpFormat.valueOf(format.toUpperCase()));
                     }
                     break;
-                case "nopMode":
-                    builder.setNopMode(toBoolean(value));
+                case "Xdevel":
+                    builder.setXDevel(toBoolean(value));
                     break;
-                case "instrumentAll":
-                    builder.setInstrumentAll(toBoolean(value));
+                case "XupgradeBytecode":
+                    builder.setXUpgradeBytecode(toBoolean(value));
                     break;
-                case "nopMethod":
-                    builder.setNopMethod(Options.NopMethod.valueOf(expectValue(name, value).toUpperCase()));
+                case "XnopMode":
+                    builder.setXNopMode(toBoolean(value));
                     break;
-                case "invocationMethod":
-                    builder.setInvocationMethod(Options.InvocationMethod.valueOf(expectValue(name, value).toUpperCase()));
+                case "XinstrumentAll":
+                    builder.setXInstrumentAll(toBoolean(value));
                     break;
-                case "mutableCallSites":
-                    builder.setMutableCallSites(toBoolean(value));
+                case "XnopMethod":
+                    builder.setXNopMethod(Options.NopMethod.valueOf(expectValue(name, value).toUpperCase()));
+                    break;
+                case "XinvocationMethod":
+                    builder.setXInvocationMethod(Options.InvocationMethod.valueOf(expectValue(name, value).toUpperCase()));
+                    break;
+                case "XmutableCallSites":
+                    builder.setXMutableCallSites(toBoolean(value));
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid option: " + option);

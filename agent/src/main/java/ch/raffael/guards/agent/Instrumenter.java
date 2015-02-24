@@ -163,7 +163,7 @@ class Instrumenter extends ClassVisitor {
                     return;
                 }
                 for( int i = 0; i < parameterCount; i++ ) {
-                    if ( options.isInstrumentAll() || hasParameterAnnotations[i] ) {
+                    if ( options.isXInstrumentAll() || hasParameterAnnotations[i] ) {
                         loadArg(i);
                         invokeDynamic("guard:arg" + i, "(" + parameterTypes[i].getDescriptor() + ")V", Indy.BOOTSTRAP_ASM_HANDLE,
                                 name, desc, i, parameterName[i] == null ? "" : parameterName[i]);
@@ -172,7 +172,7 @@ class Instrumenter extends ClassVisitor {
             }
 
             private void checkReturnValue(int opcode) {
-                if ( options.isInstrumentAll() || hasMethodAnnotations ) {
+                if ( options.isXInstrumentAll() || hasMethodAnnotations ) {
                     String guardDesc = "(" + Type.getReturnType(desc) + ")V";
                     String indyName = "guard:return";
                     String pname = "";
