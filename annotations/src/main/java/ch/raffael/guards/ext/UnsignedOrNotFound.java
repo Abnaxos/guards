@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.ext;
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -26,6 +26,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import ch.raffael.guards.Min;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.Positioning;
 import ch.raffael.guards.definition.PositioningTendency;
