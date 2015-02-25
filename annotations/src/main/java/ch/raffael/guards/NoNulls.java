@@ -40,7 +40,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.HIGH)
 @Relations(subsetOf = AllowNulls.class)
-@Positioning(tendency = PositioningTendency.PRIMARY)
+@Positioning(value = PositioningTendency.PRIMARY)
 @Message("Collection may not contain null elements")
 public @interface NoNulls {
 

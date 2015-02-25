@@ -69,7 +69,6 @@
                      shortName="GuardsInheritance" displayName="Guards Inheritance Issues" groupName="Guards"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="ch.raffael.guards.plugins.idea.GuardsInheritanceInspection"/>
-    <!--<iconProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons" order="first"/>-->
     <iconLayerProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons"/>
   </extensions>
 

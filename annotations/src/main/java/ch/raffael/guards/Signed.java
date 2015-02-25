@@ -39,7 +39,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
 @Relations(supersetOf = { Unsigned.class, Positive.class })
-@Positioning(tendency = PositioningTendency.LEADING)
+@Positioning(value = PositioningTendency.LEADING)
 public @interface Signed {
 
 }

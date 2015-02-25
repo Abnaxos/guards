@@ -40,7 +40,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations(supersetOf = Positive.class, subsetOf = Signed.class)
-@Positioning(tendency = PositioningTendency.LEADING)
+@Positioning(value = PositioningTendency.LEADING)
 @Message("Value must not be negative")
 public @interface Unsigned {
 

@@ -40,7 +40,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW, testNulls = true)
 @Relations(subsetOf = Nullable.class)
-@Positioning(tendency = PositioningTendency.PRIMARY, before = Positioning.All.class)
+@Positioning(value = PositioningTendency.PRIMARY, before = Positioning.All.class)
 @Message("Value must not be null")
 public @interface NotNull {
 

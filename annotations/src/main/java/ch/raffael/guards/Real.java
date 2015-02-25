@@ -38,7 +38,7 @@ import ch.raffael.guards.definition.PositioningTendency;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
-@Positioning(tendency = PositioningTendency.LEADING)
+@Positioning(value = PositioningTendency.LEADING)
 @Message("The value must be a real number")
 public @interface Real {
 

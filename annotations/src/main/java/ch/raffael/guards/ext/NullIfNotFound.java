@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.ext;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,26 +22,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.Message;
-import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.Nullable;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
-import ch.raffael.guards.definition.Relations;
 
 
 /**
- * Checks that a numeric value is greater than zero.
- *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW)
-@Relations(subsetOf = { Unsigned.class, Signed.class })
-@Positioning(value = PositioningTendency.LEADING)
-@Message("Value must greater than zero")
-public @interface Positive {
+@Positioning()
+@Nullable
+public @interface NullIfNotFound {
+
 
 }

@@ -41,7 +41,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations(supersetOf = { NoNulls.class, AllowNulls.class })
-@Positioning(tendency = PositioningTendency.LEADING, before = Max.class)
+@Positioning(value = PositioningTendency.LEADING, before = Max.class)
 @Message("Value may not be empty")
 public @interface NotEmpty {
 

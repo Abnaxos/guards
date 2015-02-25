@@ -16,10 +16,6 @@
 
 package ch.raffael.guards.ext;
 
-/**
- * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
- */
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -41,8 +37,9 @@ import ch.raffael.guards.definition.PositioningTendency;
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+
 @Min(-1)
-@Positioning(tendency = PositioningTendency.LEADING)
+@Positioning(value = PositioningTendency.LEADING)
 @Message("The value must be signed or -1 if not found")
 public @interface UnsignedOrNotFound {
 

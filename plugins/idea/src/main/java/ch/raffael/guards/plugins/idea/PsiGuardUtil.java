@@ -28,6 +28,7 @@ import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiPrimitiveType;
 
 import ch.raffael.guards.NotNull;
 
@@ -67,7 +68,21 @@ public class PsiGuardUtil {
         return false;
     }
 
-    private static boolean isGuarded(@NotNull PsiModifierListOwner element) {
+    public static boolean isFullyGuarded(PsiMethod method) {
+        if ( !isGuarded(method) ) {
+            if ( method.getReturnType() != null && !(method.getReturnType() instanceof PsiPrimitiveType) ) {
+                return false;
+            }
+        }
+        for( PsiParameter param : method.getParameterList().getParameters() ) {
+            if ( !isGuarded(param) && !(param.getType() instanceof PsiPrimitiveType) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isGuarded(@NotNull PsiModifierListOwner element) {
         if ( element.getModifierList() == null ) {
             return false;
         }

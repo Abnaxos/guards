@@ -40,7 +40,7 @@ import ch.raffael.guards.definition.Relations;
         handler = Guard.AlwaysTrue.class)
 @Message("Collection mut not contain null values")
 @Relations(supersetOf = NoNulls.class)
-@Positioning(tendency = PositioningTendency.PRIMARY)
+@Positioning(value = PositioningTendency.PRIMARY)
 public @interface AllowNulls {
 
 }

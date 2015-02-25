@@ -16,19 +16,26 @@
 
 package ch.raffael.guards.plugins.idea;
 
+import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.Icon;
 
 import com.intellij.codeHighlighting.Pass;
+import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
+import com.intellij.ide.DataManager;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.ui.awt.RelativePoint;
+
+import ch.raffael.guards.NotNull;
+import ch.raffael.guards.Nullable;
+import ch.raffael.guards.plugins.idea.ui.GuardEditor;
+import ch.raffael.guards.plugins.idea.ui.GuardFocus;
 
 
 /**
@@ -36,7 +43,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvider {
 
-    private static final Icon GUARDED_ICON = GuardIcons.Guard;
+    private static final Icon GUARDED_ICON = GuardIcons.GutterGuard;
 
     //@Override
     //public void annotate(@NotNull PsiElement element, AnnotationHolder holder) {
@@ -59,30 +66,46 @@ public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvid
     @Override
     public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
         if ( element instanceof PsiMethod ) {
-            PsiMethod method = (PsiMethod)element;
-            if ( PsiGuardUtil.isGuarded(method) ) {
-                int startOffset;
-                if ( method.getNameIdentifier() == null ) {
-                    startOffset = method.getTextRange().getStartOffset();
-                }
-                else {
-                    startOffset = method.getNameIdentifier().getTextRange().getStartOffset();
-                }
-                return new LineMarkerInfo<>(method, startOffset, GUARDED_ICON, Pass.UPDATE_ALL,
-                        null /*new Function<PsiMethod, String>() {
-                            @Override
-                            public String fun(PsiMethod psiMethod) {
-                                StringBuilder buf = new StringBuilder();
-                                for( GuardInfo info : guardInfos ) {
-                                    if ( buf.length() > 0 ) {
-                                        buf.append('\n');
-                                    }
-                                    buf.append(info);
-                                }
-                                return buf.toString();
-                            }
-                        }*/, null, GutterIconRenderer.Alignment.RIGHT);
+            final PsiMethod method = (PsiMethod)element;
+            int startOffset;
+            if ( method.getNameIdentifier() == null ) {
+                startOffset = method.getTextRange().getStartOffset();
             }
+            else {
+                startOffset = method.getNameIdentifier().getTextRange().getStartOffset();
+            }
+            Icon icon;
+            if ( PsiGuardUtil.isFullyGuarded(method) ) {
+                icon = GuardIcons.GutterGuard;
+            }
+            else {
+                icon = GuardIcons.GutterGuardWarning;
+            }
+            return new LineMarkerInfo<>(method, startOffset, icon, Pass.UPDATE_ALL,
+                    null /*new Function<PsiMethod, String>() {
+                        @Override
+                        public String fun(PsiMethod psiMethod) {
+                            StringBuilder buf = new StringBuilder();
+                            for( GuardInfo info : guardInfos ) {
+                                if ( buf.length() > 0 ) {
+                                    buf.append('\n');
+                                }
+                                buf.append(info);
+                            }
+                            return buf.toString();
+                        }
+                    }*/,
+                    new GutterIconNavigationHandler<PsiMethod>() {
+                        @Override
+                        public void navigate(MouseEvent e, PsiMethod method) {
+                            GuardFocus focus = GuardFocus.find(method);
+                            if ( focus == null ) {
+                                return;
+                            }
+                            new GuardEditor(focus, method.getProject(), null, DataManager.getInstance().getDataContextFromFocus().getResult())
+                                    .show(RelativePoint.fromScreen(e.getLocationOnScreen()));
+                        }
+                    }, GutterIconRenderer.Alignment.RIGHT);
             //PsiMethod method = (PsiMethod)element;
             //final List<GuardInfo> guardInfos = GuardInfo.forPsiMethod(method);
             //if ( !guardInfos.isEmpty() ) {

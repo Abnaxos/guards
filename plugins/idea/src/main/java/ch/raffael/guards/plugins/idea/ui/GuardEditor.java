@@ -156,6 +156,10 @@ public class GuardEditor {
         popup.show(popupLocation);
     }
 
+    public void show(RelativePoint location) {
+        popup.show(location);
+    }
+
     private ActionGroup buildElementsGroup() {
         PsiClass psiClass = focus.getMethod().getContainingClass();
         SimpleActionGroup group;

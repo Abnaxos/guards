@@ -16,15 +16,20 @@
 
 package ch.raffael.guards.plugins.idea;
 
+import java.awt.Rectangle;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.ide.IconLayerProvider;
 import com.intellij.openapi.util.Iconable;
 import com.intellij.psi.PsiElement;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.ui.LayeredIcon;
+import com.intellij.util.IconUtil;
 
 import ch.raffael.guards.NotNull;
+import ch.raffael.guards.Nullable;
 
 import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isGuarded;
 
@@ -34,11 +39,15 @@ import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isGuarded;
  */
 public final class GuardIcons implements IconLayerProvider {
 
-    private static Icon load(String resPath) {
+    @NotNull
+    private static Icon load(@NotNull String resPath) {
         return new ImageIcon(GuardIcons.class.getResource(resPath));
     }
 
     public static final Icon Guard = load("guards.png");
+    public static final Icon GutterGuard = load("guards12.png");
+    public static final Icon GutterGuardWarning = new LayeredIcon(GutterGuard,
+            IconUtil.cropIcon(AllIcons.General.WarningDecorator, new Rectangle(4, 0, 12, 12)));
     public static final Icon GuardLayer = load("guard-layer.png");
 
     @Nullable
@@ -52,7 +61,6 @@ public final class GuardIcons implements IconLayerProvider {
         }
     }
 
-    @Nullable
     @Override
     public String getLayerDescription() {
         return "Layer for guard annotations";

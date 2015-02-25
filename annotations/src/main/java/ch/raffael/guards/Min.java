@@ -57,7 +57,7 @@ import ch.raffael.guards.definition.Relations.Rules;
                 "value == 1 -> equal",
                 "-> superset" })
 })
-@Positioning(tendency = PositioningTendency.LEADING, before = Max.class)
+@Positioning(value = PositioningTendency.LEADING, before = Max.class)
 @Message("Value must be at least {value}")
 public @interface Min {
 

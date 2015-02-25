@@ -58,7 +58,7 @@ import ch.raffael.guards.definition.Relations.Rules;
                 "max >= 1 -> intersecting",
                 "-> disjoint" })
 })
-@Positioning(tendency = PositioningTendency.LEADING, after = Min.class)
+@Positioning(value = PositioningTendency.LEADING, after = Min.class)
 @Message("Value must be at most {value}")
 public @interface Max {
 

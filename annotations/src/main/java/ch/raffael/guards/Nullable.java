@@ -39,7 +39,9 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
 @Relations(supersetOf = NotNull.class)
-@Positioning(tendency = PositioningTendency.PRIMARY, before = Positioning.All.class)
+@Positioning(value = PositioningTendency.PRIMARY, before = Positioning.All.class)
 public @interface Nullable {
+
+    String when() default "No idea";
 
 }

@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
 @GuardAnnotation
 public @interface Positioning {
 
-    PositioningTendency tendency() default PositioningTendency.PRIMARY;
+    PositioningTendency value() default PositioningTendency.PRIMARY;
 
     Class<? extends Annotation>[] before() default {};
 
@@ -47,7 +47,7 @@ public @interface Positioning {
     /**
      * Special value for {@link Positioning#before() before} and {@link Positioning#after() after}
      * to indicate that the annotation should be placed before all/after all other annotations in
-     * its {@link Positioning#tendency() tendency} group.
+     * its {@link Positioning#value() tendency} group.
      */
     @Target({})
     @Retention(RetentionPolicy.RUNTIME)
