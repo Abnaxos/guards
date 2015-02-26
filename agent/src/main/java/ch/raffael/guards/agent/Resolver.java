@@ -30,7 +30,6 @@ import java.util.List;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
-import ch.raffael.guards.agent.guava.base.MoreObjects;
 import ch.raffael.guards.agent.guava.collect.AbstractSequentialIterator;
 import ch.raffael.guards.agent.guava.collect.ImmutableList;
 import ch.raffael.guards.agent.guava.collect.Iterables;
@@ -38,7 +37,6 @@ import ch.raffael.guards.agent.guava.primitives.Primitives;
 import ch.raffael.guards.agent.guava.reflect.TypeToken;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Guard.Handler;
-import ch.raffael.guards.definition.Guard.TypeConversions;
 import ch.raffael.guards.definition.HandlerPackage;
 import ch.raffael.guards.runtime.GuardsInternalError;
 import ch.raffael.guards.runtime.IllegalGuardError;
@@ -122,7 +120,6 @@ class Resolver {
     private final boolean testNulls;
     @SuppressWarnings("UnusedDeclaration")
     private final Class<? extends Handler<?>> handlerType;
-    private final TypeConversions conversions;
     private final Constructor<? extends Handler<?>> constructor;
     private final List<TestMethod> testMethods;
 
@@ -151,7 +148,6 @@ class Resolver {
             }
         }
         this.testMethods = testMethods.build();
-        this.conversions = MoreObjects.firstNonNull(guardType.getAnnotation(TypeConversions.class), TypeConversions.DEFAULTS);
     }
 
     /**
@@ -161,7 +157,6 @@ class Resolver {
         this.guardType = guardType;
         this.testNulls = false;
         this.handlerType = Guard.AlwaysTrue.class;
-        this.conversions = TypeConversions.DEFAULTS;
         this.constructor = null;
         this.testMethods = null;
     }
@@ -247,13 +242,9 @@ class Resolver {
             // try widening the primitives
             testMethod = findWithPrimitiveConversions(target.getValueType(), instance);
         }
-        if ( testMethod == null && conversions.unbox() && Primitives.isWrapperType(target.getValueType()) ) {
+        if ( testMethod == null && !testNulls && Primitives.isWrapperType(target.getValueType()) ) {
             // try unboxing the value and then widening the primitive
             testMethod = findWithPrimitiveConversions(Primitives.unwrap(target.getValueType()), instance);
-            if ( testNulls ) {
-                // TODO: find something better to do here? IllegalGuardError?
-                Log.warning("Unwrapping " + target.getValueType() + " on handler that checks null values");
-            }
         }
         if ( testMethod == null ) {
             throw new IllegalGuardError(target + ": No matching test method found for " + guardType.getName());
@@ -321,12 +312,6 @@ class Resolver {
             return testMethod;
         }
         for( PrimitiveType type : Iterables.skip(PrimitiveType.forType(tryWithType), 1) ) {
-            if ( type == PrimitiveType.LONG && !conversions.widenToLong() ) {
-                break;
-            }
-            else if ( type == PrimitiveType.DOUBLE && !conversions.widenToDouble() ) {
-                break;
-            }
             testMethod = findForPrimitive(type.type(), instance);
             if ( testMethod != null ) {
                 return testMethod;
