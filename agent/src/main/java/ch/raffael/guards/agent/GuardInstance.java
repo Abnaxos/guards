@@ -17,23 +17,22 @@
 package ch.raffael.guards.agent;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Sensitive;
+import ch.raffael.guards.agent.guava.base.Joiner;
 import ch.raffael.guards.agent.guava.collect.ForwardingMap;
 import ch.raffael.guards.agent.guava.collect.ImmutableBiMap;
+import ch.raffael.guards.agent.guava.collect.ImmutableList;
 import ch.raffael.guards.agent.guava.collect.ImmutableMap;
 import ch.raffael.guards.agent.guava.collect.ImmutableSet;
 import ch.raffael.guards.agent.guava.reflect.Reflection;
-import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.runtime.ContractViolationError;
-import ch.raffael.guards.runtime.GuardsInternalError;
 import ch.raffael.guards.runtime.internal.Substitutor;
 
 
@@ -45,32 +44,44 @@ final class GuardInstance {
     private static final Set<String> NON_ANNOTATION_VALUES = ImmutableSet.of(
             "clone", "finalize", "getClass", "hashCode", "toString", "annotationType");
 
-    private static final ClassValue<Type> TYPES = new ClassValue<Type>() {
-        @SuppressWarnings("unchecked")
-        @Override
-        protected Type computeValue(Class<?> type) {
-            assert type.isAnnotation();
-            Guard configuration = type.getAnnotation(Guard.class);
-            if ( configuration == null ) {
-                throw new GuardsInternalError("Not a guard type: " + type);
-            }
-            return new Type((Class<? extends Annotation>)type, configuration);
-        }
-    };
-
     private final static String MY_PACKAGE_NAME = Reflection.getPackageName(GuardInstance.class);
-    public static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
     private final GuardTarget target;
-    private final Annotation annotation;
-    private final Type guardType;
-    private final Resolver.TestMethod testMethod;
+    private final List<Annotation> annotationPath;
+    private final String message;
+    private Method testMethod;
 
-    GuardInstance(GuardTarget target, Annotation annotation) {
+    GuardInstance(GuardTarget target, Annotation annotation, String message) {
         this.target = target;
-        this.annotation = annotation;
-        guardType = TYPES.get(annotation.annotationType());
-        this.testMethod = Resolver.resolverFor(annotation.annotationType()).findTestMethod(this);
+        this.annotationPath = ImmutableList.of(annotation);
+        if ( message == null ) {
+            Message msgAnnotation = annotation.annotationType().getAnnotation(Message.class);
+            if ( msgAnnotation != null ) {
+                message = msgAnnotation.value();
+            }
+        }
+        this.message = message;
+    }
+
+    GuardInstance(GuardInstance parent, Annotation annotation) {
+        this.target = parent.getTarget();
+        this.annotationPath = ImmutableList.<Annotation>builder().addAll(parent.annotationPath).add(annotation).build();
+        if ( parent.message == null ) {
+            Message msgAnnotation = annotation.annotationType().getAnnotation(Message.class);
+            if ( msgAnnotation != null ) {
+                message = msgAnnotation.value();
+            }
+            else {
+                message = null;
+            }
+        }
+        else {
+            message = parent.message;
+        }
+    }
+
+    void updateTestMethod(Method testMethod) {
+        this.testMethod = testMethod;
     }
 
     GuardTarget getTarget() {
@@ -78,27 +89,7 @@ final class GuardInstance {
     }
 
     Annotation getAnnotation() {
-        return annotation;
-    }
-
-    Type getGuardType() {
-        return guardType;
-    }
-
-    @NotNull
-    Method getTestMethod() {
-        return testMethod.method();
-    }
-
-    @NotNull
-    MethodHandle getTestMethodHandle() {
-        return testMethod.methodHandle();
-    }
-
-    private boolean dummyTestMethod(Object obj) {
-        //System.err.println("Guard Instance: " + target + " / " + annotation + " / value " + obj);
-        return true;
-        //return !annotation.annotationType().getName().equals("guards.Fail");
+        return annotationPath.get(annotationPath.size() - 1);
     }
 
     void guardViolation(Object value) {
@@ -135,10 +126,11 @@ final class GuardInstance {
                 buf.append(value);
             }
         }
-        buf.append("\n  Guard : ").append(getAnnotation());
+        buf.append("\n  Guard : ");
+        Joiner.on(" -> ").appendTo(buf, annotationPath);
         buf.append("\n  Target: ");
         target.appendFullString(buf);
-        buf.append("\n  Method: ").append(getTestMethod());
+        buf.append("\n  Method: ").append(testMethod != null ? testMethod : "(unknown)");
         ContractViolationError violationError = new ContractViolationError(buf.toString());
         StackTraceElement[] stackTrace = violationError.getStackTrace();
         int removeCount = 0;
@@ -165,12 +157,11 @@ final class GuardInstance {
     }
 
     private void appendMessage(StringBuilder buf, Object value) {
-        String message = guardType.configuration.message().trim();
-        if ( message.isEmpty() ) {
-            buf.append(annotation);
+        if ( message != null ) {
+            substituteAnnotationValues(buf, message, value);
         }
         else {
-            substituteAnnotationValues(buf, message, value);
+            buf.append(getAnnotation());
         }
     }
 
@@ -181,6 +172,7 @@ final class GuardInstance {
             protected Map<String, String> delegate() {
                 if ( delegate == null ) {
                     ImmutableMap.Builder<String, String> builder = ImmutableBiMap.builder();
+                    Annotation annotation = getAnnotation();
                     for( Method method : annotation.getClass().getMethods() ) {
                         if ( method.getParameterTypes().length == 0 && method.getReturnType() != void.class && !NON_ANNOTATION_VALUES.contains(method.getName()) ) {
                             Object value;
@@ -200,33 +192,13 @@ final class GuardInstance {
                     else {
                         builder.put("", String.valueOf(value));
                     }
-                    builder.put("annotationType", "@" + guardType.annotationType().getName());
+                    builder.put("annotationType", "@" + annotation.annotationType().getName());
                     builder.put("this", annotation.toString());
                     delegate = builder.build();
                 }
                 return delegate;
             }
         });
-    }
-
-    static final class Type {
-
-        private final Class<? extends Annotation> annotationType;
-        private final Guard configuration;
-
-        private Type(Class<? extends Annotation> annotationType, Guard configuration) {
-            this.annotationType = annotationType;
-            this.configuration = configuration;
-        }
-
-        Class<? extends Annotation> annotationType() {
-            return annotationType;
-        }
-
-        Guard configuration() {
-            return configuration;
-        }
-
     }
 
 }

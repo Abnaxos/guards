@@ -62,7 +62,7 @@ public final class Indy {
     private static final MethodHandle TEST_NOT_NULL;
     private static final MethodHandle ILLEGAL_GUARD_HANDLE;
     private static final MethodHandle GUARD_NOT_APPLICABLE_HANDLE;
-    private static final MethodHandle GUARD_VIOLATION_HANDLE;
+    static final MethodHandle GUARD_VIOLATION_HANDLE;
     static {
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -121,7 +121,7 @@ public final class Indy {
     }
 
     @NotNull
-    private static MethodHandle nopHandle(@Nullable Class<?> type) {
+    static MethodHandle nopHandle(@Nullable Class<?> type) {
         MethodHandle nop = null;
         switch ( GuardsAgent.getInstance().getOptions().getXNopMethod() ) {
             case MH_CONSTANT:
@@ -149,12 +149,12 @@ public final class Indy {
     }
 
     @NotNull
-    static MethodHandle appendGuardMethod(@Nullable MethodHandle currentGuardHandle, @NotNull GuardInstance guard) {
-        Class<?> type = guard.getTarget().getValueType();
+    static MethodHandle prependGuardMethod(@NotNull MethodHandle guardMethod, @NotNull GuardInstance instance, @Nullable MethodHandle prependTo) {
+        Class<?> type = instance.getTarget().getValueType();
         return MethodHandles.guardWithTest(
-                guard.getTestMethodHandle().asType(methodType(boolean.class, type)),
-                currentGuardHandle == null ? nopHandle(type) : currentGuardHandle,
-                GUARD_VIOLATION_HANDLE.bindTo(guard).asType(methodType(void.class, type)));
+                guardMethod.asType(methodType(boolean.class, type)),
+                prependTo == null ? nopHandle(type) : prependTo,
+                GUARD_VIOLATION_HANDLE.bindTo(instance).asType(methodType(void.class, type)));
     }
 
     public static CallSite bootstrap(MethodHandles.Lookup caller, String ignoredName, MethodType type, String targetMethodName, String targetMethodDescriptor, int parameterIndex, String parameterName) {

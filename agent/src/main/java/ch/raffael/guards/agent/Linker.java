@@ -36,7 +36,6 @@ import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.agent.guava.base.Optional;
 import ch.raffael.guards.agent.guava.collect.Lists;
-import ch.raffael.guards.definition.Guard;
 
 
 /**
@@ -48,7 +47,7 @@ final class Linker {
 
     private final Map<MethodPointer, MethodGuards> callSiteCache;
 
-    private Linker(Map<MethodPointer, MethodGuards> callSiteCache) {
+    private Linker(@NotNull Map<MethodPointer, MethodGuards> callSiteCache) {
         this.callSiteCache = callSiteCache;
     }
 
@@ -89,7 +88,7 @@ final class Linker {
         }
     }
 
-    private static boolean hasGuards(Annotation[][] parameterAnnotations) {
+    private static boolean hasGuards(@NotNull Annotation[][] parameterAnnotations) {
         for( Annotation[] annotations : parameterAnnotations ) {
             if ( hasGuards(annotations) ) {
                 return true;
@@ -98,7 +97,7 @@ final class Linker {
         return false;
     }
 
-    private static boolean hasGuards(Annotation[] annotations) {
+    private static boolean hasGuards(@NotNull Annotation[] annotations) {
         for( Annotation annotation : annotations ) {
             if ( isGuard(annotation) ) {
                 return true;
@@ -107,18 +106,24 @@ final class Linker {
         return false;
     }
 
-    private static boolean isGuard(Annotation annotation) {
-        return annotation.annotationType().getAnnotation(Guard.class) != null;
+    private static boolean isGuard(@NotNull Annotation annotation) {
+        return GuardDefinition.get(annotation.annotationType()) != null;
     }
 
-    CallSite bootstrap(MethodHandles.Lookup caller, MethodType type, String targetMethodName, String targetMethodDescriptor, int parameterIndex, String parameterName) {
+    @NotNull
+    CallSite bootstrap(@NotNull MethodHandles.Lookup caller,
+                       @NotNull MethodType type,
+                       @NotNull String targetMethodName,
+                       @NotNull String targetMethodDescriptor,
+                       @NotNull int parameterIndex,
+                       @NotNull String parameterName) {
         //assert type.returnType() == void.class;
         //assert type.parameterCount() == 1;
         //assert parameterIndex >= -1;
         MethodType targetType = MethodType.fromMethodDescriptorString(targetMethodDescriptor, caller.lookupClass().getClassLoader());
         MethodGuards guards = callSiteCache.get(new MethodPointer(targetMethodName, targetType));
         if ( guards == null ) {
-            return Indy.resolveToNop(type.parameterType(0));
+            return new ConstantCallSite(Indy.nopHandle(type.parameterType(0)));
             //throw new GuardsInternalError("Guards requested for non-guarded method " + Diagnostics.toString(caller.lookupClass(), name, guardedMethodType));
         }
         else {
@@ -160,42 +165,33 @@ final class Linker {
         }
 
         private CallSite createCallSite(int parameterIndex, String parameterName) {
-            Class<?> type;
             Annotation[] annotations;
+            GuardTarget target = new GuardTarget(guardable, parameterIndex, parameterName);
             if ( parameterIndex < 0 ) {
-                type = guardable.getReturnType();
                 annotations = guardable.getAnnotations();
             }
             else {
-                type = guardable.getParameterTypes()[parameterIndex];
                 Annotation[][] allAnnotations = guardable.getParameterAnnotations();
                 if ( parameterIndex >= allAnnotations.length ) {
-                    return Indy.resolveToNop(type);
+                    return new ConstantCallSite(Indy.nopHandle(target.getValueType()));
                 }
                 annotations = allAnnotations[parameterIndex];
             }
             if ( annotations.length == 0 ) {
-                return Indy.resolveToNop(type);
+                return new ConstantCallSite(Indy.nopHandle(target.getValueType()));
             }
             ArrayList<GuardInstance> guardInstances = new ArrayList<>(annotations.length);
             for( Annotation annotation : annotations ) {
                 if ( isGuard(annotation) ) {
-                    guardInstances.add(new GuardInstance(new GuardTarget(guardable, parameterIndex, parameterName), annotation));
+                    guardInstances.add(new GuardInstance(target, annotation, null));
                 }
             }
-            MethodHandle handle;
-            if ( guardInstances.isEmpty() ) {
-                return Indy.resolveToNop(type);
+            MethodHandle handle = null;
+            for( GuardInstance guardInstance : Lists.reverse(guardInstances)) {
+                handle = GuardDefinition.get(guardInstance.getAnnotation().annotationType()).resolveTestMethod(guardInstance, handle);
             }
-            if ( options.getXInvocationMethod() == Options.InvocationMethod.INVOKER) {
-                handle = TestInvokers.invoker(guardInstances).asType(MethodType.methodType(void.class, type));
-            }
-            else {
-                handle = null;
-                for( GuardInstance guardInstance : Lists.reverse(guardInstances)) {
-                    handle = Indy.appendGuardMethod(handle, guardInstance);
-                }
-                assert handle != null;
+            if ( handle == null ) {
+                handle = Indy.nopHandle(target.getValueType());
             }
             if ( options.isXMutableCallSites() ) {
                 return new MutableCallSite(handle);

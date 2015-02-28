@@ -19,6 +19,8 @@
 
 
 
+
+
 package run
 
 import benchmarks.GuardBenchmark
@@ -62,7 +64,6 @@ class RunGuardBenchmarks {
                 agent('+XnopMode', '+XinstrumentAll', 'XnopMethod=dedicated_method'),
 
                 [['-XinstrumentAll', '+XinstrumentAll'],
-                 ['XinvocationMethod=mh_guard', 'XinvocationMethod=invoker'],
                  ['-XmutableCallSites', '+XmutableCallSites'],
                 ].combinations().collect({ List args -> agent(args) }),
         ].flatten()
