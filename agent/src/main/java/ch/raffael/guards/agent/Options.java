@@ -46,8 +46,6 @@ public final class Options {
     private boolean xInstrumentAll = false;
     private NopMethod xNopMethod = NopMethod.MH_CONSTANT;
 
-    private InvocationMethod xInvocationMethod = InvocationMethod.MH_GUARD;
-
     private boolean xMutableCallSites = false;
 
     public Options() {
@@ -64,7 +62,6 @@ public final class Options {
             xNopMode = builder.isXNopMode();
             xInstrumentAll = builder.isXInstrumentAll();
             xNopMethod = builder.getXNopMethod();
-            xInvocationMethod = builder.getXInvocationMethod();
             xMutableCallSites = builder.isXMutableCallSites();
         }
     }
@@ -102,10 +99,6 @@ public final class Options {
     @NotNull
     public NopMethod getXNopMethod() {
         return xNopMethod;
-    }
-
-    public InvocationMethod getXInvocationMethod() {
-        return xInvocationMethod;
     }
 
     /**
@@ -170,24 +163,6 @@ public final class Options {
          * method is used.
          */
         DEDICATED_METHOD
-    }
-
-    public static enum InvocationMethod {
-        /**
-         * Use a chain of `MethodHandle::guardWithTest` to invoke the guards.
-         *
-         * **[Performance]** First simplistic benchmarks indicate that `MH_GUARD` is about twice
-         * as fast as `INVOKER`.
-         */
-        MH_GUARD,
-        /**
-         * Use an array of Invoker objects that themselves use `MethodHandleProxies` to bridge to
-         * the guard's test method to invoke the guards.
-         *
-         * **[Performance]** First simplistic benchmarks indicate that `MH_GUARD` is about twice
-         * as fast as `INVOKER`.
-         */
-        INVOKER
     }
 
 }

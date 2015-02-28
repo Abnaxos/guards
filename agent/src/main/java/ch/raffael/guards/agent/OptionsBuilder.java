@@ -28,6 +28,7 @@ import ch.raffael.guards.Nullable;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
+@SuppressWarnings("UnusedDeclaration")
 public class OptionsBuilder {
 
     private boolean dump = false;
@@ -40,8 +41,6 @@ public class OptionsBuilder {
     private boolean xNopMode;
     private boolean xInstrumentAll;
     private Options.NopMethod xNopMethod;
-
-    private Options.InvocationMethod xInvocationMethod;
 
     private boolean xMutableCallSites;
 
@@ -61,7 +60,6 @@ public class OptionsBuilder {
         setXNopMode(options.isXNopMode());
         setXInstrumentAll(options.isXInstrumentAll());
         setXNopMethod(options.getXNopMethod());
-        setXInvocationMethod(options.getXInvocationMethod());
         setXMutableCallSites(options.isXMutableCallSites());
     }
 
@@ -109,7 +107,7 @@ public class OptionsBuilder {
     @NotNull
     public OptionsBuilder withDumpFormats(@NotNull Collection<Options.DumpFormat> dumpFormats) {
         dumpFormats.clear();
-        dumpFormats.addAll(dumpFormats);
+        this.dumpFormats.addAll(dumpFormats);
         return this;
     }
 
@@ -178,19 +176,6 @@ public class OptionsBuilder {
     @NotNull
     public OptionsBuilder withXNopMethod(@NotNull Options.NopMethod nopMethod) {
         setXNopMethod(nopMethod);
-        return this;
-    }
-
-    public Options.InvocationMethod getXInvocationMethod() {
-        return xInvocationMethod;
-    }
-
-    public void setXInvocationMethod(Options.InvocationMethod xInvocationMethod) {
-        this.xInvocationMethod = xInvocationMethod;
-    }
-
-    public OptionsBuilder withXInvocationMethod(Options.InvocationMethod invocationMethod) {
-        setXInvocationMethod(invocationMethod);
         return this;
     }
 

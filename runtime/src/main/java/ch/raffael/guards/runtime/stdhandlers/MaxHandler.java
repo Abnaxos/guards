@@ -19,22 +19,22 @@ package ch.raffael.guards.runtime.stdhandlers;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import ch.raffael.guards.Min;
+import ch.raffael.guards.Max;
 import ch.raffael.guards.definition.Guard;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class MaxHandler extends Guard.Handler<Min> {
+public class MaxHandler extends Guard.Handler<Max> {
 
     private final int maxInt;
     private final long max;
 
-    public MaxHandler(Min annotation) {
+    public MaxHandler(Max annotation) {
         super(annotation);
         max = annotation.value();
-        maxInt = max > Integer.MAX_VALUE ? (int)max : Integer.MAX_VALUE;
+        maxInt = max > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)max;
     }
 
     public boolean test(int value) {

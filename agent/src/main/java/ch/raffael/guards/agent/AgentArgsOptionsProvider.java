@@ -93,9 +93,6 @@ public class AgentArgsOptionsProvider implements OptionsProvider {
                 case "XnopMethod":
                     builder.setXNopMethod(Options.NopMethod.valueOf(expectValue(name, value).toUpperCase()));
                     break;
-                case "XinvocationMethod":
-                    builder.setXInvocationMethod(Options.InvocationMethod.valueOf(expectValue(name, value).toUpperCase()));
-                    break;
                 case "XmutableCallSites":
                     builder.setXMutableCallSites(toBoolean(value));
                     break;

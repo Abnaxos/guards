@@ -163,7 +163,13 @@ public @interface Guard {
         @Target(ElementType.METHOD)
         @Retention(RetentionPolicy.RUNTIME)
         @Documented
-        public @interface Test {
+        protected @interface Test {
+        }
+
+        @Target(ElementType.CONSTRUCTOR)
+        @Retention(RetentionPolicy.RUNTIME)
+        @Documented
+        protected @interface RuntimeConstructor {
         }
 
     }

@@ -17,9 +17,9 @@
 package ch.raffael.guards.agent;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
 import ch.raffael.guards.Sensitive;
+import ch.raffael.guards.agent.guava.reflect.TypeToken;
 import ch.raffael.guards.runtime.GuardsInternalError;
 
 
@@ -33,7 +33,7 @@ final class GuardTarget {
     private final String parameterName;
     private final boolean sensitive;
     private final Class<?> valueType;
-    private final Type genericValueType;
+    private final TypeToken<?> genericValueType;
 
     GuardTarget(GuardableMember member, int parameterIndex, String parameterName) {
         this.member = member;
@@ -53,7 +53,7 @@ final class GuardTarget {
         if ( parameterIndex < 0 ) {
             sensitive = member.getAnnotation(Sensitive.class) != null;
             valueType = member.getReturnType();
-            genericValueType = member.getGenericReturnType();
+            genericValueType = TypeToken.of(member.getGenericReturnType());
         }
         else {
             if ( parameterIndex >= member.getParameterTypes().length ) {
@@ -74,7 +74,7 @@ final class GuardTarget {
             }
             this.sensitive = sensitive;
             this.valueType = member.getParameterTypes()[parameterIndex];
-            this.genericValueType = member.getGenericParameterTypes()[parameterIndex];
+            this.genericValueType = TypeToken.of(member.getGenericParameterTypes()[parameterIndex]);
         }
     }
 
@@ -98,7 +98,7 @@ final class GuardTarget {
         return valueType;
     }
 
-    public Type getGenericValueType() {
+    public TypeToken<?> getGenericValueType() {
         return genericValueType;
     }
 
