@@ -68,7 +68,11 @@ public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvid
                 else {
                     startOffset = method.getNameIdentifier().getTextRange().getStartOffset();
                 }
-                return new LineMarkerInfo<>(method, startOffset, GUARDED_ICON, Pass.UPDATE_ALL,
+                PsiElement markAnchor = method.getNameIdentifier();
+                if ( markAnchor == null ) {
+                    markAnchor = method;
+                }
+                return new LineMarkerInfo<>(markAnchor, startOffset, GUARDED_ICON, Pass.UPDATE_ALL,
                         null /*new Function<PsiMethod, String>() {
                             @Override
                             public String fun(PsiMethod psiMethod) {
