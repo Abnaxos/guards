@@ -50,39 +50,39 @@ public class PsiGuardUtil {
             return isGuardAnnotation((PsiClass)element);
         }
         else if ( element instanceof PsiMethod ) {
-            if ( isGuarded((PsiMethod)element) ) {
+            if ( hasGuardModifiers((PsiMethod)element) ) {
                 return true;
             }
             for( PsiParameter param : ((PsiMethod)element).getParameterList().getParameters() ) {
-                if ( isGuarded(param) ) {
+                if ( hasGuardModifiers(param) ) {
                     return true;
                 }
             }
         }
         else if (element instanceof PsiField ) {
-            return isGuarded((PsiModifierListOwner)element);
+            return hasGuardModifiers((PsiModifierListOwner)element);
         }
         else if ( element instanceof PsiParameter ) {
-            return isGuarded((PsiParameter)element);
+            return hasGuardModifiers((PsiParameter)element);
         }
         return false;
     }
 
     public static boolean isFullyGuarded(PsiMethod method) {
-        if ( !isGuarded(method) ) {
+        if ( !hasGuardModifiers(method) ) {
             if ( method.getReturnType() != null && !(method.getReturnType() instanceof PsiPrimitiveType) ) {
                 return false;
             }
         }
         for( PsiParameter param : method.getParameterList().getParameters() ) {
-            if ( !isGuarded(param) && !(param.getType() instanceof PsiPrimitiveType) ) {
+            if ( !hasGuardModifiers(param) && !(param.getType() instanceof PsiPrimitiveType) ) {
                 return false;
             }
         }
         return true;
     }
 
-    public static boolean isGuarded(@NotNull PsiModifierListOwner element) {
+    private static boolean hasGuardModifiers(@NotNull PsiModifierListOwner element) {
         if ( element.getModifierList() == null ) {
             return false;
         }

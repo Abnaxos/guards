@@ -20,8 +20,10 @@ import java.nio.file.Paths;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.agent.guava.base.Function;
 import ch.raffael.guards.agent.guava.base.Splitter;
 import ch.raffael.guards.agent.guava.collect.ImmutableSet;
+import ch.raffael.guards.agent.guava.collect.Iterables;
 
 import static ch.raffael.guards.agent.guava.base.MoreObjects.toStringHelper;
 
@@ -74,9 +76,15 @@ public class AgentArgsOptionsProvider implements OptionsProvider {
                     builder.setDumpPath(Paths.get(expectValue(name, value)));
                     break;
                 case "dumpFormats":
-                    for( String format : Splitter.on('+').trimResults().omitEmptyStrings().split(expectValue(name, value)) ) {
-                        builder.withDumpFormat(Options.DumpFormat.valueOf(format.toUpperCase()));
-                    }
+                    builder.withDumpFormats(Iterables.transform(
+                            Splitter.on('+').trimResults().omitEmptyStrings().split(expectValue(name, value)),
+                            new Function<String, Options.DumpFormat>() {
+                                @Override
+                                public Options.DumpFormat apply(String input) {
+                                    return Options.DumpFormat.valueOf(input.toUpperCase());
+                                }
+                            }
+                    ));
                     break;
                 case "Xdevel":
                     builder.setXDevel(toBoolean(value));

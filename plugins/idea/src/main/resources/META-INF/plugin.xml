@@ -70,6 +70,7 @@
                      enabledByDefault="true" level="WARNING"
                      implementationClass="ch.raffael.guards.plugins.idea.GuardsInheritanceInspection"/>
     <iconLayerProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons"/>
+    <runConfigurationExtension implementation="ch.raffael.guards.plugins.idea.run.GuardsRunConfigurationExtension"/>
   </extensions>
 
   <module-components>

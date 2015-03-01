@@ -17,12 +17,12 @@
 package ch.raffael.guards.agent;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Set;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.agent.guava.collect.Iterables;
 
 
 /**
@@ -105,9 +105,9 @@ public class OptionsBuilder {
     }
 
     @NotNull
-    public OptionsBuilder withDumpFormats(@NotNull Collection<Options.DumpFormat> dumpFormats) {
-        dumpFormats.clear();
-        this.dumpFormats.addAll(dumpFormats);
+    public OptionsBuilder withDumpFormats(@NotNull Iterable<Options.DumpFormat> dumpFormats) {
+        this.dumpFormats.clear();
+        Iterables.addAll(this.dumpFormats, dumpFormats);
         return this;
     }
 

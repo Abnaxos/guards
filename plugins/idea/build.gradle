@@ -16,8 +16,6 @@
 
 
 
-
-
 configurations {
     ideaClasses
 }
@@ -35,6 +33,25 @@ dependencies {
         include '*.jar'
     }
 
+}
+
+processResources {
+    dependsOn project(':agent').jar
+
+    into('ch/raffael/guards/plugins/idea') {
+        from project(':agent').jar.archivePath.parent
+        include project(':agent').jar.archivePath.name
+        rename {
+            f -> println f; 'guards-agent.jar'
+        }
+    }
+}
+
+task('copyResourcesToClasses', type:Copy) {
+    dependsOn processResources
+
+    into sourceSets.main.output.classesDir
+    from sourceSets.main.output.resourcesDir
 }
 
 jar {

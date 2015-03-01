@@ -16,14 +16,25 @@
 
 package ch.raffael.guards.plugins.idea;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 import com.intellij.codeInspection.InspectionToolProvider;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.openapi.diagnostic.Logger;
+
+import ch.raffael.guards.NotNull;
+import ch.raffael.guards.Nullable;
 
 import static ch.raffael.guards.plugins.idea.GuardsApplicationComponent.PLUGIN_ID;
 
@@ -35,16 +46,31 @@ import static ch.raffael.guards.plugins.idea.GuardsApplicationComponent.PLUGIN_I
         storages = @Storage(file = StoragePathMacros.APP_CONFIG + "/guards.xml"))
 public class GuardsApplicationComponent implements ApplicationComponent, InspectionToolProvider, PersistentStateComponent<UiState> {
 
+    private static final Logger LOG = Logger.getInstance(
+            GuardsApplicationComponent.class.getName().substring(0, GuardsApplicationComponent.class.getName().lastIndexOf('.')));
+
     public static final boolean DEBUG = true;
 
     public static final String PLUGIN_ID = "ch.raffael.guards";
 
     private UiState uiState = new UiState();
+    private Path guardsAgentJar;
 
     public GuardsApplicationComponent() {
     }
 
     public void initComponent() {
+        try {
+            Path pluginTempPath = Paths.get(PathManager.getPluginTempPath()).resolve(PLUGIN_ID);
+            guardsAgentJar = pluginTempPath.resolve("guards-agent.jar");
+            Files.createDirectories(pluginTempPath);
+            try ( InputStream in = GuardsApplicationComponent.class.getResourceAsStream("guards-agent.jar") ) {
+                Files.copy(in, guardsAgentJar, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        catch ( IOException e ) {
+            LOG.error("Cannot copy agent jar", e);
+        }
     }
 
     public void disposeComponent() {
@@ -75,6 +101,11 @@ public class GuardsApplicationComponent implements ApplicationComponent, Inspect
     @Override
     public void loadState(UiState state) {
         this.uiState = state;
+    }
+
+    @NotNull
+    public static Path getGuardsAgentJar() {
+        return ApplicationManager.getApplication().getComponent(GuardsApplicationComponent.class).guardsAgentJar;
     }
 
 }
