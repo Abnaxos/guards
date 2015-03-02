@@ -177,8 +177,13 @@ class Instrumenter extends ClassVisitor {
                     String indyName = "guard:return";
                     String pname = "";
                     switch ( opcode ) {
-                        case IRETURN: // return int
-                            assert returnType.equals(Type.INT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
+                        case IRETURN: // return int / short / byte / boolean / char
+                            assert returnType.equals(Type.INT_TYPE)
+                                    ||returnType.equals(Type.SHORT_TYPE)
+                                    || returnType.equals(Type.BYTE_TYPE)
+                                    || returnType.equals(Type.BOOLEAN_TYPE)
+                                    || returnType.equals(Type.CHAR_TYPE)
+                                    : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
                             dup();
                             invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1, pname);
                             break;

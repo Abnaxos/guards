@@ -18,6 +18,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
 import ch.raffael.guards.agent.DynaGuards.Recorder
@@ -32,7 +34,7 @@ import static groovy.lang.Closure.DELEGATE_FIRST
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Use([ClassToTypeToken, TypeTokenToTypeToken])
-class AgentSpecification extends Specification {
+abstract class AgentSpecification extends Specification {
 
     protected DynaGuards guards = null
 
