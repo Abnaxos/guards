@@ -19,6 +19,7 @@ package ch.raffael.guards.agent;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -45,6 +46,7 @@ import ch.raffael.guards.definition.HandlerPackage;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.Positioning;
 import ch.raffael.guards.definition.Relations;
+import ch.raffael.guards.runtime.GuardNotApplicableError;
 import ch.raffael.guards.runtime.GuardsInternalError;
 import ch.raffael.guards.runtime.IllegalGuardError;
 
@@ -252,7 +254,7 @@ final class GuardDefinition {
         }
         TestMethod testMethod = findTestMethod(instance);
         if ( testMethod == null ) {
-            throw new IllegalGuardError(instance.getTarget() + ": No matching test method found for " + handlerClass.getName());
+            throw new GuardNotApplicableError(instance.getTarget() + ": No matching test method found for " + handlerClass.getName());
         }
         instance.updateTestMethod(testMethod.method);
         MethodHandle handle;
@@ -265,11 +267,24 @@ final class GuardDefinition {
         if ( !Modifier.isStatic(testMethod.method.getModifiers()) ) {
             handle = handle.bindTo(handlerInstantiator.get().instantiate(instance.getAnnotation(), instance.getTarget().getGenericValueType()));
         }
-        if ( !testMethod.valueType.isPrimitive() && !guard.testNulls() ) {
-            handle = MethodHandles.guardWithTest(
-                    Indy.testNotNullHandle(testMethod.valueType.getRawType()),
-                    handle,
-                    Indy.alwaysTrueHandle(testMethod.valueType.getRawType()));
+        // add null guards if necessary
+        if ( !guard.testNulls() ) {
+            if ( testMethod.valueType.isPrimitive() ) {
+                // check for unboxing
+                if ( !instance.getTarget().getValueType().isPrimitive() ) {
+                    handle = MethodHandles.guardWithTest(
+                            Indy.testNotNullHandle(instance.getTarget().getValueType()),
+                            handle.asType(MethodType.methodType(boolean.class, instance.getTarget().getValueType())),
+                            Indy.alwaysTrueHandle(instance.getTarget().getValueType())
+                    );
+                }
+            }
+            else {
+                handle = MethodHandles.guardWithTest(
+                        Indy.testNotNullHandle(testMethod.valueType.getRawType()),
+                        handle,
+                        Indy.alwaysTrueHandle(testMethod.valueType.getRawType()));
+            }
         }
         return Indy.prependGuardMethod(handle, instance, prependTo);
     }
@@ -305,7 +320,7 @@ final class GuardDefinition {
                 if ( testMethod != null ) {
                     // ambiguity detected!
                     // TODO: how to resolve this?
-                    throw new IllegalGuardError(instance.getTarget() + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
+                    throw new GuardNotApplicableError(instance.getTarget() + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
                 }
                 testMethod = candidate;
             }
@@ -329,7 +344,7 @@ final class GuardDefinition {
                     else {
                         // ambiguity detected!
                         // TODO: how to resolve this?
-                        throw new IllegalGuardError(instance.getTarget() + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
+                        throw new GuardNotApplicableError(instance.getTarget() + ": Ambiguous test method: Both " + testMethod.method + " and " + candidate.method + " match");
                     }
                 }
             }

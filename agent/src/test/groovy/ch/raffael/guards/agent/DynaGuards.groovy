@@ -18,6 +18,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
 import ch.raffael.guards.agent.guava.reflect.TypeToken
@@ -32,8 +34,10 @@ import static groovy.lang.Closure.DELEGATE_FIRST
 class DynaGuards {
 
     static final String PACKAGE = 'ch.raffael.guards.test.$dynamic'
+    static final String METHODS_CLASSNAME = PACKAGE + '.METHODS'
     static final String DEFAULT_GUARD = 'Default'
 
+    final OuterRecorder = new OuterRecorder()
     final Recorder recorder
     private methods
 
@@ -83,7 +87,7 @@ class DynaGuards {
             println()
             methods = new GroovyShell(DynaGuards.classLoader, new Binding(), new CompilerConfiguration(
                     targetBytecode: CompilerConfiguration.JDK7)).evaluate(source)
-            methods.RECORDER = recorder
+            methods.RECORDER = outerRecorder
         }
         return methods
     }
@@ -115,6 +119,7 @@ class DynaGuards {
     class GuardBuilder {
         final String name
         final Map<String, TestBuilder> tests = [:]
+        boolean testNulls
 
         GuardBuilder(String name) {
             this.name = name
@@ -139,7 +144,7 @@ class DynaGuards {
         private toSource(PrintWriter out) {
             out.println "@java.lang.annotation.Target(java.lang.annotation.ElementType.PARAMETER)"
             out.println "@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)"
-            out.println "@Guard(performanceImpact=PerformanceImpact.LOW)"
+            out.println "@Guard(performanceImpact=PerformanceImpact.LOW,testNulls=$testNulls)"
             out.println "@interface $name {"
             out.println "class Handler extends Guard.Handler<$name> {"
             tests.values().each { t -> t.toSource(out) }
@@ -156,9 +161,10 @@ class DynaGuards {
             this.name = name
             this.type = type
         }
+
         private toSource(PrintWriter out) {
             out.println "@Guard.Handler.Test static boolean $name($type value) {"
-            out.println "  METHODS.RECORDER.invocation('$name', ${typeSource(type)}, value)"
+            out.println "  METHODS.RECORDER.invocation(null, '$name', ${typeSource(type)}, value)"
             out.println "  return true"
             out.println "}"
         }
@@ -166,6 +172,7 @@ class DynaGuards {
     }
 
     class MethodBuilder {
+
         final String name
         private final Map<String, ParamBuilder> params = [:]
         private int paramCounter = 0
@@ -224,14 +231,21 @@ class DynaGuards {
         }
 
         protected toSource(PrintWriter out) {
-            guards.each { guard -> out.print "@$guard.name "}
+            guards.each { guard -> out.print "@$guard.name " }
             out.print "$type $name"
         }
     }
 
     static interface Recorder {
-
-        void invocation(String name, TypeToken type, Object value)
-
+        void invocation(String methodName, String testMethodName, TypeToken type, Object value)
     }
+
+    class OuterRecorder implements Recorder {
+        @Override
+        void invocation(String methodName, String testMethodName, TypeToken type, Object value) {
+            methodName = Thread.currentThread().getStackTrace().find({ elem -> elem.className.equals(PACKAGE + '.METHODS') })?.methodName
+            recorder.invocation(methodName, testMethodName, type, value)
+        }
+    }
+
 }

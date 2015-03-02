@@ -20,6 +20,8 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
 import ch.raffael.guards.agent.DynaGuards.Recorder
@@ -69,11 +71,17 @@ abstract class AgentSpecification extends Specification {
         TypeToken getType() {
             return TypeToken.of(this)
         }
+        TypeToken getTt() {
+            return TypeToken.of(this)
+        }
     }
 
     @Category(TypeToken)
     static class TypeTokenToTypeToken {
         TypeToken getType() {
+            this
+        }
+        TypeToken getTt() {
             this
         }
     }

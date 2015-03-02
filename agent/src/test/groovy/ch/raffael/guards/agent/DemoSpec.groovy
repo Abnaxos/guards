@@ -19,6 +19,7 @@
 
 
 package ch.raffael.guards.agent
+
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
@@ -39,8 +40,8 @@ class DemoSpec extends AgentSpecification {
 
       then:
         with(guardInvocations) {
-            1 * invocation(_, int.type, 42)
-            1 * invocation(_, int.type, 23)
+            1 * invocation(_, _, int.type, 42)
+            1 * invocation(_, _, int.type, 23)
         }
         0 * _
     }
