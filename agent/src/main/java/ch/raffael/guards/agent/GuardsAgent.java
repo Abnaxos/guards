@@ -30,6 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.Map;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,6 +47,8 @@ import ch.raffael.guards.agent.asm.ClassReader;
 import ch.raffael.guards.agent.asm.ClassWriter;
 import ch.raffael.guards.agent.asm.util.TraceClassVisitor;
 import ch.raffael.guards.agent.guava.base.Joiner;
+import ch.raffael.guards.agent.guava.collect.ImmutableBiMap;
+import ch.raffael.guards.agent.guava.collect.ImmutableMap;
 
 import static ch.raffael.guards.agent.Logging.LOG;
 
@@ -53,6 +57,22 @@ import static ch.raffael.guards.agent.Logging.LOG;
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 public class GuardsAgent {
+
+    private final static Map<String, String> VERSION_INFO;
+    static {
+        try {
+            Properties properties = new Properties();
+            properties.load(GuardsAgent.class.getResourceAsStream("version.properties"));
+            ImmutableMap.Builder<String, String> toMap = ImmutableBiMap.builder();
+            for( Map.Entry<Object, Object> entry : properties.entrySet() ) {
+                toMap.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+            }
+            VERSION_INFO = toMap.build();
+        }
+        catch ( Throwable e ) {
+            throw (ExceptionInInitializerError)new ExceptionInInitializerError("Cannot load version info").initCause(e);
+        }
+    }
 
     private final static GuardsAgent INSTANCE = new GuardsAgent();
 
@@ -76,7 +96,19 @@ public class GuardsAgent {
             throw new IllegalStateException("Guards agent already initialized");
         }
         instrumentation.addTransformer(transformer, true);
-        LOG.info("Guards Agent installed");
+        LOG.info(String.format("Guards Agent installed: Version %s (branch:%s; commit:%s(clean:%s); built:%s)",
+                VERSION_INFO.get("version"),
+                VERSION_INFO.get("branch"),
+                shortCommit(VERSION_INFO.get("commit"), 8),
+                VERSION_INFO.get("clean"),
+                VERSION_INFO.get("time")));
+    }
+    @Nullable
+    private String shortCommit(String commit, int length) {
+        if ( commit == null || commit.length() < length ) {
+            return null;
+        }
+        return commit.substring(0, length);
     }
 
     public Options getOptions() {
