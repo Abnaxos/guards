@@ -41,6 +41,7 @@ import ch.raffael.guards.definition.Relations;
 @Message("Collection mut not contain null values")
 @Relations(supersetOf = NoNulls.class)
 @Positioning(value = PositioningTendency.PRIMARY)
+@Retract(NoNulls.class)
 public @interface AllowNulls {
 
 }

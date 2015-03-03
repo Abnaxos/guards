@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.ext;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,25 +22,24 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.raffael.guards.definition.Guard;
-import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.Nullable;
 import ch.raffael.guards.definition.Positioning;
 import ch.raffael.guards.definition.PositioningTendency;
-import ch.raffael.guards.definition.Relations;
 
 
 /**
- * Mark the value as nullable (opposite of {@link NotNull @NotNull}).
+ * The same as {@link ch.raffael.guards.NotNull @NotNull}, but allows to specify a natural-language
+ * condition of what `null` means.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
-@Relations(supersetOf = NotNull.class)
-@Positioning(value = PositioningTendency.PRIMARY, before = Positioning.All.class)
-@Retract(NotNull.class)
-public @interface Nullable {
+@Positioning(PositioningTendency.PRIMARY)
+@Nullable
+public @interface NullIf {
+
+    String value();
 
 }

@@ -30,17 +30,18 @@ import ch.raffael.guards.definition.Relations;
 
 
 /**
- * Mark the value as nullable (opposite of {@link NotNull @NotNull}).
+ * Check that a {@link java.util.Collection}, {@link Iterable}, {@link CharSequence} or array is not
+ * empty.
  *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
-@Relations(supersetOf = NotNull.class)
-@Positioning(value = PositioningTendency.PRIMARY, before = Positioning.All.class)
-@Retract(NotNull.class)
-public @interface Nullable {
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations(supersetOf = {NotEmpty.class}) // todo @NotNull / @AllowNulls
+@Positioning(value = PositioningTendency.LEADING, before = Max.class)
+@Retract(NotEmpty.class)
+public @interface AllowEmpty {
 
 }

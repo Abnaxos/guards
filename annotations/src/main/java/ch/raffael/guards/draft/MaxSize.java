@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards;
+package ch.raffael.guards.draft;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -23,24 +23,31 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
 /**
- * Mark the value as nullable (opposite of {@link NotNull @NotNull}).
- *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
-@Relations(supersetOf = NotNull.class)
-@Positioning(value = PositioningTendency.PRIMARY, before = Positioning.All.class)
-@Retract(NotNull.class)
-public @interface Nullable {
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations()
+@Positioning()
+@Message("Value must not be larger than {value}")
+public @interface MaxSize {
+
+    int value();
+
+    class Handler extends Guard.Handler<MaxSize> {
+
+        public Handler(MaxSize annotation) {
+            super(annotation);
+        }
+    }
 
 }
