@@ -16,21 +16,31 @@
 
 package ch.raffael.guards.plugins.idea;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.intellij.codeInsight.AnnotationUtil;
+import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiPrimitiveType;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiType;
+import org.jetbrains.annotations.Contract;
 
 import ch.raffael.guards.NotNull;
+import ch.raffael.guards.Nullable;
+import ch.raffael.guards.ext.NullIfNotFound;
 
 
 /**
@@ -38,78 +48,58 @@ import ch.raffael.guards.NotNull;
  */
 public class PsiGuardUtil {
 
+    private static final FluentIterable<Object> EMPTY_FLUENT_ITERABLE = fluentIterable(Arrays.asList());
+
     private PsiGuardUtil() {
     }
 
-    public static boolean isGuarded(@NotNull PsiElement element) {
-        // TODO: proper language check
-        if ( !element.getLanguage().is(JavaLanguage.INSTANCE) ) {
-            return false;
-        }
-        if ( element instanceof PsiClass ) {
-            return isGuardAnnotation((PsiClass)element);
-        }
-        else if ( element instanceof PsiMethod ) {
-            if ( hasGuardModifiers((PsiMethod)element) ) {
-                return true;
-            }
-            for( PsiParameter param : ((PsiMethod)element).getParameterList().getParameters() ) {
-                if ( hasGuardModifiers(param) ) {
-                    return true;
-                }
-            }
-        }
-        else if (element instanceof PsiField ) {
-            return hasGuardModifiers((PsiModifierListOwner)element);
-        }
-        else if ( element instanceof PsiParameter ) {
-            return hasGuardModifiers((PsiParameter)element);
-        }
-        return false;
+    @Contract("null -> false")
+    public static boolean isGuardableLanguage(@Nullable Language language) {
+        return JavaLanguage.INSTANCE.is(language);
     }
 
-    public static boolean isFullyGuarded(PsiMethod method) {
-        if ( !hasGuardModifiers(method) ) {
-            if ( method.getReturnType() != null && !(method.getReturnType() instanceof PsiPrimitiveType) ) {
-                return false;
-            }
-        }
-        for( PsiParameter param : method.getParameterList().getParameters() ) {
-            if ( !hasGuardModifiers(param) && !(param.getType() instanceof PsiPrimitiveType) ) {
-                return false;
-            }
-        }
-        return true;
+    @Contract("null -> false")
+    public static boolean isGuardableLanguage(@Nullable PsiElement element) {
+        return element != null && isGuardableLanguage(element.getLanguage());
     }
 
-    private static boolean hasGuardModifiers(@NotNull PsiModifierListOwner element) {
-        if ( element.getModifierList() == null ) {
-            return false;
-        }
-        for( PsiAnnotation annotation : element.getModifierList().getAnnotations() ) {
-            if ( annotation.getNameReferenceElement() == null ) {
-                continue;
-            }
-            PsiElement resolved = annotation.getNameReferenceElement().resolve();
-            if ( !(resolved instanceof PsiClass) ) {
-                continue;
-            }
-            if ( isGuardAnnotation((PsiClass)resolved) ) {
-                return true;
-            }
-        }
-        return false;
+    @Contract("null -> false")
+    public static boolean isGuardable(@Nullable PsiElement element) {
+        return isGuardableLanguage(element) && (element instanceof PsiMethod || element instanceof PsiParameter);
     }
 
-    public static boolean isGuardAnnotation(@NotNull PsiClass psiClass) {
-        return isGuardAnnotation(new HashSet<PsiClass>(), psiClass);
+    @Contract("null -> false")
+    public static boolean isGuardAnnotation(@Nullable PsiElement element) {
+        PsiAnnotation annotation = as(PsiAnnotation.class, element);
+        return annotation != null && isGuardType(resolve(annotation.getNameReferenceElement()));
     }
 
-    public static boolean isGuardAnnotation(@NotNull Set<PsiClass> seen, @NotNull PsiClass psiClass) {
-        if ( !seen.add(psiClass) ) {
-            return false;
+
+    static boolean isGuarded(@Nullable PsiElement element) {
+        return getGuards(as(PsiModifierListOwner.class, element)).anyMatch(Predicates.alwaysTrue());
+    }
+
+    @NotNull
+    static FluentIterable<PsiAnnotation> getGuards(@Nullable PsiModifierListOwner element) {
+        if ( !isGuardable(element) || element.getModifierList() == null ) {
+            return fluentIterable();
         }
-        if ( !psiClass.isAnnotationType() ) {
+        return fluentIterable(element.getModifierList().getAnnotations()).filter(new Predicate<PsiAnnotation>() {
+            @Override
+            public boolean apply(@Nullable PsiAnnotation psiElement) {
+                return isGuardAnnotation(psiElement);
+            }
+        });
+    }
+
+    @Contract("null -> false")
+    public static boolean isGuardType(@Nullable PsiElement element) {
+        return isGuardableLanguage(element) && (element instanceof PsiClass)
+                && isGuardType(new HashSet<PsiClass>(), (PsiClass)element);
+    }
+
+    public static boolean isGuardType(@NotNull Set<PsiClass> seen, @Nullable PsiClass psiClass) {
+        if ( psiClass == null || !seen.add(psiClass) || !psiClass.isAnnotationType() ) {
             return false;
         }
         if ( psiClass.getModifierList() == null ) {
@@ -119,18 +109,72 @@ public class PsiGuardUtil {
             return true;
         }
         for( PsiAnnotation annotation : psiClass.getModifierList().getAnnotations() ) {
-            if ( annotation.getNameReferenceElement() == null ) {
-                continue;
-            }
-            PsiElement resolved = annotation.getNameReferenceElement().resolve();
-            if ( !(resolved instanceof PsiClass) ) {
-                continue;
-            }
-            if ( isGuardAnnotation(seen, (PsiClass)resolved) ) {
-                return true;
+            if ( annotation.getNameReferenceElement() != null ) {
+                if ( isGuardType(seen, resolve(PsiClass.class, annotation.getNameReferenceElement())) ) {
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+    @NullIfNotFound
+    public static PsiElement resolve(@Nullable PsiElement element) {
+        PsiReference ref = as(PsiReference.class, element);
+        return ref == null ? null : ref.resolve();
+    }
+
+    @NullIfNotFound
+    public static <T extends PsiElement> T resolve(@NotNull Class<T> expectedType, @Nullable PsiElement element) {
+        return as(expectedType, resolve(element));
+    }
+
+    @Contract("null -> false")
+    public static boolean isPrimitiveType(@Nullable PsiType element) {
+        return element instanceof PsiPrimitiveType;
+    }
+
+    @Contract("null -> false")
+    public static boolean isAnnotationType(@Nullable PsiClass element) {
+        return element != null && element.isAnnotationType();
+    }
+
+    @NotNull
+    public static <T> FluentIterable<T> fluentIterable(@Nullable Iterable<T> iterable) {
+        if ( iterable == null || ((iterable instanceof Collection) && ((Collection)iterable).isEmpty()) ) {
+            return fluentIterable();
+        }
+        else {
+            return FluentIterable.from(iterable);
+        }
+    }
+
+    @SafeVarargs
+    @NotNull
+    public static <T> FluentIterable<T> fluentIterable(@Nullable T... array) {
+        if ( array == null || array.length == 0 ) {
+            return fluentIterable();
+        }
+        else {
+            return FluentIterable.from(Arrays.asList(array));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @NotNull
+    public static <T> FluentIterable<T> fluentIterable() {
+        return (FluentIterable<T>)EMPTY_FLUENT_ITERABLE;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Nullable
+    public static <T> T as(@NotNull Class<T> type, @Nullable Object object) {
+        if ( type.isInstance(object) ) {
+            return (T)object;
+        }
+        else {
+            return null;
+        }
     }
 
 }

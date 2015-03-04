@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.swing.Icon;
 
+import com.google.common.base.Predicate;
 import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
@@ -30,6 +31,7 @@ import com.intellij.ide.DataManager;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiParameter;
 import com.intellij.ui.awt.RelativePoint;
 
 import ch.raffael.guards.NotNull;
@@ -37,12 +39,17 @@ import ch.raffael.guards.Nullable;
 import ch.raffael.guards.plugins.idea.ui.GuardEditor;
 import ch.raffael.guards.plugins.idea.ui.GuardFocus;
 
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.fluentIterable;
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isAnnotationType;
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isGuarded;
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isPrimitiveType;
+
+
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvider {
 
-    private static final Icon GUARDED_ICON = GuardIcons.GutterGuard;
 
     //@Override
     //public void annotate(@NotNull PsiElement element, AnnotationHolder holder) {
@@ -64,6 +71,9 @@ public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvid
     @Nullable
     @Override
     public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
+        if ( !PsiGuardUtil.isGuardableLanguage(element) ) {
+            return null;
+        }
         if ( element instanceof PsiMethod ) {
             final PsiMethod method = (PsiMethod)element;
             int startOffset;
@@ -73,12 +83,34 @@ public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvid
             else {
                 startOffset = method.getNameIdentifier().getTextRange().getStartOffset();
             }
-            Icon icon;
-            if ( PsiGuardUtil.isFullyGuarded(method) ) {
-                icon = GuardIcons.GutterGuard;
-            }
-            else {
-                icon = GuardIcons.GutterGuardWarning;
+            Icon icon = null;
+            if ( !isAnnotationType(method.getContainingClass()) ) {
+                boolean fullyGuarded = method.getReturnType() == null
+                        || isPrimitiveType(method.getReturnType())
+                        || isGuarded(method);
+                if ( fullyGuarded ) {
+                    fullyGuarded = !fluentIterable(method.getParameterList().getParameters())
+                            .filter(new Predicate<PsiParameter>() {
+                                // remove all unknown / primitive types
+                                @Override
+                                public boolean apply(@Nullable PsiParameter psiParameter) {
+                                    return psiParameter != null && !isPrimitiveType(psiParameter.getType());
+                                }
+                            })
+                            .anyMatch(new Predicate<PsiParameter>() {
+                                // true if there is any unguarded
+                                @Override
+                                public boolean apply(@Nullable PsiParameter psiParameter) {
+                                    return !isGuarded(psiParameter);
+                                }
+                            });
+                }
+                if ( fullyGuarded ) {
+                    icon = GuardIcons.GutterGuard;
+                }
+                else {
+                    icon = GuardIcons.GutterGuardWarning;
+                }
             }
             return new LineMarkerInfo<>(method, startOffset, icon, Pass.UPDATE_ALL,
                     null /*new Function<PsiMethod, String>() {
@@ -105,24 +137,6 @@ public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvid
                                     .show(RelativePoint.fromScreen(e.getLocationOnScreen()));
                         }
                     }, GutterIconRenderer.Alignment.RIGHT);
-            //PsiMethod method = (PsiMethod)element;
-            //final List<GuardInfo> guardInfos = GuardInfo.forPsiMethod(method);
-            //if ( !guardInfos.isEmpty() ) {
-            //    return new LineMarkerInfo<>(method, method.getNameIdentifier().getTextRange(), GUARDED_ICON, Pass.UPDATE_ALL,
-            //            new Function<PsiMethod, String>() {
-            //                @Override
-            //                public String fun(PsiMethod psiMethod) {
-            //                    StringBuilder buf = new StringBuilder();
-            //                    for( GuardInfo info : guardInfos ) {
-            //                        if ( buf.length() > 0 ) {
-            //                            buf.append('\n');
-            //                        }
-            //                        buf.append(info);
-            //                    }
-            //                    return buf.toString();
-            //                }
-            //            }, null, GutterIconRenderer.Alignment.RIGHT);
-            //}
         }
         return null;
     }

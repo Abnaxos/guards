@@ -86,14 +86,13 @@ allprojects {
         loggingImpl group:'ch.qos.logback', name:'logback-classic', version:'1.1.2'
         loggingImpl group:'org.slf4j', name:'jul-to-slf4j', version:slf4jVersion
 
-        groovy group:'org.codehaus.groovy', name:'groovy-all', classifier:'indy', version:'2.3.9'
+        groovy group:'org.codehaus.groovy', name:'groovy-all', classifier:'indy', version:'2.4.1'
 
         testCompile configurations.loggingImpl
         testCompile configurations.groovy
-        testCompile('org.spockframework:spock-core:0.7-groovy-2.0') {
+        testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
             exclude group:'org.codehaus.groovy'
         }
-        testCompile group:'cglib', name:'cglib-nodep', version:'3.1'
         testCompile group:'org.slf4j', name:'slf4j-simple', version:slf4jVersion
     }
 }

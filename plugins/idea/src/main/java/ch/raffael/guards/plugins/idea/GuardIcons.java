@@ -31,7 +31,8 @@ import com.intellij.util.IconUtil;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 
-import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isGuarded;
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.as;
+import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isGuardType;
 
 
 /**
@@ -53,7 +54,7 @@ public final class GuardIcons implements IconLayerProvider {
     @Nullable
     @Override
     public Icon getLayerIcon(@NotNull Iconable element, boolean isLocked) {
-        if ( element instanceof PsiElement && isGuarded((PsiElement)element) ) {
+        if ( isGuardType(as(PsiElement.class, element)) ) {
             return GuardLayer;
         }
         else {
