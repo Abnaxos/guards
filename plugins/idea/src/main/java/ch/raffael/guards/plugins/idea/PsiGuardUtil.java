@@ -18,6 +18,7 @@ package ch.raffael.guards.plugins.idea;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,7 +49,7 @@ import ch.raffael.guards.ext.NullIfNotFound;
  */
 public class PsiGuardUtil {
 
-    private static final FluentIterable<Object> EMPTY_FLUENT_ITERABLE = fluentIterable(Arrays.asList());
+    private static final FluentIterable<Object> EMPTY_FLUENT_ITERABLE = FluentIterable.from(Collections.emptyList());
 
     private PsiGuardUtil() {
     }
