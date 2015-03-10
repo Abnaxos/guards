@@ -23,6 +23,7 @@ import ch.raffael.guards.agent.asm.MethodVisitor;
 import ch.raffael.guards.agent.asm.Opcodes;
 import ch.raffael.guards.agent.asm.Type;
 import ch.raffael.guards.agent.asm.commons.AdviceAdapter;
+import ch.raffael.guards.agent.asm.commons.AnalyzerAdapter;
 import ch.raffael.guards.agent.asm.tree.MethodNode;
 
 import static ch.raffael.guards.agent.IntFlags.containsFlag;
@@ -40,6 +41,8 @@ class Instrumenter extends ClassVisitor {
     private final Options options;
     private final ClassLoader loader;
 
+    private String className;
+
     Instrumenter(Options options, ClassLoader loader, ClassVisitor cv) {
         super(ASM5, cv);
         this.loader = loader;
@@ -55,6 +58,7 @@ class Instrumenter extends ClassVisitor {
         if ( containsFlag(access, ACC_ANNOTATION) ) {
             throw new CancelException("Is an annotation type");
         }
+        this.className = name;
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
@@ -124,8 +128,21 @@ class Instrumenter extends ClassVisitor {
 
         private class MethodInstrumenter extends AdviceAdapter {
 
+            private int stackExtensionEntry = 0;
+            private int stackExtensionExit = 0;
+
             public MethodInstrumenter() {
-                super(Opcodes.ASM5, ParameterNameCollector.this.mv, ParameterNameCollector.this.access, ParameterNameCollector.this.name, ParameterNameCollector.this.desc);
+                super(Opcodes.ASM5,
+                        // #BYTECODE-UPGRADE: The AnalyzerAdapter expands our frames as needed;
+                        new AnalyzerAdapter(
+                                className,
+                                ParameterNameCollector.this.access,
+                                ParameterNameCollector.this.name,
+                                ParameterNameCollector.this.desc,
+                                ParameterNameCollector.this.mv),
+                        ParameterNameCollector.this.access,
+                        ParameterNameCollector.this.name,
+                        ParameterNameCollector.this.desc);
             }
 
             @Override
@@ -167,6 +184,7 @@ class Instrumenter extends ClassVisitor {
                         loadArg(i);
                         invokeDynamic("guard:arg" + i, "(" + parameterTypes[i].getDescriptor() + ")V", Indy.BOOTSTRAP_ASM_HANDLE,
                                 name, desc, i, parameterName[i] == null ? "" : parameterName[i]);
+                        stackExtensionEntry = Math.max(stackExtensionEntry, parameterTypes[i].getSize());
                     }
                 }
             }
@@ -186,25 +204,30 @@ class Instrumenter extends ClassVisitor {
                                     : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
                             dup();
                             invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1, pname);
+                            stackExtensionExit = Math.max(stackExtensionExit, 1);
                             break;
                         case LRETURN: // return long
                             assert returnType.equals(Type.LONG_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
                             dup2();
                             invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1, pname);
+                            stackExtensionExit = Math.max(stackExtensionExit, 2);
                             break;
                         case FRETURN: // return float
                             assert returnType.equals(Type.FLOAT_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
                             dup();
                             invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1, pname);
+                            stackExtensionExit = Math.max(stackExtensionExit, 1);
                             break;
                         case DRETURN: // return double
                             assert returnType.equals(Type.DOUBLE_TYPE) : "Return opcode mismatch: opcode=" + opcode + " / type=" + returnType;
                             dup2();
                             invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1, pname);
+                            stackExtensionExit = Math.max(stackExtensionExit, 2);
                             break;
                         case ARETURN: // return reference
                             dup();
                             invokeDynamic(indyName, guardDesc, Indy.BOOTSTRAP_ASM_HANDLE, name, desc, -1, pname);
+                            stackExtensionExit = Math.max(stackExtensionExit, 1);
                         case RETURN: // return void => no instrumentation
                         case ATHROW: // throw exception => no instrumentation
                             break;
@@ -212,6 +235,18 @@ class Instrumenter extends ClassVisitor {
                             assert false : "Unexpected onMethodExit() opcode: " + opcode;
                     }
                 }
+            }
+
+            @Override
+            public void visitMaxs(int maxStack, int maxLocals) {
+                // @BYTECODE-UPGRADE: AnalyzerAdapter takes care of this
+                super.visitMaxs(maxStack, maxLocals);
+                //if ( stackExtensionExit > 0 ) {
+                //    super.visitMaxs(maxStack + stackExtensionExit, maxLocals);
+                //}
+                //else {
+                //    super.visitMaxs(Math.max(maxStack, stackExtensionEntry), maxLocals);
+                //}
             }
         }
     }

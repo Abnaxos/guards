@@ -322,9 +322,11 @@ public class GuardsAgent {
             try {
                 final Options options = getInstance().getOptions();
                 ClassReader classReader = new ClassReader(classfileBuffer);
-                ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+                // DO NOT USE CALCULATE_FRAMES! It tries to load classes! #BYTECODE-UPGRADE
+                ClassWriter classWriter = new ClassWriter(0);
                 Instrumenter instrumenter = new Instrumenter(options, loader, classWriter);
-                classReader.accept(instrumenter, ClassReader.SKIP_FRAMES);
+                // #BYTECODE-UPGRADE: EXPAND_FRAMES is set for Analyzer adapter
+                classReader.accept(instrumenter, ClassReader.EXPAND_FRAMES);
                 final byte[] instrumentedBytecode = classWriter.toByteArray();
                 asmDump(options, className, instrumentedBytecode);
                 return instrumentedBytecode;
