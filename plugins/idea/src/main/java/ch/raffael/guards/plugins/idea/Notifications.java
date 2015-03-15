@@ -16,38 +16,17 @@
 
 package ch.raffael.guards.plugins.idea;
 
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
-
-
-
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsProjectComponent implements ProjectComponent {
+public final class Notifications {
 
-    private final Project project;
-
-    public GuardsProjectComponent(Project project) {
-        this.project = project;
+    private Notifications() {
     }
 
-    public void initComponent() {
-    }
 
-    public void disposeComponent() {
-    }
+    public static void notifyError(String message) {
 
-    @NotNull
-    public String getComponentName() {
-        return "GuardsPluginProject";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
     }
 
 }

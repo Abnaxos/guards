@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.swing.Icon;
+import javax.swing.JComponent;
 
 import com.google.common.base.Predicate;
 import com.intellij.codeHighlighting.Pass;
@@ -36,8 +37,7 @@ import com.intellij.ui.awt.RelativePoint;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
-import ch.raffael.guards.plugins.idea.ui.GuardEditor;
-import ch.raffael.guards.plugins.idea.ui.GuardFocus;
+import ch.raffael.guards.plugins.idea.editor.GuardPopupController;
 
 import static ch.raffael.guards.plugins.idea.PsiGuardUtil.fluentIterable;
 import static ch.raffael.guards.plugins.idea.PsiGuardUtil.isAnnotationType;
@@ -129,12 +129,16 @@ public class GuardsLineMarkerProvider implements /*Annotator,*/ LineMarkerProvid
                     new GutterIconNavigationHandler<PsiMethod>() {
                         @Override
                         public void navigate(MouseEvent e, PsiMethod method) {
-                            GuardFocus focus = GuardFocus.find(method);
-                            if ( focus == null ) {
-                                return;
-                            }
-                            new GuardEditor(focus, method.getProject(), null, DataManager.getInstance().getDataContextFromFocus().getResult())
-                                    .show(RelativePoint.fromScreen(e.getLocationOnScreen()));
+                            new GuardPopupController(
+                                    new RelativePoint(e), (JComponent)e.getComponent(), method)
+                                    .shopPopup(DataManager.getInstance().getDataContext(e.getComponent()));
+                            // TODO: open popup with mouse
+                            //GuardFocus focus = GuardFocus.find(method);
+                            //if ( focus == null ) {
+                            //    return;
+                            //}
+                            //new GuardEditor(focus, method.getProject(), null, DataManager.getInstance().getDataContextFromFocus().getResult())
+                            //        .show(RelativePoint.fromScreen(e.getLocationOnScreen()));
                         }
                     }, GutterIconRenderer.Alignment.RIGHT);
         }

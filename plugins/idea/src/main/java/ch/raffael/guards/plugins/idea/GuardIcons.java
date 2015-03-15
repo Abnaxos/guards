@@ -51,6 +51,8 @@ public final class GuardIcons implements IconLayerProvider {
             IconUtil.cropIcon(AllIcons.General.WarningDecorator, new Rectangle(4, 0, 12, 12)));
     public static final Icon GuardLayer = load("guard-layer.png");
 
+    public static final Icon EditGuardsAction = load("edit-guards.png");
+
     @Nullable
     @Override
     public Icon getLayerIcon(@NotNull Iconable element, boolean isLocked) {

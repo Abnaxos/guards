@@ -14,40 +14,11 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea;
-
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
-
-
+package ch.raffael.guards.plugins.idea.editor;
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsProjectComponent implements ProjectComponent {
-
-    private final Project project;
-
-    public GuardsProjectComponent(Project project) {
-        this.project = project;
-    }
-
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return "GuardsPluginProject";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
+public class EditGuardsIntention {
 
 }

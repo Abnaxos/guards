@@ -88,8 +88,8 @@ public class GuardsApplicationComponent implements ApplicationComponent, Inspect
         };
     }
 
-    public UiState getUiState() {
-        return uiState;
+    public static UiState getUiState() {
+        return ApplicationManager.getApplication().getComponent(GuardsApplicationComponent.class).uiState;
     }
 
     @Nullable

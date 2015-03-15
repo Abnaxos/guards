@@ -16,38 +16,28 @@
 
 package ch.raffael.guards.plugins.idea;
 
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
+import javax.swing.Icon;
 
+import com.intellij.ide.IconProvider;
+import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.Nullable;
+
+import ch.raffael.guards.NotNull;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsProjectComponent implements ProjectComponent {
+public class GuardsIconProvider extends IconProvider {
 
-    private final Project project;
-
-    public GuardsProjectComponent(Project project) {
-        this.project = project;
+    @Nullable
+    @Override
+    public Icon getIcon(@NotNull PsiElement element, int flags) {
+        if ( PsiGuardUtil.isGuardAnnotation(element) ) {
+            return GuardIcons.Guard;
+        }
+        else {
+            return null;
+        }
     }
-
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return "GuardsPluginProject";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
-
 }

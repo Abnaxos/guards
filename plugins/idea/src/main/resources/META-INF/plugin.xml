@@ -37,10 +37,6 @@
   <depends>com.intellij.modules.lang</depends>
   -->
 
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-  </extensions>
-
   <application-components>
     <!-- Add your application components here -->
     <component>
@@ -58,7 +54,7 @@
   <actions>
     <!-- Add your actions here -->
     <action id="ch.raffael.guards.displayGuards"
-            class="ch.raffael.guards.plugins.idea.ui.EditGuardsAction" text="Display Guards">
+            class="ch.raffael.guards.plugins.idea.editor.InvokeGuardEditorAction">
       <keyboard-shortcut keymap="$default" first-keystroke="alt G"/>
     </action>
   </actions>
@@ -70,6 +66,7 @@
                      enabledByDefault="true" level="WARNING"
                      implementationClass="ch.raffael.guards.plugins.idea.GuardsInheritanceInspection"/>
     <iconLayerProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons"/>
+    <iconProvider implementation="ch.raffael.guards.plugins.idea.GuardsIconProvider"/>
     <runConfigurationExtension implementation="ch.raffael.guards.plugins.idea.run.GuardsRunConfigurationExtension"/>
   </extensions>
 

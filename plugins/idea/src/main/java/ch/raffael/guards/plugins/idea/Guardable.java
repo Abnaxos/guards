@@ -16,38 +16,25 @@
 
 package ch.raffael.guards.plugins.idea;
 
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiParameter;
+
+import ch.raffael.guards.ext.InstanceOf;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsProjectComponent implements ProjectComponent {
-
-    private final Project project;
-
-    public GuardsProjectComponent(Project project) {
-        this.project = project;
-    }
-
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return "GuardsPluginProject";
-    }
-
-    public void projectOpened() {
-    }
-
-    public void projectClosed() {
-    }
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Retention(RetentionPolicy.CLASS)
+@Documented
+@InstanceOf({ PsiMethod.class, PsiParameter.class })
+public @interface Guardable {
 
 }
