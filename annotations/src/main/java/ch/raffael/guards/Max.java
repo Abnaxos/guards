@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 import ch.raffael.guards.definition.Relations.Rules;
 
@@ -58,7 +57,7 @@ import ch.raffael.guards.definition.Relations.Rules;
                 "max >= 1 -> intersecting",
                 "-> disjoint" })
 })
-@Positioning(value = PositioningTendency.LEADING, after = Min.class)
+@Positioning(slot = Positioning.Slot.LEADING, groupAfter = Min.class)
 @Message("Value must be at most {value}")
 public @interface Max {
 

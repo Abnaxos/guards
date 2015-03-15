@@ -32,9 +32,8 @@ import ch.raffael.guards.definition.Positioning;
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.CLASS)
 @Documented
-@Positioning()
+@Positioning(slot = Positioning.Slot.PRIMARY, priority = Nullable.NULLITY_PRIORITY)
 @Nullable
 public @interface NullIfNotFound {
-
 
 }

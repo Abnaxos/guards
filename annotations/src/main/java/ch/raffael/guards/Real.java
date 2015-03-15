@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 
 
 /**
@@ -38,7 +37,7 @@ import ch.raffael.guards.definition.PositioningTendency;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
-@Positioning(value = PositioningTendency.LEADING)
+@Positioning(slot = Positioning.Slot.LEADING)
 @Message("The value must be a real number")
 public @interface Real {
 

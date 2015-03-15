@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -40,8 +39,10 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW, testNulls = true)
 @Relations(subsetOf = Nullable.class)
-@Positioning(value = PositioningTendency.PRIMARY, before = Positioning.All.class)
+@Positioning(slot = Positioning.Slot.PRIMARY, priority = 1000)
 @Message("Value must not be null")
 public @interface NotNull {
+
+    int NULLITY_PRIORITY = 1000;
 
 }

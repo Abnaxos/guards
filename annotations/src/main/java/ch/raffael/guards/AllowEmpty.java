@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -40,7 +39,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations(supersetOf = {NotEmpty.class}) // todo @NotNull / @AllowNulls
-@Positioning(value = PositioningTendency.LEADING, before = Max.class)
+@Positioning(slot = Positioning.Slot.LEADING, groupBefore = Max.class)
 @Retract(NotEmpty.class)
 public @interface AllowEmpty {
 

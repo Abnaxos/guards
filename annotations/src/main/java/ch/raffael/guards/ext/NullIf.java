@@ -24,7 +24,6 @@ import java.lang.annotation.Target;
 
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 
 
 /**
@@ -36,7 +35,7 @@ import ch.raffael.guards.definition.PositioningTendency;
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.CLASS)
 @Documented
-@Positioning(PositioningTendency.PRIMARY)
+@Positioning(slot = Positioning.Slot.PRIMARY, priority = Nullable.NULLITY_PRIORITY)
 @Nullable
 public @interface NullIf {
 

@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
-import ch.raffael.guards.definition.Positioning;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -37,7 +36,6 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations()
-@Positioning()
 @Message("Value must not be larger than {value}")
 public @interface MaxSize {
 

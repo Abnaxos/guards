@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -40,7 +39,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.HIGH)
 @Relations(subsetOf = AllowNulls.class)
-@Positioning(value = PositioningTendency.PRIMARY)
+@Positioning(slot = Positioning.Slot.PRIMARY)
 @Message("Collection may not contain null elements")
 public @interface NoNulls {
 

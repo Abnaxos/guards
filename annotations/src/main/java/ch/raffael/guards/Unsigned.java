@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -40,7 +39,7 @@ import ch.raffael.guards.definition.Relations;
 @Documented
 @Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations(supersetOf = Positive.class, subsetOf = Signed.class)
-@Positioning(value = PositioningTendency.LEADING)
+@Positioning(slot = Positioning.Slot.LEADING)
 @Message("Value must not be negative")
 public @interface Unsigned {
 

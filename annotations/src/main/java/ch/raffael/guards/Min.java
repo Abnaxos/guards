@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 import ch.raffael.guards.definition.Relations.Rules;
 
@@ -57,7 +56,7 @@ import ch.raffael.guards.definition.Relations.Rules;
                 "value == 1 -> equal",
                 "-> superset" })
 })
-@Positioning(value = PositioningTendency.LEADING, before = Max.class)
+@Positioning(slot = Positioning.Slot.LEADING, groupBefore = Max.class)
 @Message("Value must be at least {value}")
 public @interface Min {
 

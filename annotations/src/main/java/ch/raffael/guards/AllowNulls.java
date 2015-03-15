@@ -26,7 +26,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.PerformanceImpact;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 import ch.raffael.guards.definition.Relations;
 
 
@@ -40,7 +39,7 @@ import ch.raffael.guards.definition.Relations;
         handler = Guard.AlwaysTrue.class)
 @Message("Collection mut not contain null values")
 @Relations(supersetOf = NoNulls.class)
-@Positioning(value = PositioningTendency.PRIMARY)
+@Positioning(slot = Positioning.Slot.PRIMARY)
 @Retract(NoNulls.class)
 public @interface AllowNulls {
 

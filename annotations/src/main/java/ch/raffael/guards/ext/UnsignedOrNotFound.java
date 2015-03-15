@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import ch.raffael.guards.Min;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.Positioning;
-import ch.raffael.guards.definition.PositioningTendency;
 
 
 /**
@@ -39,7 +38,7 @@ import ch.raffael.guards.definition.PositioningTendency;
 @Documented
 
 @Min(-1)
-@Positioning(value = PositioningTendency.LEADING)
+@Positioning(slot = Positioning.Slot.LEADING)
 @Message("The value must be signed or -1 if not found")
 public @interface UnsignedOrNotFound {
 

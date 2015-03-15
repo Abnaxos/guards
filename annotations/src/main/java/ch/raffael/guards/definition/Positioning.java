@@ -30,6 +30,8 @@ import java.lang.annotation.Target;
  * also provides means to group several annotations together, like {@link ch.raffael.guards.Min @Min}
  * always right next to {@link ch.raffael.guards.Max @Max}.
  *
+ * @todo The agent will probably *not* reorder the guards.
+ *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Target(ElementType.ANNOTATION_TYPE)
@@ -38,19 +40,19 @@ import java.lang.annotation.Target;
 @GuardAnnotation
 public @interface Positioning {
 
-    PositioningTendency value() default PositioningTendency.PRIMARY;
+    Slot slot();
 
-    Class<? extends Annotation>[] before() default {};
+    Class<? extends Annotation>[] groupBefore() default {};
 
-    Class<? extends Annotation>[] after() default {};
+    Class<? extends Annotation>[] groupAfter() default {};
+
+    int priority() default 0;
 
     /**
-     * Special value for {@link Positioning#before() before} and {@link Positioning#after() after}
-     * to indicate that the annotation should be placed before all/after all other annotations in
-     * its {@link Positioning#value() tendency} group.
+     *
+     * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
      */
-    @Target({})
-    @Retention(RetentionPolicy.RUNTIME)
-    @interface All {}
-
+    enum Slot {
+        PRIMARY, CUSTOM, LEADING, TRAILING
+    }
 }
