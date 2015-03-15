@@ -14,10 +14,27 @@
  * limitations under the License.
  */
 
+package ch.raffael.guards;
 
+/**
+ * Error thrown when an internal error occurs.
+ *
+ * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
+ */
+public class GuardsInternalError extends Error {
 
-apply plugin:guards.Publishable
+    public GuardsInternalError() {
+    }
 
-dependencies {
-    compile project(':annotations')
+    public GuardsInternalError(String message) {
+        super(message);
+    }
+
+    public GuardsInternalError(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public GuardsInternalError(Throwable cause) {
+        super(cause);
+    }
 }

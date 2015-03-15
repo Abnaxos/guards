@@ -18,6 +18,8 @@
 
 
 
+
+
 import org.ajoberstar.grgit.Grgit
 
 
@@ -36,7 +38,7 @@ apply plugin:guards.PreparedShadow
 apply plugin:guards.Publishable
 
 dependencies {
-    included project(':runtime'), project(':annotations')
+    included project(':annotations')
 
     provided findToolsJar()
 

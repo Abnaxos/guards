@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.internal;
+package ch.raffael.guards.internal;
 
 import java.util.Map;
 

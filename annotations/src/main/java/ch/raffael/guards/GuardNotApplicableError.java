@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime;
-
-import ch.raffael.guards.NotNull;
-import ch.raffael.guards.Nullable;
-
+package ch.raffael.guards;
 
 /**
+ * Error thrown when a guard is not applicable to the element for some reason.
+ *
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class ContractViolationError extends AssertionError {
+public class GuardNotApplicableError extends Error {
 
-    public ContractViolationError(@NotNull String message) {
-        this(message, null);
+    public GuardNotApplicableError() {
+        super();
     }
 
-    public ContractViolationError(@NotNull String message, @Nullable Throwable cause) {
+    public GuardNotApplicableError(String message) {
+        super(message);
+    }
+
+    public GuardNotApplicableError(Throwable cause) {
+        super(cause);
+    }
+
+    public GuardNotApplicableError(String message, Throwable cause) {
         super(message, cause);
     }
-
 }

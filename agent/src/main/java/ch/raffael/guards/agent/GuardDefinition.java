@@ -29,6 +29,9 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import ch.raffael.guards.GuardNotApplicableError;
+import ch.raffael.guards.GuardsInternalError;
+import ch.raffael.guards.IllegalGuardError;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.agent.guava.base.Function;
@@ -42,13 +45,9 @@ import ch.raffael.guards.agent.guava.primitives.Primitives;
 import ch.raffael.guards.agent.guava.reflect.TypeToken;
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Guard.Handler;
-import ch.raffael.guards.definition.HandlerPackage;
 import ch.raffael.guards.definition.Message;
 import ch.raffael.guards.definition.Positioning;
 import ch.raffael.guards.definition.Relations;
-import ch.raffael.guards.runtime.GuardNotApplicableError;
-import ch.raffael.guards.runtime.GuardsInternalError;
-import ch.raffael.guards.runtime.IllegalGuardError;
 
 
 /**
@@ -172,19 +171,15 @@ final class GuardDefinition {
                     handlerClass = candidate;
                 }
             }
-            // TODO: remove this
-            if ( handlerClass == null && type.getPackage() != null ) {
-                HandlerPackage handlerPackage = type.getPackage().getAnnotation(HandlerPackage.class);
-                if ( handlerPackage != null ) {
-                    try {
-                        handlerClass = Class.forName(
-                                handlerPackage.value() + "."
-                                        + type.getName().substring(type.getName().lastIndexOf('.') + 1) + "Handler",
-                                false, type.getClassLoader());
+            if ( handlerClass == null ) {
+                try {
+                    handlerClass = Class.forName(type.getName() + "GuardHandler", false, type.getClassLoader());
+                    if ( !Handler.class.isAssignableFrom(handlerClass) ) {
+                        handlerClass = null;
                     }
-                    catch ( ClassNotFoundException e ) {
-                        // ignore
-                    }
+                }
+                catch ( ClassNotFoundException e ) {
+                    handlerClass = null;
                 }
             }
         }
@@ -473,6 +468,7 @@ final class GuardDefinition {
         private final Class[] paramTypes;
 
         public HandlerInstantiator(Constructor constructor) {
+            constructor.setAccessible(true);
             this.constructor = constructor;
             paramTypes = constructor.getParameterTypes();
             for( Class t : paramTypes ) {
@@ -522,6 +518,7 @@ final class GuardDefinition {
         private final Method method;
         private TestMethod(Method method, TypeToken<?> valueType) {
             this.valueType = valueType;
+            method.setAccessible(true);
             this.method = method;
         }
         Type valueType() {

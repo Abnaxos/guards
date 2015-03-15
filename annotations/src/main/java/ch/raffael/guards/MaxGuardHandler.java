@@ -14,50 +14,50 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import ch.raffael.guards.Min;
 import ch.raffael.guards.definition.Guard;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class MinHandler extends Guard.Handler<Min> {
+class MaxGuardHandler extends Guard.Handler<Max> {
 
-    private final int minInt;
-    private final long min;
+    private final int maxInt;
+    private final long max;
 
-    public MinHandler(Min annotation) {
+    public MaxGuardHandler(Max annotation) {
         super(annotation);
-        min = annotation.value();
-        minInt = min > Integer.MIN_VALUE ? (int)min : Integer.MIN_VALUE;
+        max = annotation.value();
+        maxInt = max > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)max;
     }
 
     public boolean test(int value) {
-        return value >= minInt;
+        return value <= maxInt;
     }
 
     public boolean test(long value) {
-        return value >= min;
+        return value <= max;
     }
 
     public boolean test(float value) {
-        return value >= min;
+        return value <= max;
     }
 
     public boolean test(double value) {
-        return value >= min;
+        return value <= max;
     }
 
     public boolean test(BigInteger value) {
-        return value.compareTo(BigInteger.valueOf(min)) >= 0;
+        return value.compareTo(BigInteger.valueOf(max)) <= 0;
     }
 
     public boolean test(BigDecimal value) {
-        return value.compareTo(BigDecimal.valueOf(min)) >= 0;
+        return value.compareTo(BigDecimal.valueOf(max)) <= 0;
     }
+
 }

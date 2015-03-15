@@ -14,28 +14,44 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
-import ch.raffael.guards.Real;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class RealHandler extends Guard.Handler<Real> {
-    public RealHandler(Real annotation) {
+class UnsignedGuardHandler extends Guard.Handler<Unsigned> {
+
+    public UnsignedGuardHandler(Unsigned annotation) {
         super(annotation);
     }
 
-    public boolean test(float value) {
-        return value != Float.NaN
-                && value != Float.POSITIVE_INFINITY
-                && value != Float.NEGATIVE_INFINITY;
+    public boolean test(int value) {
+        return value >= 0;
     }
+
+    public boolean test(long value) {
+        return value >= 0;
+    }
+
+    public boolean test(float value) {
+        return value >= 0;
+    }
+
     public boolean test(double value) {
-        return value != Double.NaN
-                && value != Double.POSITIVE_INFINITY
-                && value != Double.NEGATIVE_INFINITY;
+        return value >= 0;
+    }
+
+    public boolean test(BigInteger value) {
+        return value.compareTo(BigInteger.ZERO) >= 0;
+    }
+
+    public boolean test(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) >= 0;
     }
 }

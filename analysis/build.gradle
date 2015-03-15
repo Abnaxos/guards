@@ -20,6 +20,8 @@
 
 
 
+
+
 apply plugin:guards.PreparedShadow
 
 def antlr4Version = '4.5'
@@ -36,7 +38,7 @@ dependencies {
     shadowed group:'org.antlr', name:'antlr4-runtime', version:antlr4Version
     antlr4Tool group:'org.antlr', name:'antlr4', version:antlr4Version
 
-    compile project(':runtime')
+    compile project(':annotations')
 }
 
 tasks.create('antlr4') {

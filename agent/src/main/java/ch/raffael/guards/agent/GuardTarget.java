@@ -18,9 +18,9 @@ package ch.raffael.guards.agent;
 
 import java.lang.annotation.Annotation;
 
+import ch.raffael.guards.GuardsInternalError;
 import ch.raffael.guards.Sensitive;
 import ch.raffael.guards.agent.guava.reflect.TypeToken;
-import ch.raffael.guards.runtime.GuardsInternalError;
 
 
 /**

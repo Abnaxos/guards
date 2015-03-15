@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.definition;
+package ch.raffael.guards.ext;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,15 +22,25 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import ch.raffael.guards.NotNull;
+import ch.raffael.guards.Nullable;
+import ch.raffael.guards.definition.Guard;
+import ch.raffael.guards.definition.Message;
+import ch.raffael.guards.definition.PerformanceImpact;
+import ch.raffael.guards.definition.Relations;
+
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Target({ ElementType.PACKAGE, ElementType.ANNOTATION_TYPE })
-@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Retention(RetentionPolicy.CLASS)
 @Documented
-public @interface HandlerPackage {
+@Guard(performanceImpact = PerformanceImpact.LOW)
+@Relations(subsetOf = { Nullable.class }, intersectingWith = { NotNull.class })
+@Message("Value must be an instanceof {value}")
+public @interface InstanceOf {
 
-    String value();
+    Class<?>[] value();
 
 }

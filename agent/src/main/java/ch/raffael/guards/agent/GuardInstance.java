@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import ch.raffael.guards.ContractViolationError;
 import ch.raffael.guards.Sensitive;
 import ch.raffael.guards.agent.guava.base.Joiner;
 import ch.raffael.guards.agent.guava.collect.ForwardingMap;
@@ -32,8 +33,7 @@ import ch.raffael.guards.agent.guava.collect.ImmutableMap;
 import ch.raffael.guards.agent.guava.collect.ImmutableSet;
 import ch.raffael.guards.agent.guava.reflect.Reflection;
 import ch.raffael.guards.definition.Message;
-import ch.raffael.guards.runtime.ContractViolationError;
-import ch.raffael.guards.runtime.internal.Substitutor;
+import ch.raffael.guards.internal.Substitutor;
 
 
 /**

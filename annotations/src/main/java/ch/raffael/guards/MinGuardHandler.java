@@ -14,48 +14,49 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.definition.Guard;
 
 
 /**
-* @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
-*/
-public class NotNegativeHandler extends Guard.Handler<Unsigned> {
+ * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
+ */
+class MinGuardHandler extends Guard.Handler<Min> {
 
-    private static final BigDecimal DEC_ZERO = new BigDecimal(0);
-    private static final BigInteger BIGINT_ZERO = new BigInteger("0");
+    private final int minInt;
+    private final long min;
 
-    public NotNegativeHandler(Unsigned annotation) {
+    public MinGuardHandler(Min annotation) {
         super(annotation);
+        min = annotation.value();
+        minInt = min > Integer.MIN_VALUE ? (int)min : Integer.MIN_VALUE;
     }
 
     public boolean test(int value) {
-        return value >= 0;
+        return value >= minInt;
     }
 
     public boolean test(long value) {
-        return value >= 0;
+        return value >= min;
     }
 
     public boolean test(float value) {
-        return value >= 0;
+        return value >= min;
     }
 
     public boolean test(double value) {
-        return value >= 0;
+        return value >= min;
     }
 
-    public boolean check(BigDecimal value) {
-        return DEC_ZERO.compareTo(value) >= 0;
+    public boolean test(BigInteger value) {
+        return value.compareTo(BigInteger.valueOf(min)) >= 0;
     }
 
-    public boolean check(BigInteger value) {
-        return BIGINT_ZERO.compareTo(value) >= 0;
+    public boolean test(BigDecimal value) {
+        return value.compareTo(BigDecimal.valueOf(min)) >= 0;
     }
 }

@@ -22,14 +22,14 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
+import ch.raffael.guards.GuardNotApplicableError;
+import ch.raffael.guards.IllegalGuardError;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.agent.asm.Handle;
 import ch.raffael.guards.agent.asm.Opcodes;
 import ch.raffael.guards.agent.asm.Type;
 import ch.raffael.guards.agent.asm.commons.Method;
-import ch.raffael.guards.runtime.GuardNotApplicableError;
-import ch.raffael.guards.runtime.IllegalGuardError;
 
 import static ch.raffael.guards.agent.asm.Type.getType;
 import static java.lang.invoke.MethodHandles.constant;

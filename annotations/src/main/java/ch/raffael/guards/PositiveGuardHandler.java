@@ -14,32 +14,44 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
-import java.util.regex.Pattern;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
-import ch.raffael.guards.Matches;
 import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class MatchesHandler extends Guard.Handler<Matches> {
+class PositiveGuardHandler extends Guard.Handler<Positive> {
 
-    private final Pattern pattern;
-
-    public MatchesHandler(Matches annotation) {
+    public PositiveGuardHandler(Positive annotation) {
         super(annotation);
-        pattern = Pattern.compile(annotation.value(), annotation.flags());
     }
 
-    public boolean test(CharSequence value) {
-        if ( annotation.find() ) {
-            return pattern.matcher(value).find();
-        }
-        else{
-            return pattern.matcher(value).matches();
-        }
+    public boolean test(int value) {
+        return value > 0;
+    }
+
+    public boolean test(long value) {
+        return value > 0;
+    }
+
+    public boolean test(float value) {
+        return value > 0;
+    }
+
+    public boolean test(double value) {
+        return value > 0;
+    }
+
+    public boolean check(BigInteger value) {
+        return value.compareTo(BigInteger.ZERO) > 0;
+    }
+
+    public boolean check(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) > 0;
     }
 }

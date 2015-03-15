@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
 import java.util.Collection;
 
-import ch.raffael.guards.NoNulls;
 import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class NoNullsHandler extends Guard.Handler<NoNulls> {
-    public NoNullsHandler(NoNulls annotation)  {
+class NoNullsGuardHandler extends Guard.Handler<NoNulls> {
+    public NoNullsGuardHandler(NoNulls annotation)  {
         super(annotation);
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime;
+package ch.raffael.guards;
 
 /**
  * Error thrown if a guard does not meet the contract.

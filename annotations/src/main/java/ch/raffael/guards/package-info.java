@@ -18,5 +18,4 @@
  * This package contains some default guards an exceptions that may be thrown by the
  * agent, in case someone wants to handle them.
  */
-@ch.raffael.guards.definition.HandlerPackage("ch.raffael.guards.runtime.stdhandlers")
 package ch.raffael.guards;

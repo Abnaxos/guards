@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
 import java.util.Collection;
 
-import ch.raffael.guards.NotEmpty;
 import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class NotEmptyHandler extends Guard.Handler<NotEmpty> {
+class NotEmptyGuardHandler extends Guard.Handler<NotEmpty> {
 
-    public NotEmptyHandler(NotEmpty annotation) {
+    public NotEmptyGuardHandler(NotEmpty annotation) {
         super(annotation);
     }
 

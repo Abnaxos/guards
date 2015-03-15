@@ -43,7 +43,7 @@ public @interface Relations {
     Class<? extends Annotation>[] equalTo() default {};
 
     @GuardAnnotation
-    Class<? extends Annotation[]>[] intersectingWith() default {};
+    Class<? extends Annotation>[] intersectingWith() default {};
 
     @GuardAnnotation
     Class<? extends Annotation>[] disjointFrom() default {};

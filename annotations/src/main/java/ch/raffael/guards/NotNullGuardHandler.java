@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime;
+package ch.raffael.guards;
+
+import ch.raffael.guards.definition.Guard;
+
 
 /**
- * Error thrown when an internal error occurs.
- *
- * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
- */
-public class GuardsInternalError extends Error {
+* @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
+*/
+class NotNullGuardHandler extends Guard.Handler<NotNull> {
 
-    public GuardsInternalError() {
+    public static boolean test(Object value) {
+        return value != null;
     }
 
-    public GuardsInternalError(String message) {
-        super(message);
-    }
-
-    public GuardsInternalError(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public GuardsInternalError(Throwable cause) {
-        super(cause);
-    }
 }

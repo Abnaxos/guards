@@ -16,9 +16,11 @@
 
 
 
+
+
 package ch.raffael.guards.agent
 
-import ch.raffael.guards.runtime.GuardNotApplicableError
+import ch.raffael.guards.GuardNotApplicableError
 
 
 /**

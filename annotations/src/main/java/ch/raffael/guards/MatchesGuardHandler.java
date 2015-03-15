@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.runtime.stdhandlers;
+package ch.raffael.guards;
 
-import ch.raffael.guards.NotNull;
+import java.util.regex.Pattern;
+
 import ch.raffael.guards.definition.Guard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
-public class NotNullHandler extends Guard.Handler<NotNull> {
+class MatchesGuardHandler extends Guard.Handler<Matches> {
 
-    public static boolean test(Object value) {
-        return value != null;
+    private final Pattern pattern;
+
+    public MatchesGuardHandler(Matches annotation) {
+        super(annotation);
+        pattern = Pattern.compile(annotation.value(), annotation.flags());
     }
 
+    public boolean test(CharSequence value) {
+        if ( annotation.find() ) {
+            return pattern.matcher(value).find();
+        }
+        else{
+            return pattern.matcher(value).matches();
+        }
+    }
 }

@@ -28,12 +28,12 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 
+import ch.raffael.guards.ContractViolationError;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.agent.GuardsAgent;
 import ch.raffael.guards.agent.guava.base.Stopwatch;
 import ch.raffael.guards.agent.guava.io.Files;
-import ch.raffael.guards.runtime.ContractViolationError;
 
 
 /**
