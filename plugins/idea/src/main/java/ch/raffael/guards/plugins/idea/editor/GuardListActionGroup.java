@@ -29,14 +29,14 @@ import ch.raffael.guards.plugins.idea.PsiGuardUtil;
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class GuardsActionGroup extends AbstractGuardPopupGroup<PsiModifierListOwner> {
+public class GuardListActionGroup extends AbstractGuardPopupGroup<PsiModifierListOwner> {
 
-    public GuardsActionGroup(GuardPopupController controller, @Guardable final PsiModifierListOwner element) {
+    public GuardListActionGroup(GuardPopupController controller, @Guardable final PsiModifierListOwner element) {
         super(controller, element);
         init(element);
     }
 
-    public GuardsActionGroup(GuardPopupAction<?> parent, @Guardable final PsiModifierListOwner element) {
+    public GuardListActionGroup(GuardPopupAction<?> parent, @Guardable final PsiModifierListOwner element) {
         super(parent, element);
         init(element);
     }
@@ -46,7 +46,7 @@ public class GuardsActionGroup extends AbstractGuardPopupGroup<PsiModifierListOw
         for( AnAction action : PsiGuardUtil.getGuards(element).transform(new Function<PsiAnnotation, AnAction>() {
             @Override
             public AnAction apply(PsiAnnotation psiAnnotation) {
-                return new EditGuardActionGroup(GuardsActionGroup.this, psiAnnotation);
+                return new GuardActionGroup(GuardListActionGroup.this, psiAnnotation);
             }
         }) ) {
             add(action);

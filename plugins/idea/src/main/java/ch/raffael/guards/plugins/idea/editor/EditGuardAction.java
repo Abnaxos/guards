@@ -30,7 +30,11 @@ import com.intellij.codeInsight.template.TemplateEditingAdapter;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.icons.AllIcons;
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -46,6 +50,7 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.ui.ScrollPaneFactory;
+import com.intellij.util.Consumer;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
@@ -62,13 +67,15 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
 
     private static final Pattern EMPTY_ARGS_RE = Pattern.compile("\\s*\\(\\s*\\)(\\s*)");
 
+    private AnAction onFinish;
+
     public EditGuardAction(@Nullable GuardPopupController controller, @NotNull PsiAnnotation guard) {
-        super(controller, guard);
+        super(controller, guard, SelectionKey.of(guard, SelectionKey.Option.EDIT));
         init(guard);
     }
 
     public EditGuardAction(@Nullable GuardPopupAction<?> parent, @NotNull PsiAnnotation guard) {
-        super(parent, guard);
+        super(parent, guard, SelectionKey.of(guard, SelectionKey.Option.EDIT));
         init(guard);
     }
 
@@ -76,6 +83,11 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
         caption("Edit...", "Delete guard " + PsiGuardUtil.getGuardDescription(guard, true), AllIcons.Actions.Edit);
         //setShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0)));
         getTemplatePresentation().setEnabled(guard.isWritable());
+    }
+
+    public EditGuardAction onFinish(AnAction anAction) {
+        onFinish = anAction;
+        return this;
     }
 
     @Override
@@ -161,6 +173,17 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
                         else {
                             removeEmptyParens();
                             popup.closeOk(null);
+                            DataManager.getInstance().getDataContextFromFocus().doWhenDone(new Consumer<DataContext>() {
+                                @Override
+                                public void consume(final DataContext dataContext) {
+                                    ApplicationManager.getApplication().invokeLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            getController().shopPopup(dataContext, SelectionKey.of(getElement(), SelectionKey.Option.PULL_UP));
+                                        }
+                                    });
+                                }
+                            });
                         }
                     }
 

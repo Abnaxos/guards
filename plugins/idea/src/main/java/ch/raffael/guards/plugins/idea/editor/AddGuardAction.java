@@ -46,13 +46,13 @@ public class AddGuardAction extends AbstractGuardPopupWriteAction<PsiModifierLis
     private int expandCount = 0;
 
     public AddGuardAction(GuardPopupController controller, @NotNull PsiModifierListOwner element, @NotNull PsiClass guardType) {
-        super(controller, element);
+        super(controller, element, SelectionKey.of(guardType, SelectionKey.Option.INSERT));
         this.guardType = guardType;
         caption(innerClassName(new StringBuilder(), guardType).toString(), PsiGuardUtil.getGuardTypeDescription(guardType), guardType.getIcon(0));
     }
 
     public AddGuardAction(GuardPopupAction parent, @NotNull @Guardable PsiModifierListOwner element, @NotNull PsiClass guardType) {
-        super(parent, element);
+        super(parent, element, SelectionKey.of(guardType, SelectionKey.Option.INSERT));
         this.guardType = guardType;
         caption(innerClassName(new StringBuilder(), guardType).toString(), PsiGuardUtil.getGuardTypeDescription(guardType), guardType.getIcon(0));
     }
@@ -94,6 +94,7 @@ public class AddGuardAction extends AbstractGuardPopupWriteAction<PsiModifierLis
         //PsiDocumentManager.getInstance(getElement().getProject()).commitDocument();
         //new EditGuardAction()
         setShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT, 0)));
+        //getController().shopPopup(e.getDataContext(), SelectionKey.of(psiAnnotation, SelectionKey.Option.PULL_UP));
     }
 
     @Override

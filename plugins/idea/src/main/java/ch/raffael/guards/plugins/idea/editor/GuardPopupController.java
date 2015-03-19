@@ -19,15 +19,21 @@ package ch.raffael.guards.plugins.idea.editor;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.swing.JComponent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.JList;
+import javax.swing.SwingUtilities;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MapMaker;
@@ -51,6 +57,8 @@ import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.JBPopupListener;
 import com.intellij.openapi.ui.popup.LightweightWindowEvent;
 import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.openapi.ui.popup.ListPopupStep;
+import com.intellij.openapi.ui.popup.PopupStep;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -59,12 +67,16 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.ui.awt.RelativePoint;
+import com.intellij.ui.popup.PopupFactoryImpl;
+import com.intellij.ui.popup.WizardPopup;
+import com.intellij.ui.popup.list.ListPopupImpl;
+import com.intellij.util.containers.FilteringIterator;
+import com.intellij.util.ui.JBSwingUtilities;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.plugins.idea.ElementIndex;
-import ch.raffael.guards.plugins.idea.PsiGuardUtil;
 
 
 /**
@@ -91,7 +103,7 @@ public class GuardPopupController implements Disposable {
     private Integer popupIndex = null;
     private final LinkedList<JBPopup> popups = new LinkedList<>();
 
-    private PsiElement selection = null;
+    private SelectionKey<?> selection;
 
     public GuardPopupController(JComponent component, PsiMember member) {
         this(null, component, null, member);
@@ -158,7 +170,7 @@ public class GuardPopupController implements Disposable {
         return shopPopup(data, null);
     }
 
-    public JBPopup shopPopup(DataContext data, PsiElement select) {
+    public JBPopup shopPopup(DataContext data, SelectionKey<?> select) {
         int offset = -1;
         boolean selectInline = false;
         if ( editor != null ) {
@@ -182,7 +194,7 @@ public class GuardPopupController implements Disposable {
         }
         else {
             if ( selection != null ) {
-                PsiElement param = PsiTreeUtil.getParentOfType(selection, PsiParameter.class, false);
+                PsiElement param = PsiTreeUtil.getParentOfType(selection.getElement(), PsiParameter.class, false);
                 if ( param != null ) {
                     //noinspection SuspiciousMethodCalls
                     popupIndex = parameters.indexOf(param);
@@ -234,43 +246,32 @@ public class GuardPopupController implements Disposable {
     }
 
     protected JBPopup createPopup(DataContext data, final ActionGroup actionGroup) {
-        DisposeCallback disposeCallback = new DisposeCallback();
-        final JBPopup popup = popupFactory.createActionGroupPopup(null, actionGroup,
-                data, false, true, false, disposeCallback, 0, new Condition<AnAction>() {
-                    @Override
-                    public boolean value(AnAction anAction) {
-                        if ( selection != null && anAction instanceof GuardPopupAction ) {
-                            PsiElement target = PsiGuardUtil.as(PsiElement.class, ((GuardPopupAction)anAction).getSelectionElement());
-                            return PsiTreeUtil.isAncestor(target, selection, false);
+        disposePopups();
+        final ListPopup popup = new RootPopup(
+                null, actionGroup, data, false, false, true, false, null, -1, null, null) {
+            @Override
+            protected void initPopup(ListPopup popup) {
+                if ( selection != null ) {
+                    popup.addListener(new JBPopupListener() {
+                        @Override
+                        public void beforeShown(LightweightWindowEvent event) {
+                            final ListPopup listPopup = (ListPopup)event.asPopup();
+                            //listPopup.removeListener(this);
+                            preselect(listPopup);
                         }
-                        return false;
-                    }
-                });
-        ((ListPopup)popup).addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                // FIXME: Not implemented
-                //System.out.println(e);
-            }
-        });
-        popup.addListener(new JBPopupListener() {
-            @Override
-            public void beforeShown(LightweightWindowEvent event) {
-                if ( event.asPopup() instanceof ListPopup ) {
-                    final ListPopup listPopup = (ListPopup)event.asPopup();
-                    if ( INSTALLED.putIfAbsent(listPopup.getContent(), true) != null ) {
-                        return;
-                    }
-                    ExtendedKeyboardActionDispatcher dispatcher = new ExtendedKeyboardActionDispatcher(listPopup);
-                    dispatcher.install(listPopup.getContent());
+
+                        @Override
+                        public void onClosed(LightweightWindowEvent event) {
+                        }
+                    });
                 }
+                if ( INSTALLED.putIfAbsent(popup.getContent(), true) != null ) {
+                    return;
+                }
+                ExtendedKeyboardActionDispatcher dispatcher = new ExtendedKeyboardActionDispatcher(popup);
+                dispatcher.install(popup.getContent());
             }
-            @Override
-            public void onClosed(LightweightWindowEvent event) {
-                //System.out.println("closed: " + event);
-            }
-        });
-        disposeCallback.popup = popup;
+        };
         return popup;
     }
 
@@ -284,6 +285,7 @@ public class GuardPopupController implements Disposable {
             }
             popups.add(popup);
             popup.show(new RelativePoint(editor.getContentComponent(), p));
+            //((ListPopup)popup).handleSelect(false);
         }
         else if ( position != null ) {
             popup.show(position);
@@ -292,6 +294,54 @@ public class GuardPopupController implements Disposable {
             popup.show(popupFactory.guessBestPopupLocation(component));
         }
         return popup;
+    }
+
+    private void preselect(final ListPopup popup) {
+        Iterator items = popup.getListStep().getValues().iterator();
+        int index = preselectedIndex(items);
+        if ( index >= 0 ) {
+            findJList(popup).setSelectedIndex(index);
+            AnAction action = ((PopupFactoryImpl.ActionItem)popup.getListStep().getValues().get(index)).getAction();
+            if ( action instanceof ActionGroup ) {
+                if ( preselectedIndex(Arrays.asList(((ActionGroup)action).getChildren(null)).iterator()) >= 0 ) {
+                    // ensure that the next sub-menu gets activated
+                    Window window = (Window)SwingUtilities.getRoot(popup.getContent());
+                    if ( window.isVisible() ) {
+                        popup.handleSelect(false);
+                    }
+                    else {
+                        window.addWindowListener(
+                                new WindowAdapter() {
+                                    @Override
+                                    public void windowOpened(WindowEvent e) {
+                                        popup.handleSelect(false);
+                                        e.getWindow().removeWindowListener(this);
+                                    }
+                                });
+                    }
+                }
+            }
+        }
+    }
+
+    private int preselectedIndex(Iterator items) {
+        for( int index = 0; items.hasNext(); index++ ) {
+            Object item = items.next();
+            GuardPopupAction<?> action = null;
+            if ( item instanceof GuardPopupAction ) {
+                action = (GuardPopupAction)item;
+            }
+            else if ( item instanceof PopupFactoryImpl.ActionItem && ((PopupFactoryImpl.ActionItem)item).getAction() instanceof GuardPopupAction ) {
+                action= (GuardPopupAction)((PopupFactoryImpl.ActionItem)item).getAction();
+            }
+            if ( action == null ) {
+                continue;
+            }
+            if ( action.getSelectionKey() != null && action.getSelectionKey().isSelectableBy(selection) ) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     @Override
@@ -328,6 +378,15 @@ public class GuardPopupController implements Disposable {
         }
     }
 
+    static JList findJList(ListPopup popup) {
+        Set<Component> lists = JBSwingUtilities.uiTraverser().preOrderTraversal(popup.getContent())
+                .filter(new FilteringIterator.InstanceOf<>(JList.class)).toSet();
+        if ( lists.size() != 1 ) {
+            throw new IllegalStateException("Expected exactly one JList");
+        }
+        return (JList)lists.iterator().next();
+    }
+
     private class CycleElementAction extends AnAction {
         private final boolean forward;
         public CycleElementAction(boolean forward) {
@@ -352,12 +411,41 @@ public class GuardPopupController implements Disposable {
         }
     }
 
-    private class DisposeCallback implements Runnable {
-        JBPopup popup;
-        @Override
-        public void run() {
-            popups.remove(popup);
-        }
-    }
+    /**
+     * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
+     */
+    abstract class RootPopup extends PopupFactoryImpl.ActionGroupPopup {
 
+        RootPopup(String title, ActionGroup actionGroup, DataContext dataContext, boolean showNumbers, boolean useAlphaAsNumbers, boolean showDisabledActions, boolean honorActionMnemonics, Runnable disposeCallback, int maxRowCount, Condition<AnAction> preselectActionCondition, String actionPlace) {
+            super(title, actionGroup, dataContext, showNumbers, useAlphaAsNumbers, showDisabledActions, honorActionMnemonics, disposeCallback, maxRowCount, preselectActionCondition, actionPlace);
+            initPopup(this);
+        }
+
+        protected abstract void initPopup(ListPopup popup);
+
+        @Override
+        protected WizardPopup createPopup(WizardPopup parent, PopupStep step, Object parentValue) {
+            ChildPopup popup = new ChildPopup(parent, (ListPopupStep)step, parentValue);
+            initPopup(popup);
+            return popup;
+        }
+
+        @Override
+        protected void afterShow() {
+        }
+
+        class ChildPopup extends ListPopupImpl {
+            ChildPopup(WizardPopup aParent, ListPopupStep aStep, Object parentValue) {
+                super(aParent, aStep, parentValue);
+            }
+            @Override
+            protected WizardPopup createPopup(WizardPopup parent, PopupStep step, Object parentValue) {
+                return RootPopup.this.createPopup(parent, step, parentValue);
+            }
+            @Override
+            protected void afterShow() {
+            }
+        }
+
+    }
 }

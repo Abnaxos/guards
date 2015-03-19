@@ -47,9 +47,18 @@ public abstract class AbstractGuardPopupGroup<T extends PsiElement> extends Acti
         guardPopup = new Support<>(this, controller, element);
     }
 
+    public AbstractGuardPopupGroup(@NotNull GuardPopupController controller, @Nullable T element, SelectionKey<? extends T> selectionKey) {
+        guardPopup = new Support<>(this, controller, element, selectionKey);
+    }
+
     public AbstractGuardPopupGroup(@NotNull GuardPopupAction parent, @Nullable T element) {
         super();
         guardPopup = new Support<>(this, parent, element);
+    }
+
+    public AbstractGuardPopupGroup(@NotNull GuardPopupAction parent, @Nullable T element, SelectionKey<? extends T> selectionKey) {
+        super();
+        guardPopup = new Support<>(this, parent, element, selectionKey);
     }
 
     public void caption(@Nullable String text) {
@@ -87,14 +96,9 @@ public abstract class AbstractGuardPopupGroup<T extends PsiElement> extends Acti
     }
 
     @Override
-    public void setSelectable(boolean selectable) {
-        guardPopup.setSelectable(selectable);
-    }
-
-    @Override
     @NullIf("Not selectable")
-    public T getSelectionElement() {
-        return guardPopup.getSelectionElement();
+    public SelectionKey<? extends T> getSelectionKey() {
+        return guardPopup.getSelectionKey();
     }
 
     @Override

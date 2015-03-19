@@ -32,17 +32,19 @@ import ch.raffael.guards.plugins.idea.PsiGuardUtil;
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class EditGuardActionGroup extends AbstractGuardPopupGroup<PsiAnnotation> {
+public class GuardActionGroup extends AbstractGuardPopupGroup<PsiAnnotation> {
 
     private EditGuardAction editAction;
+    private PullUpAction pullUpAction;
+    private PushDownAction pushDownAction;
     private DeleteGuardAction deleteAction;
 
-    public EditGuardActionGroup(@NotNull GuardPopupController controller, @NotNull PsiAnnotation guard) {
+    public GuardActionGroup(@NotNull GuardPopupController controller, @NotNull PsiAnnotation guard) {
         super(controller, guard);
         init(guard);
     }
 
-    public EditGuardActionGroup(@NotNull GuardPopupAction parent, @NotNull PsiAnnotation guard) {
+    public GuardActionGroup(@NotNull GuardPopupAction parent, @NotNull PsiAnnotation guard) {
         super(parent, guard);
         init(guard);
     }
@@ -52,6 +54,8 @@ public class EditGuardActionGroup extends AbstractGuardPopupGroup<PsiAnnotation>
                 PsiGuardUtil.getGuardDescription(guard, true),
                 guard.getIcon(0));
         add(editAction = new EditGuardAction(this, guard));
+        add(pullUpAction=new PullUpAction(this, guard));
+        add(pushDownAction=new PushDownAction(this, guard));
         add(deleteAction = new DeleteGuardAction(this, guard));
         setPopup(true);
         //setShortcutSet(new CustomShortcutSet(KeyEvent.VK_DELETE));

@@ -37,12 +37,12 @@ import ch.raffael.guards.plugins.idea.PsiGuardUtil;
 public class DeleteGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation> {
 
     public DeleteGuardAction(@Nullable GuardPopupController controller, @NotNull PsiAnnotation guard) {
-        super(controller, guard);
+        super(controller, guard, SelectionKey.of(guard, SelectionKey.Option.DELETE));
         init(guard);
     }
 
     public DeleteGuardAction(@Nullable GuardPopupAction<?> parent, @NotNull PsiAnnotation guard) {
-        super(parent, guard);
+        super(parent, guard, SelectionKey.of(guard, SelectionKey.Option.DELETE));
         init(guard);
     }
 

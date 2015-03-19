@@ -28,12 +28,18 @@ public abstract class AbstractGuardPopupWriteAction<T extends PsiElement> extend
 
     public AbstractGuardPopupWriteAction(GuardPopupController controller, T element) {
         super(controller, element);
-        setSelectable(false);
+    }
+
+    public AbstractGuardPopupWriteAction(GuardPopupController controller, T element, SelectionKey<? extends T> selectionKey) {
+        super(controller, element, selectionKey);
     }
 
     public AbstractGuardPopupWriteAction(GuardPopupAction<?> parent, T element) {
-        super(parent, element);
-        setSelectable(false);
+        super(parent, element, null);
+    }
+
+    public AbstractGuardPopupWriteAction(GuardPopupAction<?> parent, T element, SelectionKey<? extends T> selectionKey) {
+        super(parent, element, selectionKey);
     }
 
     @Override

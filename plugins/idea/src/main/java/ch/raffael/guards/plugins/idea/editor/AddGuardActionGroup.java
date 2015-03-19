@@ -41,18 +41,17 @@ import ch.raffael.guards.plugins.idea.PsiGuardUtil;
 public class AddGuardActionGroup extends AbstractGuardPopupGroup<PsiModifierListOwner> {
 
     public AddGuardActionGroup(GuardPopupController controller, @NotNull @Guardable final PsiModifierListOwner element) {
-        super(controller, element);
+        super(controller, element, SelectionKey.of(element, SelectionKey.Option.INSERT));
         init();
     }
 
     public AddGuardActionGroup(GuardPopupAction<?> parent, @NotNull @Guardable final PsiModifierListOwner element) {
-        super(parent, element);
+        super(parent, element, SelectionKey.of(element, SelectionKey.Option.INSERT));
         init();
     }
 
     protected void init() {
         setPopup(true);
-        setSelectable(false);
         getTemplatePresentation().setText("Add Guard...");
         getTemplatePresentation().setIcon(AllIcons.General.Add);
         if ( !(getElement() instanceof PsiMethod) || PsiGuardUtil.isGuardableReturnType((PsiMethod)getElement()) ) {
@@ -84,7 +83,7 @@ public class AddGuardActionGroup extends AbstractGuardPopupGroup<PsiModifierList
             getTemplatePresentation().setEnabledAndVisible(false);
         }
     }
-    
+
     @Override
     public boolean hideIfNoVisibleChildren() {
         return true;

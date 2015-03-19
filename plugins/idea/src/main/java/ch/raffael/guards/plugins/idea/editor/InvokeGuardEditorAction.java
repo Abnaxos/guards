@@ -92,7 +92,7 @@ public class InvokeGuardEditorAction extends AnAction {
                 }
                 if ( component != null ) {
                     GuardPopupController controller = new GuardPopupController((JComponent)component, member);
-                    controller.shopPopup(event.getDataContext(), parameter);
+                    controller.shopPopup(event.getDataContext(), SelectionKey.of(parameter));
                 }
             }
         }
@@ -198,7 +198,7 @@ public class InvokeGuardEditorAction extends AnAction {
                 initialSelection = currentAnnotation;
             }
         }
-        controller.shopPopup(data, initialSelection);
+        controller.shopPopup(data, SelectionKey.of(initialSelection));
         return true;
     }
 

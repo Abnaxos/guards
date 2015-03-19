@@ -31,10 +31,8 @@ import ch.raffael.guards.ext.NullIf;
  */
 public interface GuardPopupAction<T extends PsiElement> {
 
-    void setSelectable(boolean selectable);
-
     @NullIf("No target")
-    T getSelectionElement();
+    SelectionKey<? extends T> getSelectionKey();
 
     @NotNull
     GuardPopupController getController();
@@ -50,20 +48,40 @@ public interface GuardPopupAction<T extends PsiElement> {
         private final GuardPopupController controller;
         private final GuardPopupAction<?> parent;
         private final T element;
-        private boolean selectable = true;
+        private final SelectionKey<? extends T> selectionKey;
 
         public Support(@NotNull AnAction action, @NotNull GuardPopupController controller, @Nullable T element) {
+            this(action, controller, element, defaultSelectionKey(element));
+        }
+
+        public Support(@NotNull AnAction action, @NotNull GuardPopupController controller, @Nullable T element, @NullIf("Not auto-selectable") SelectionKey<? extends T> selectionKey) {
             this.action = action;
             this.controller = controller;
             this.parent = null;
             this.element = element;
+            this.selectionKey = selectionKey;
         }
 
         public Support(@NotNull AnAction action, @NotNull GuardPopupAction<?> parent, @Nullable T element) {
+            this(action, parent, element, defaultSelectionKey(element));
+        }
+
+        public Support(@NotNull AnAction action, @NotNull GuardPopupAction<?> parent, @Nullable T element, @NullIf("Not auto-selectable") SelectionKey<? extends T> selectionKey) {
             this.action = action;
             this.controller = parent.getController();
             this.parent = null;
             this.element = element;
+            this.selectionKey = selectionKey;
+        }
+
+        @NullIf("Input element is null")
+        private static <T extends PsiElement> SelectionKey<? extends T> defaultSelectionKey(@Nullable T element) {
+            if ( element == null ) {
+                return null;
+            }
+            else {
+                return SelectionKey.of(element);
+            }
         }
 
         public void caption(String text) {
@@ -86,19 +104,9 @@ public interface GuardPopupAction<T extends PsiElement> {
         }
 
         @Override
-        public void setSelectable(boolean selectable) {
-            this.selectable = selectable;
-        }
-
-        @Override
         @NullIf("Not selectable")
-        public T getSelectionElement() {
-            if ( selectable ) {
-                return element;
-            }
-            else {
-                return null;
-            }
+        public SelectionKey<? extends T> getSelectionKey() {
+            return selectionKey;
         }
 
         @Override

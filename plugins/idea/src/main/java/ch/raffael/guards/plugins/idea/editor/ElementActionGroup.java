@@ -66,7 +66,7 @@ public class ElementActionGroup extends AbstractGuardPopupGroup<PsiModifierListO
         }
         caption(typeString  + ((PsiNamedElement)element).getName(), element.getIcon(0));
         add(new AddGuardActionGroup(this, element));
-        add(new GuardsActionGroup(this, element));
+        add(new GuardListActionGroup(this, element));
     }
 
 }
