@@ -35,6 +35,7 @@ import com.intellij.openapi.diagnostic.Logger;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.plugins.idea.ui.UiState;
 
 import static ch.raffael.guards.plugins.idea.GuardsApplicationComponent.PLUGIN_ID;
 

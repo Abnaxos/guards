@@ -16,14 +16,14 @@
 
 
 
-
-
 configurations {
     ideaClasses
 }
 sourceSets.main.compileClasspath += configurations.ideaClasses
 sourceSets.test.compileClasspath += configurations.ideaClasses
 sourceSets.test.runtimeClasspath += configurations.ideaClasses
+
+sourceSets.main.resources.exclude '**/*.xcf'
 
 archivesBaseName = 'guards-idea-plugin'
 

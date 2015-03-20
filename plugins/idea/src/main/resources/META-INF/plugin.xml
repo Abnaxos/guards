@@ -54,20 +54,20 @@
   <actions>
     <!-- Add your actions here -->
     <action id="ch.raffael.guards.displayGuards"
-            class="ch.raffael.guards.plugins.idea.editor.InvokeGuardEditorAction">
+            class="ch.raffael.guards.plugins.idea.ui.live.InvokeGuardEditorAction">
       <keyboard-shortcut keymap="$default" first-keystroke="alt G"/>
     </action>
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
-    <codeInsight.lineMarkerProvider language="JAVA" implementationClass="ch.raffael.guards.plugins.idea.GuardsLineMarkerProvider"/>
+    <codeInsight.lineMarkerProvider language="JAVA" implementationClass="ch.raffael.guards.plugins.idea.ui.GuardsLineMarkerProvider"/>
     <localInspection language="JAVA"
                      shortName="GuardsInheritance" displayName="Guards Inheritance Issues" groupName="Guards"
                      enabledByDefault="true" level="WARNING"
                      implementationClass="ch.raffael.guards.plugins.idea.GuardsInheritanceInspection"/>
-    <iconLayerProvider implementation="ch.raffael.guards.plugins.idea.GuardIcons"/>
-    <iconProvider implementation="ch.raffael.guards.plugins.idea.GuardsIconProvider"/>
-    <runConfigurationExtension implementation="ch.raffael.guards.plugins.idea.run.GuardsRunConfigurationExtension"/>
+    <iconLayerProvider implementation="ch.raffael.guards.plugins.idea.ui.GuardIcons"/>
+    <iconProvider implementation="ch.raffael.guards.plugins.idea.ui.GuardsIconProvider"/>
+    <runConfigurationExtension implementation="ch.raffael.guards.plugins.idea.ui.run.GuardsRunConfigurationExtension"/>
   </extensions>
 
   <module-components>
