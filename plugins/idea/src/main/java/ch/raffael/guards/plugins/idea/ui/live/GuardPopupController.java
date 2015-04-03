@@ -77,6 +77,7 @@ import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.plugins.idea.ElementIndex;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
 
 
 /**
@@ -186,15 +187,15 @@ public class GuardPopupController implements Disposable {
         ActionGroup actionGroup;
         if ( !selectInline ) {
             if ( !parameters.isEmpty() ) {
-                actionGroup = new MemberParametersActionGroup(this, member, parameters);
+                actionGroup = new ParametersActionGroup(this, PsiGuardTarget.get(member));
             }
             else {
-                actionGroup = new ElementActionGroup(this, member);
+                actionGroup = new ElementActionGroup(this, PsiGuardTarget.get(member));
             }
         }
         else {
             if ( selection != null ) {
-                PsiElement param = PsiTreeUtil.getParentOfType(selection.getElement(), PsiParameter.class, false);
+                PsiElement param = PsiTreeUtil.getParentOfType(selection.getElement().getElement(), PsiParameter.class, false);
                 if ( param != null ) {
                     //noinspection SuspiciousMethodCalls
                     popupIndex = parameters.indexOf(param);
@@ -203,7 +204,7 @@ public class GuardPopupController implements Disposable {
             if ( popupIndex == null ) {
                 popupIndex = -1;
             }
-            actionGroup = new ElementActionGroup(this, popupIndex < 0 ? member : parameters.get(popupIndex));
+            actionGroup = new ElementActionGroup(this, PsiGuardTarget.get(popupIndex < 0 ? member : parameters.get(popupIndex)));
         }
         //final JBPopup popup = popupFactory.createActionGroupPopup(null, actionGroup,
         //        data, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, true);

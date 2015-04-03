@@ -18,21 +18,22 @@ package ch.raffael.guards.plugins.idea.ui.live;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.psi.PsiAnnotation;
+
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ALL")
-public class PullUpAction extends AbstractGuardPopupAction<PsiAnnotation> {
+public class PullUpAction extends AbstractGuardPopupAction<PsiGuard> {
 
-    public PullUpAction(GuardPopupController controller, PsiAnnotation element) {
+    public PullUpAction(GuardPopupController controller, PsiGuard element) {
         super(controller, element, SelectionKey.of(element, SelectionKey.Option.PULL_UP));
         caption("Pull Up...", "Pull the selected guard up the class hierarchy", AllIcons.Actions.MoveUp);
     }
 
-    public PullUpAction(GuardPopupAction<?> parent, PsiAnnotation element) {
+    public PullUpAction(GuardPopupAction<?> parent, PsiGuard element) {
         super(parent, element, SelectionKey.of(element, SelectionKey.Option.PULL_UP));
         caption("Pull Up...", "Pull the selected guard up the class hierarchy", AllIcons.Actions.MoveUp);
     }

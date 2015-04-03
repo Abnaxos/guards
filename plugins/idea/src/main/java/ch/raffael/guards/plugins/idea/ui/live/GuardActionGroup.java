@@ -22,37 +22,36 @@ import javax.swing.KeyStroke;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.psi.PsiAnnotation;
 
 import ch.raffael.guards.NotNull;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class GuardActionGroup extends AbstractGuardPopupGroup<PsiAnnotation> {
+public class GuardActionGroup extends AbstractGuardPopupGroup<PsiGuard> {
 
     private EditGuardAction editAction;
     private PullUpAction pullUpAction;
     private PushDownAction pushDownAction;
     private DeleteGuardAction deleteAction;
 
-    public GuardActionGroup(@NotNull GuardPopupController controller, @NotNull PsiAnnotation guard) {
+    public GuardActionGroup(@NotNull GuardPopupController controller, @NotNull PsiGuard guard) {
         super(controller, guard);
         init(guard);
     }
 
-    public GuardActionGroup(@NotNull GuardPopupAction parent, @NotNull PsiAnnotation guard) {
+    public GuardActionGroup(@NotNull GuardPopupAction parent, @NotNull PsiGuard guard) {
         super(parent, guard);
         init(guard);
     }
 
-    private void init(PsiAnnotation guard) {
-        caption(Psi.getGuardDescription(guard, false),
-                Psi.getGuardDescription(guard, true),
-                guard.getIcon(0));
+    private void init(PsiGuard guard) {
+        caption(guard.getDescription(false),
+                guard.getDescription(true),
+                guard.getElement().getIcon(0));
         add(editAction = new EditGuardAction(this, guard));
         add(pullUpAction=new PullUpAction(this, guard));
         add(pushDownAction=new PushDownAction(this, guard));

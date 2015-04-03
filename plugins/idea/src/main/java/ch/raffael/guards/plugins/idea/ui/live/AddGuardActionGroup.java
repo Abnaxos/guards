@@ -23,30 +23,27 @@ import java.util.Comparator;
 
 import javax.swing.KeyStroke;
 
+import com.google.common.base.Predicate;
 import com.intellij.icons.AllIcons;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifierListOwner;
-import com.intellij.util.Processor;
 
 import ch.raffael.guards.NotNull;
-import ch.raffael.guards.plugins.idea.Guardable;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardType;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class AddGuardActionGroup extends AbstractGuardPopupGroup<PsiModifierListOwner> {
+public class AddGuardActionGroup extends AbstractGuardPopupGroup<PsiGuardTarget> {
 
-    public AddGuardActionGroup(GuardPopupController controller, @NotNull @Guardable final PsiModifierListOwner element) {
-        super(controller, element, SelectionKey.of(element, SelectionKey.Option.INSERT));
+    public AddGuardActionGroup(GuardPopupController controller, @NotNull PsiGuardTarget guardable) {
+        super(controller, guardable, SelectionKey.of(guardable, SelectionKey.Option.INSERT));
         init();
     }
 
-    public AddGuardActionGroup(GuardPopupAction<?> parent, @NotNull @Guardable final PsiModifierListOwner element) {
-        super(parent, element, SelectionKey.of(element, SelectionKey.Option.INSERT));
+    public AddGuardActionGroup(GuardPopupAction<?> parent, @NotNull PsiGuardTarget guardable) {
+        super(parent, guardable, SelectionKey.of(guardable, SelectionKey.Option.INSERT));
         init();
     }
 
@@ -54,26 +51,28 @@ public class AddGuardActionGroup extends AbstractGuardPopupGroup<PsiModifierList
         setPopup(true);
         getTemplatePresentation().setText("Add Guard...");
         getTemplatePresentation().setIcon(AllIcons.General.Add);
-        if ( !(getElement() instanceof PsiMethod) || Psi.isGuardableReturnType((PsiMethod)getElement()) ) {
+        if ( getView().isGuardable() ) {
             final ArrayList<AddGuardAction> guardActions = new ArrayList<>();
             //Stopwatch sw = Stopwatch.createStarted();
-            Psi.queryAllGuards(getElement()).forEach(new Processor<PsiClass>() {
-                @Override
-                public boolean process(@NotNull PsiClass psiClass) {
-                    AddGuardAction action = new AddGuardAction(AddGuardActionGroup.this, getElement(), psiClass)
-                    ;
-                    guardActions.add(action);
-                    // TODO: check for applicability
-                    // TODO: check for duplicate names and try to expand them until unique
-                    return true;
-                }
-            });
+            for( PsiGuardType type : PsiGuardType.queryAllGuards(getView().getElement())
+                    .filter(new Predicate<PsiGuardType>() {
+                        @Override
+                        public boolean apply(PsiGuardType psiGuardType) {
+                            // TODO: check for applicability
+                            // TODO: check for duplicate names and try to expand them until unique
+                            return true;
+                        }
+                    }) )
+            {
+                guardActions.add(new AddGuardAction(this, type, getView()));
+            }
             //System.out.println(sw.stop() + " -> " + guardActions.size());
             Collections.sort(guardActions, new Comparator<AddGuardAction>() {
                 @Override
                 public int compare(@NotNull AddGuardAction left, @NotNull AddGuardAction right) {
-                    return String.CASE_INSENSITIVE_ORDER.compare(left.getGuardType().getName(), right.getGuardType().getName());
+                    return String.CASE_INSENSITIVE_ORDER.compare(left.getView().getElement().getName(), right.getView().getElement().getName());
                 }
+
             });
             for( AddGuardAction action : guardActions ) {
                 add(action);

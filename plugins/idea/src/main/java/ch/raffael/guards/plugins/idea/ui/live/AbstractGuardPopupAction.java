@@ -20,16 +20,16 @@ import javax.swing.Icon;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.psi.PsiElement;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.ext.NullIf;
+import ch.raffael.guards.plugins.idea.psi.PsiElementView;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public abstract class AbstractGuardPopupAction<T extends PsiElement> extends AnAction implements GuardPopupAction<T> {
+public abstract class AbstractGuardPopupAction<T extends PsiElementView> extends AnAction implements GuardPopupAction<T> {
 
     private final Support<T> guardPopup;
 
@@ -83,7 +83,7 @@ public abstract class AbstractGuardPopupAction<T extends PsiElement> extends AnA
         return guardPopup.getParent();
     }
 
-    public T getElement() {
+    public T getView() {
         return guardPopup.getElement();
     }
 

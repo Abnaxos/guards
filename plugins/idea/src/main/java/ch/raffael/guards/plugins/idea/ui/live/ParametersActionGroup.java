@@ -20,30 +20,31 @@ import java.util.List;
 
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.Separator;
-import com.intellij.psi.PsiMember;
-import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiNamedElement;
+
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class MemberParametersActionGroup extends AbstractGuardPopupGroup<PsiMember> {
+public class ParametersActionGroup extends AbstractGuardPopupGroup<PsiGuardTarget> {
 
-    private final List<PsiParameter> parameters;
+    private final List<PsiGuardTarget> parameters;
 
-    public MemberParametersActionGroup(GuardPopupController controller, PsiMember member, List<PsiParameter> parameters) {
-        super(controller, member);
-        this.parameters = parameters;
-        add(asPopup(new ElementActionGroup(controller, member), true));
+    public ParametersActionGroup(GuardPopupController controller, PsiGuardTarget parent) {
+        super(controller, parent);
+        this.parameters = parent.getParameters().toList();
+        add(asPopup(new ElementActionGroup(controller, parent), true));
         if ( !parameters.isEmpty() ) {
             add(new Separator("Parameters"));
-            for( PsiParameter parameter : parameters ) {
+            for( PsiGuardTarget parameter : parameters ) {
                 add(asPopup(new ElementActionGroup(controller, parameter), true));
             }
         }
-        getTemplatePresentation().setText(member.getName());
-        getTemplatePresentation().setIcon(member.getIcon(0));
+        getTemplatePresentation().setText(((PsiNamedElement)parent.getElement()).getName());
+        getTemplatePresentation().setIcon(parent.getElement().getIcon(0));
     }
 
     private <T extends ActionGroup> T asPopup(T action, boolean asPopup) {

@@ -16,18 +16,18 @@
 
 package ch.raffael.guards.plugins.idea.ui.live;
 
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.ext.NullIf;
+import ch.raffael.guards.plugins.idea.psi.PsiElementView;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public final class SelectionKey<E extends PsiElement> {
+public final class SelectionKey<E extends PsiElementView> {
 
     private final E element;
     private final Option option;
@@ -42,12 +42,12 @@ public final class SelectionKey<E extends PsiElement> {
     }
 
     @NullIf("No selection")
-    public static <E extends PsiElement> SelectionKey<E> of(@NullIf("No selection") E element) {
+    public static <E extends PsiElementView> SelectionKey<E> of(@NullIf("No selection") E element) {
         return of(element, null);
     }
 
     @NullIf("No selection")
-    public static <E extends PsiElement> SelectionKey<E> of(@NullIf("No selection")  E element, @Nullable Option option) {
+    public static <E extends PsiElementView> SelectionKey<E> of(@NullIf("No selection")  E element, @Nullable Option option) {
         return element == null ? null : new SelectionKey<>(element, option);
     }
 
@@ -55,7 +55,7 @@ public final class SelectionKey<E extends PsiElement> {
         if ( selector == null ) {
             return false;
         }
-        if ( !PsiTreeUtil.isAncestor(element, selector.element, false) ) {
+        if ( !PsiTreeUtil.isAncestor(element.getElement(), selector.element.getElement(), false) ) {
             return false;
         }
         return option == null || option.equals(selector.option);

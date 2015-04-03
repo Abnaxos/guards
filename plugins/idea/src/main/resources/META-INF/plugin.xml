@@ -54,7 +54,7 @@
   <actions>
     <!-- Add your actions here -->
     <action id="ch.raffael.guards.displayGuards"
-            class="ch.raffael.guards.plugins.idea.ui.live.InvokeGuardEditorAction">
+            class="ch.raffael.guards.plugins.idea.ui.live.InvokeLiveEditorAction">
       <keyboard-shortcut keymap="$default" first-keystroke="alt G"/>
     </action>
   </actions>

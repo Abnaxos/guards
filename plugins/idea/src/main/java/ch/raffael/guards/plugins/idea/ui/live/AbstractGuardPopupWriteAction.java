@@ -18,13 +18,14 @@ package ch.raffael.guards.plugins.idea.ui.live;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.psi.PsiElement;
+
+import ch.raffael.guards.plugins.idea.psi.PsiElementView;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public abstract class AbstractGuardPopupWriteAction<T extends PsiElement> extends AbstractGuardPopupAction<T> {
+public abstract class AbstractGuardPopupWriteAction<T extends PsiElementView> extends AbstractGuardPopupAction<T> {
 
     public AbstractGuardPopupWriteAction(GuardPopupController controller, T element) {
         super(controller, element);

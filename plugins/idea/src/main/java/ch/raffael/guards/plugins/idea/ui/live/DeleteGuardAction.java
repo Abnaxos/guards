@@ -23,39 +23,38 @@ import javax.swing.KeyStroke;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CustomShortcutSet;
-import com.intellij.psi.PsiAnnotation;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
 @SuppressWarnings("ComponentNotRegistered")
-public class DeleteGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation> {
+public class DeleteGuardAction extends AbstractGuardPopupWriteAction<PsiGuard> {
 
-    public DeleteGuardAction(@Nullable GuardPopupController controller, @NotNull PsiAnnotation guard) {
+    public DeleteGuardAction(@Nullable GuardPopupController controller, @NotNull PsiGuard guard) {
         super(controller, guard, SelectionKey.of(guard, SelectionKey.Option.DELETE));
         init(guard);
     }
 
-    public DeleteGuardAction(@Nullable GuardPopupAction<?> parent, @NotNull PsiAnnotation guard) {
+    public DeleteGuardAction(@Nullable GuardPopupAction<?> parent, @NotNull PsiGuard guard) {
         super(parent, guard, SelectionKey.of(guard, SelectionKey.Option.DELETE));
         init(guard);
     }
 
-    protected void init(PsiAnnotation guard) {
-        caption("Delete", "Delete guard " + Psi.getGuardDescription(guard, true), AllIcons.Actions.Delete);
+    protected void init(@NotNull PsiGuard guard) {
+        caption("Delete", "Delete guard " + guard.getDescription(true), AllIcons.Actions.Delete);
         setShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0)));
-        getTemplatePresentation().setEnabled(guard.isWritable());
+        getTemplatePresentation().setEnabled(guard.getElement().isWritable());
         setShortcutSet(new CustomShortcutSet(KeyEvent.VK_DELETE));
     }
 
     @Override
     public void perform(@NotNull AnActionEvent e) {
-        getElement().delete();
+        getView().getElement().delete();
     }
 
 }

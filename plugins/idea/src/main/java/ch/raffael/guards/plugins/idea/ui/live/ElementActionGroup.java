@@ -17,56 +17,42 @@
 package ch.raffael.guards.plugins.idea.ui.live;
 
 import com.intellij.psi.PsiClassType;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNamedElement;
-import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.plugins.idea.Guardable;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class ElementActionGroup extends AbstractGuardPopupGroup<PsiModifierListOwner> {
+public class ElementActionGroup extends AbstractGuardPopupGroup<PsiGuardTarget> {
 
-    public ElementActionGroup(@NotNull GuardPopupController controller, @NotNull @Guardable PsiModifierListOwner element) {
+    public ElementActionGroup(@NotNull GuardPopupController controller, @NotNull @Guardable PsiGuardTarget element) {
         super(controller, element);
         init(element);
     }
 
-    public ElementActionGroup(@NotNull GuardPopupAction parent, @NotNull @Guardable PsiModifierListOwner element) {
+    public ElementActionGroup(@NotNull GuardPopupAction parent, @NotNull @Guardable PsiGuardTarget element) {
         super(parent, element);
         init(element);
     }
 
-    protected void init(PsiModifierListOwner element) {
-        PsiType type;
-        if ( element instanceof PsiMethod ) {
-            type = ((PsiMethod)element).getReturnType();
-        }
-        else if ( element instanceof PsiParameter ) {
-            type = ((PsiParameter)element).getType();
-        }
-        else {
-            throw new IllegalArgumentException(String.valueOf(element));
-        }
+    protected void init(@NotNull PsiGuardTarget guardable) {
+        PsiType type = guardable.getType();
         String typeString;
-        if ( type == null ) {
-            typeString = "";
-        }
-        else if ( type instanceof PsiClassType ) {
+        if ( type instanceof PsiClassType ) {
             typeString = ((PsiClassType)type).getClassName() + " ";
         }
         else {
             typeString = type.getCanonicalText() + " ";
         }
-        caption(typeString  + ((PsiNamedElement)element).getName(), element.getIcon(0));
-        add(new AddGuardActionGroup(this, element));
-        add(new GuardListActionGroup(this, element));
+        caption(typeString + ((PsiNamedElement)guardable.getElement()).getName(), guardable.getElement().getIcon(0));
+        add(new AddGuardActionGroup(this, guardable));
+        add(new GuardListActionGroup(this, guardable));
     }
 
 }

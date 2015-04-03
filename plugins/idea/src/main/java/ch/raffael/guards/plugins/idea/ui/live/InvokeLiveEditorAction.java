@@ -44,16 +44,19 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.util.PsiTreeUtil;
 
 import ch.raffael.guards.NotNull;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.Psi;
+import ch.raffael.guards.plugins.idea.psi.PsiElementView;
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
 import ch.raffael.guards.plugins.idea.ui.GuardIcons;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class InvokeGuardEditorAction extends AnAction {
+public class InvokeLiveEditorAction extends AnAction {
 
-    public InvokeGuardEditorAction() {
+    public InvokeLiveEditorAction() {
         super("Edit Guards...", null, GuardIcons.EditGuardsAction);
     }
 
@@ -92,7 +95,7 @@ public class InvokeGuardEditorAction extends AnAction {
                 }
                 if ( component != null ) {
                     GuardPopupController controller = new GuardPopupController((JComponent)component, member);
-                    controller.shopPopup(event.getDataContext(), SelectionKey.of(parameter));
+                    controller.shopPopup(event.getDataContext(), SelectionKey.of(PsiGuardTarget.get(parameter)));
                 }
             }
         }
@@ -138,7 +141,7 @@ public class InvokeGuardEditorAction extends AnAction {
             return false;
         }
         GuardPopupController controller = new GuardPopupController(editor, member);
-        PsiElement initialSelection = null;
+        PsiElementView initialSelection = null;
         if ( origin instanceof PsiMethod ) {
             // the cursor is on a method declaration
             //
@@ -163,7 +166,7 @@ public class InvokeGuardEditorAction extends AnAction {
                 PsiParameter[] parameters = parameterList.getParameters();
                 int paramIndex = Psi.findListIndex(offset, parameterList);
                 if ( paramIndex >= 0 ) {
-                    initialSelection = parameters[paramIndex];
+                    initialSelection = PsiGuardTarget.get(parameters[paramIndex]);
                 }
                 controller.extendMemberAnchor(method.getNameIdentifier());
                 for( int i = 0; i < parameters.length; i++ ) {
@@ -183,7 +186,7 @@ public class InvokeGuardEditorAction extends AnAction {
                 PsiParameter[] parameters = targetMethod.getParameterList().getParameters();
                 if ( paramIndex > parameters.length ) {
                     if ( parameters.length > 0 && parameters[parameters.length - 1].isVarArgs() ) {
-                        initialSelection = parameters[parameters.length - 1];
+                        initialSelection = PsiGuardTarget.get(parameters[parameters.length - 1]);
                     }
                 }
             }
@@ -194,8 +197,8 @@ public class InvokeGuardEditorAction extends AnAction {
             }
         }
         if ( currentAnnotation != null ) {
-            if ( initialSelection == null || PsiTreeUtil.isAncestor(initialSelection, currentAnnotation, false) ) {
-                initialSelection = currentAnnotation;
+            if ( initialSelection == null || PsiTreeUtil.isAncestor(initialSelection.getElement(), currentAnnotation, false) ) {
+                initialSelection = PsiGuard.of(currentAnnotation);
             }
         }
         controller.shopPopup(data, SelectionKey.of(initialSelection));

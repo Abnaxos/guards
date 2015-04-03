@@ -37,13 +37,13 @@ import com.intellij.ui.awt.RelativePoint;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.Psi;
 import ch.raffael.guards.plugins.idea.ui.live.GuardPopupController;
 import ch.raffael.guards.plugins.idea.util.NullSafe;
 
-import static ch.raffael.guards.plugins.idea.code.Psi.isAnnotationType;
-import static ch.raffael.guards.plugins.idea.code.Psi.isGuarded;
-import static ch.raffael.guards.plugins.idea.code.Psi.isPrimitiveType;
+import static ch.raffael.guards.plugins.idea.psi.Psi.isAnnotationType;
+import static ch.raffael.guards.plugins.idea.psi.Psi.isGuarded;
+import static ch.raffael.guards.plugins.idea.psi.Psi.isPrimitiveType;
 
 
 /**

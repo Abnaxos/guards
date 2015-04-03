@@ -24,14 +24,14 @@ import javax.swing.ImageIcon;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.IconLayerProvider;
 import com.intellij.openapi.util.Iconable;
-import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiClass;
 import com.intellij.ui.LayeredIcon;
 import com.intellij.util.IconUtil;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardType;
 
-import static ch.raffael.guards.plugins.idea.code.Psi.isGuardType;
 import static ch.raffael.guards.plugins.idea.util.NullSafe.cast;
 
 
@@ -56,7 +56,7 @@ public final class GuardIcons implements IconLayerProvider {
     @Nullable
     @Override
     public Icon getLayerIcon(@NotNull Iconable element, boolean isLocked) {
-        if ( isGuardType(cast(PsiElement.class, element)) ) {
+        if ( PsiGuardType.isGuardType(cast(PsiClass.class, element)) ) {
             return GuardLayer;
         }
         else {

@@ -46,7 +46,6 @@ import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.JBPopupListener;
 import com.intellij.openapi.ui.popup.LightweightWindowEvent;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.ui.ScrollPaneFactory;
@@ -55,33 +54,33 @@ import com.intellij.util.Consumer;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.plugins.idea.GuardsApplicationComponent;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
 
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
 */
 @SuppressWarnings("ComponentNotRegistered")
-public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation> {
+public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiGuard> {
 
     private static final Pattern EMPTY_ARGS_RE = Pattern.compile("\\s*\\(\\s*\\)(\\s*)");
 
     private AnAction onFinish;
 
-    public EditGuardAction(@Nullable GuardPopupController controller, @NotNull PsiAnnotation guard) {
+    public EditGuardAction(@Nullable GuardPopupController controller, @NotNull PsiGuard guard) {
         super(controller, guard, SelectionKey.of(guard, SelectionKey.Option.EDIT));
         init(guard);
     }
 
-    public EditGuardAction(@Nullable GuardPopupAction<?> parent, @NotNull PsiAnnotation guard) {
+    public EditGuardAction(@Nullable GuardPopupAction<?> parent, @NotNull PsiGuard guard) {
         super(parent, guard, SelectionKey.of(guard, SelectionKey.Option.EDIT));
         init(guard);
     }
 
-    protected void init(PsiAnnotation guard) {
-        caption("Edit...", "Delete guard " + Psi.getGuardDescription(guard, true), AllIcons.Actions.Edit);
+    protected void init(@NotNull PsiGuard guard) {
+        caption("Edit...", "Delete guard " + guard.getDescription(true), AllIcons.Actions.Edit);
         //setShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0)));
-        getTemplatePresentation().setEnabled(guard.isWritable());
+        getTemplatePresentation().setEnabled(guard.getElement().isWritable());
     }
 
     public EditGuardAction onFinish(AnAction anAction) {
@@ -96,7 +95,7 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
 
     protected void showEditorPopup(@NotNull AnActionEvent event) {
         final Project project = getController().getProject();
-        final PsiFile psiFile = getElement().getContainingFile();
+        final PsiFile psiFile = getView().getElement().getContainingFile();
         if ( psiFile == null ) {
             return;
         }
@@ -123,6 +122,7 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
             public void onClosed(LightweightWindowEvent event) {
                 GuardsApplicationComponent.getUiState().setPopupWidth(popup.getContent().getWidth());
                 GuardsApplicationComponent.getUiState().setPopupHeight(popup.getContent().getHeight());
+                EditorFactory.getInstance().releaseEditor(editor);
                 popup.dispose();
             }
         });
@@ -134,8 +134,8 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
         //WriteCommandAction.runWriteCommandAction(project, new Runnable() {
         //    @Override
         //    public void run() {
-                String text = getElement().getParameterList().getText();
-                TextRange range = getElement().getParameterList().getTextRange();
+                String text = getView().getElement().getParameterList().getText();
+                TextRange range = getView().getElement().getParameterList().getTextRange();
                 final boolean handleParens;
                 if ( text.startsWith("(") && text.endsWith(")") ) {
                     handleParens = true;
@@ -180,7 +180,7 @@ public class EditGuardAction extends AbstractGuardPopupWriteAction<PsiAnnotation
                                     ApplicationManager.getApplication().invokeLater(new Runnable() {
                                         @Override
                                         public void run() {
-                                            getController().shopPopup(dataContext, SelectionKey.of(getElement(), SelectionKey.Option.PULL_UP));
+                                            getController().shopPopup(dataContext, SelectionKey.of(getView(), SelectionKey.Option.PULL_UP));
                                         }
                                     });
                                 }

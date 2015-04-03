@@ -19,17 +19,17 @@ package ch.raffael.guards.plugins.idea.ui.live;
 import javax.swing.Icon;
 
 import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.psi.PsiElement;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 import ch.raffael.guards.ext.NullIf;
+import ch.raffael.guards.plugins.idea.psi.PsiElementView;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public interface GuardPopupAction<T extends PsiElement> {
+public interface GuardPopupAction<T extends PsiElementView> {
 
     @NullIf("No target")
     SelectionKey<? extends T> getSelectionKey();
@@ -42,7 +42,7 @@ public interface GuardPopupAction<T extends PsiElement> {
 
     void extendKeyboardActions(KeyboardActionExtender extender);
 
-    class Support<T extends PsiElement> implements GuardPopupAction<T> {
+    class Support<T extends PsiElementView> implements GuardPopupAction<T> {
 
         private final AnAction action;
         private final GuardPopupController controller;
@@ -75,7 +75,8 @@ public interface GuardPopupAction<T extends PsiElement> {
         }
 
         @NullIf("Input element is null")
-        private static <T extends PsiElement> SelectionKey<? extends T> defaultSelectionKey(@Nullable T element) {
+        private static <T extends PsiElementView
+                > SelectionKey<? extends T> defaultSelectionKey(@Nullable T element) {
             if ( element == null ) {
                 return null;
             }

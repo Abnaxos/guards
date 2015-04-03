@@ -14,34 +14,34 @@
  * limitations under the License.
  */
 
-package ch.raffael.guards.plugins.idea.ui;
+package ch.raffael.guards.plugins.idea.util;
 
-import javax.swing.Icon;
+import java.util.Iterator;
 
-import com.intellij.ide.IconProvider;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiElement;
-import org.jetbrains.annotations.Nullable;
-
-import ch.raffael.guards.NotNull;
-import ch.raffael.guards.plugins.idea.psi.PsiGuardType;
-
-import static ch.raffael.guards.plugins.idea.util.NullSafe.cast;
+import com.google.common.collect.Iterators;
+import com.intellij.util.containers.FluentIterable;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class GuardsIconProvider extends IconProvider {
+public class FluentIterables {
 
-    @Nullable
-    @Override
-    public Icon getIcon(@NotNull PsiElement element, int flags) {
-        if ( PsiGuardType.isGuardAnnotation(cast(PsiAnnotation.class, element)) ) {
-            return GuardIcons.Guard;
+    private FluentIterables() {
+    }
+
+    public static <T> FluentIterable<T> head(final boolean include, final T element, final FluentIterable<T> delegate) {
+        if ( include ) {
+            return new FluentIterable<T>() {
+                @Override
+                public Iterator<T> iterator() {
+                    return Iterators.concat(Iterators.singletonIterator(element), delegate.iterator());
+                }
+            };
         }
         else {
-            return null;
+            return delegate;
         }
     }
+
 }

@@ -20,41 +20,43 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.KeyStroke;
 
+import com.google.common.base.Predicate;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CustomShortcutSet;
 import com.intellij.openapi.editor.Document;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.plugins.idea.Diagnostics;
 import ch.raffael.guards.plugins.idea.Guardable;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardType;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class AddGuardAction extends AbstractGuardPopupWriteAction<PsiModifierListOwner> {
+public class AddGuardAction extends AbstractGuardPopupWriteAction<PsiGuardType> {
 
-    private final PsiClass guardType;
+    private final PsiGuardTarget target;
 
     private int expandCount = 0;
 
-    public AddGuardAction(GuardPopupController controller, @NotNull PsiModifierListOwner element, @NotNull PsiClass guardType) {
-        super(controller, element, SelectionKey.of(guardType, SelectionKey.Option.INSERT));
-        this.guardType = guardType;
-        caption(innerClassName(new StringBuilder(), guardType).toString(), Psi.getGuardTypeDescription(guardType), guardType.getIcon(0));
+    public AddGuardAction(GuardPopupController controller, @NotNull PsiGuardType guardType, @NotNull PsiGuardTarget target) {
+        super(controller, guardType, SelectionKey.of(guardType, SelectionKey.Option.INSERT));
+        this.target = target;
+        caption(innerClassName(new StringBuilder(), guardType.getElement()).toString(), guardType.getDescription(), guardType.getElement().getIcon(0));
     }
 
-    public AddGuardAction(GuardPopupAction parent, @NotNull @Guardable PsiModifierListOwner element, @NotNull PsiClass guardType) {
-        super(parent, element, SelectionKey.of(guardType, SelectionKey.Option.INSERT));
-        this.guardType = guardType;
-        caption(innerClassName(new StringBuilder(), guardType).toString(), Psi.getGuardTypeDescription(guardType), guardType.getIcon(0));
+    public AddGuardAction(GuardPopupAction parent, @NotNull PsiGuardType guardType, @NotNull @Guardable PsiGuardTarget target) {
+        super(parent, guardType, SelectionKey.of(guardType, SelectionKey.Option.INSERT));
+        this.target = target;
+        caption(innerClassName(new StringBuilder(), guardType.getElement()).toString(), guardType.getDescription(), guardType.getElement().getIcon(0));
     }
 
     @NotNull
@@ -71,25 +73,31 @@ public class AddGuardAction extends AbstractGuardPopupWriteAction<PsiModifierLis
 
     @Override
     public void perform(@NotNull final AnActionEvent e) {
-        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(getElement().getProject());
-        Document document = documentManager.getDocument(getElement().getContainingFile());
+        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(target.getElement().getProject());
+        Document document = documentManager.getDocument(target.getElement().getContainingFile());
         if ( document == null ) {
             Diagnostics.notifyError(e, "Document is null");
             return;
         }
-        if ( getElement().getModifierList() == null ) {
-            Diagnostics.notifyError(e, "Modifier of list is null (Element: %s)", getElement());
+        if ( target.getElement().getModifierList() == null ) {
+            Diagnostics.notifyError(e, "Modifier of list is null (Element: %s)", getView());
             return;
         }
-        if ( guardType.getQualifiedName() == null ) {
+        if ( getView().getElement().getQualifiedName() == null ) {
             Diagnostics.notifyError(e, "Anonymous guard type");
             return;
         }
-        PsiAnnotation psiAnnotation = getElement().getModifierList().addAnnotation(guardType.getQualifiedName());
-        JavaCodeStyleManager.getInstance(getElement().getProject()).shortenClassReferences(psiAnnotation);
+        final PsiAnnotation psiAnnotation = target.getElement().getModifierList().addAnnotation(getView().getElement().getQualifiedName());
+        JavaCodeStyleManager.getInstance(target.getElement().getProject()).shortenClassReferences(psiAnnotation);
         documentManager.doPostponedOperationsAndUnblockDocument(document);
-        if ( Psi.getGuardAnnotationMethods(guardType).iterator().hasNext() ) {
-            new EditGuardAction(AddGuardAction.this, psiAnnotation).actionPerformed(e);
+        if ( getView().getAttributeMethods().iterator().hasNext() ) {
+            new EditGuardAction(AddGuardAction.this,
+                    target.getGuards().firstMatch(new Predicate<PsiGuard>() {
+                        @Override
+                        public boolean apply(PsiGuard psiGuard) {
+                            return psiGuard.getElement().equals(psiAnnotation);
+                        }
+                    }).get()).actionPerformed(e);
         }
         //PsiDocumentManager.getInstance(getElement().getProject()).commitDocument();
         //new EditGuardAction()
@@ -103,8 +111,7 @@ public class AddGuardAction extends AbstractGuardPopupWriteAction<PsiModifierLis
         super.update(e);
     }
 
-    public PsiClass getGuardType() {
-        return guardType;
+    public PsiGuardTarget getTarget() {
+        return target;
     }
-
 }

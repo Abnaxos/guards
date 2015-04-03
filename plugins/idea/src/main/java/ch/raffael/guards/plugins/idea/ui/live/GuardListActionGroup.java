@@ -18,39 +18,36 @@ package ch.raffael.guards.plugins.idea.ui.live;
 
 import com.google.common.base.Function;
 import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiModifierListOwner;
 
-import ch.raffael.guards.plugins.idea.Guardable;
-import ch.raffael.guards.plugins.idea.code.Psi;
+import ch.raffael.guards.NotNull;
+import ch.raffael.guards.plugins.idea.psi.PsiGuard;
+import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @SuppressWarnings("ComponentNotRegistered")
-public class GuardListActionGroup extends AbstractGuardPopupGroup<PsiModifierListOwner> {
+public class GuardListActionGroup extends AbstractGuardPopupGroup<PsiGuardTarget> {
 
-    public GuardListActionGroup(GuardPopupController controller, @Guardable final PsiModifierListOwner element) {
-        super(controller, element);
-        init(element);
+    public GuardListActionGroup(GuardPopupController controller, PsiGuardTarget guardable) {
+        super(controller, guardable);
+        init(guardable);
     }
 
-    public GuardListActionGroup(GuardPopupAction<?> parent, @Guardable final PsiModifierListOwner element) {
-        super(parent, element);
-        init(element);
+    public GuardListActionGroup(GuardPopupAction<?> parent, PsiGuardTarget guardable) {
+        super(parent, guardable);
+        init(guardable);
     }
 
-    protected void init(PsiModifierListOwner element) {
+    protected void init(@NotNull PsiGuardTarget guardable) {
         setPopup(false);
-        for( AnAction action : Psi.getGuards(element).transform(new Function<PsiAnnotation, AnAction>() {
+        add(guardable.getGuards().transform(new Function<PsiGuard, AnAction>() {
             @Override
-            public AnAction apply(PsiAnnotation psiAnnotation) {
-                return new GuardActionGroup(GuardListActionGroup.this, psiAnnotation);
+            public AnAction apply(PsiGuard guard) {
+                return new GuardActionGroup(GuardListActionGroup.this, guard);
             }
-        }) ) {
-            add(action);
-        }
+        }));
     }
 
 }
