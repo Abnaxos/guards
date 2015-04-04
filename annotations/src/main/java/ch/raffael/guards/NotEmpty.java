@@ -45,3 +45,65 @@ import ch.raffael.guards.definition.Relations;
 public @interface NotEmpty {
 
 }
+
+/**
+ * Guard handler for {@link NotEmpty}
+ *
+ * @see {@link NotEmpty}
+ */
+@SuppressWarnings("unused")
+final class NotEmptyGuardHandler extends Guard.Handler<NotEmpty> {
+
+    public NotEmptyGuardHandler(NotEmpty annotation) {
+        super(annotation);
+    }
+
+    public boolean test(CharSequence string) {
+        return string.length() > 0;
+    }
+
+    // TODO: include Iterable/Iterator?
+    //public boolean test(Iterable<?> iterable) {
+    //    return iterable.iterator().hasNext();
+    //}
+
+    public boolean test(Collection<?> collection) {
+        return !collection.isEmpty();
+    }
+
+    public boolean test(Object[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(int[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(byte[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(short[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(long[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(float[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(double[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(char[] array) {
+        return array.length > 0;
+    }
+
+    public boolean test(boolean[] array) {
+        return array.length > 0;
+    }
+}

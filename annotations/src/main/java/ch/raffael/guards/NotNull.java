@@ -46,3 +46,17 @@ public @interface NotNull {
     int NULLITY_PRIORITY = 1000;
 
 }
+
+/**
+ * Guard handler for {@link NotNull}
+ *
+ * @see {@link NotNull}
+ */
+@SuppressWarnings("unused")
+final class NotNullGuardHandler extends Guard.Handler<NotNull> {
+
+    public static boolean test(Object value) {
+        return value != null;
+    }
+
+}

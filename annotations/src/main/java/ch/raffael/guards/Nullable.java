@@ -36,7 +36,7 @@ import ch.raffael.guards.definition.Relations;
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
+@Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations(supersetOf = NotNull.class)
 @Positioning(slot = Positioning.Slot.PRIMARY, priority = 1000)
 @Retract(NotNull.class)
@@ -44,4 +44,20 @@ public @interface Nullable {
 
     int NULLITY_PRIORITY = 1000;
 
+}
+
+/**
+ * Guard handler for {@link Nullable}
+ *
+ * @see {@link Nullable}
+ */
+@SuppressWarnings("unused")
+final class NullableGuardHandler extends Guard.Handler<Nullable> {
+
+    public NullableGuardHandler() {
+    }
+
+    public boolean test(Object value) {
+        return true;
+    }
 }

@@ -177,21 +177,9 @@ public @interface Guard {
     /**
      * Pseudo handler to lookup the handler by convention.
      */
-    public final class ByConvention extends Guard.Handler<Annotation> {
+    final class ByConvention extends Guard.Handler<Annotation> {
         private ByConvention() {
             super(null);
-        }
-    }
-
-    /**
-     * Pseudo handler to mark that all values are valid for a guard.
-     */
-    public final class AlwaysTrue extends Guard.Handler<Annotation> {
-        private AlwaysTrue() {
-            super(null);
-        }
-        public static boolean alwaysTrue() {
-            return true;
         }
     }
 

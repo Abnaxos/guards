@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
@@ -43,4 +44,44 @@ import ch.raffael.guards.definition.Relations;
 @Message("Collection may not contain null elements")
 public @interface NoNulls {
 
+}
+
+/**
+ * Guard handler for {@link NoNulls}
+ *
+ * @see {@link NoNulls}
+ */
+@SuppressWarnings("unused")
+final class NoNullsGuardHandler extends Guard.Handler<NoNulls> {
+    public NoNullsGuardHandler(NoNulls annotation)  {
+        super(annotation);
+    }
+
+    // TODO: Include Iterator/Iterable?
+    //public boolean test(Iterable<?> iterable) {
+    //    for ( Object elem : iterable ) {
+    //        if ( elem == null ) {
+    //            return false;
+    //        }
+    //    }
+    //    return true;
+    //}
+
+    public boolean test(Collection<?> collection) {
+        for ( Object elem : collection ) {
+            if ( elem == null ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean test(Object[] array) {
+        for ( Object element : array ) {
+            if ( element == null ) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

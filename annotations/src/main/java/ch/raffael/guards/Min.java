@@ -21,6 +21,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
@@ -62,4 +64,46 @@ public @interface Min {
 
     long value();
 
+}
+
+/**
+ * Guard handler for {@link Min}
+ *
+ * @see {@link Min}
+ */
+@SuppressWarnings("unused")
+final class MinGuardHandler extends Guard.Handler<Min> {
+
+    private final int minInt;
+    private final long min;
+
+    public MinGuardHandler(Min annotation) {
+            super(annotation);
+            min = annotation.value();
+            minInt = min > Integer.MIN_VALUE ? (int)min : Integer.MIN_VALUE;
+    }
+
+    public boolean test(int value) {
+            return value >= minInt;
+    }
+
+    public boolean test(long value) {
+            return value >= min;
+    }
+
+    public boolean test(float value) {
+            return value >= min;
+    }
+
+    public boolean test(double value) {
+            return value >= min;
+    }
+
+    public boolean test(BigInteger value) {
+            return value.compareTo(BigInteger.valueOf(min)) >= 0;
+    }
+
+    public boolean test(BigDecimal value) {
+            return value.compareTo(BigDecimal.valueOf(min)) >= 0;
+    }
 }

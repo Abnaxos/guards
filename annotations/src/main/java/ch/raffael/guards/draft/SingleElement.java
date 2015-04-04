@@ -41,11 +41,4 @@ public @interface SingleElement {
 
     boolean optional() default false;
 
-    class Handler extends Guard.Handler<SingleElement> {
-
-        public Handler(SingleElement annotation) {
-            super(annotation);
-        }
-    }
-
 }

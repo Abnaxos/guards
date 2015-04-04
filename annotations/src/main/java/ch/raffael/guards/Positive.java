@@ -21,6 +21,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
@@ -43,4 +45,45 @@ import ch.raffael.guards.definition.Relations;
 @Message("Value must greater than zero")
 public @interface Positive {
 
+}
+
+/**
+ * Guard handler for {@link Positive}
+ *
+ * @see {@link Positive}
+ */
+@SuppressWarnings("unused")
+final class PositiveGuardHandler extends Guard.Handler<Positive> {
+
+    public PositiveGuardHandler(Positive annotation) {
+        super(annotation);
+    }
+
+    public boolean test(char value) {
+        return true;
+    }
+
+    public boolean test(int value) {
+        return value > 0;
+    }
+
+    public boolean test(long value) {
+        return value > 0;
+    }
+
+    public boolean test(float value) {
+        return value > 0;
+    }
+
+    public boolean test(double value) {
+        return value > 0;
+    }
+
+    public boolean check(BigInteger value) {
+        return value.compareTo(BigInteger.ZERO) > 0;
+    }
+
+    public boolean check(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) > 0;
+    }
 }

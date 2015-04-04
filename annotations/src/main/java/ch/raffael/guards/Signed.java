@@ -21,6 +21,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
@@ -36,9 +38,45 @@ import ch.raffael.guards.definition.Relations;
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW, handler = Guard.AlwaysTrue.class)
+@Guard(performanceImpact = PerformanceImpact.LOW)
 @Relations(supersetOf = { Unsigned.class, Positive.class })
 @Positioning(slot = Positioning.Slot.LEADING)
 public @interface Signed {
 
+}
+
+/**
+ * Guard handler for {@link Signed}
+ *
+ * @see {@link Signed}
+ */
+@SuppressWarnings("unused")
+final class SignedGuardHandler extends Guard.Handler<Signed> {
+
+    public SignedGuardHandler() {
+    }
+
+    public boolean test(int value) {
+        return true;
+    }
+
+    public boolean test(long value) {
+        return true;
+    }
+
+    public boolean test(float value) {
+        return true;
+    }
+
+    public boolean test(double value) {
+        return true;
+    }
+
+    public boolean test(BigInteger value) {
+        return true;
+    }
+
+    public boolean test(BigDecimal value) {
+        return true;
+    }
 }
