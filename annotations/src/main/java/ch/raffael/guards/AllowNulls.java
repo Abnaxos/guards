@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
@@ -35,12 +36,51 @@ import ch.raffael.guards.definition.Relations;
 @Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Guard(performanceImpact = PerformanceImpact.LOW,
-        handler = Guard.AlwaysTrue.class)
+@Guard(performanceImpact = PerformanceImpact.LOW)
 @Message("Collection mut not contain null values")
 @Relations(supersetOf = NoNulls.class)
 @Positioning(slot = Positioning.Slot.PRIMARY)
 @Retract(NoNulls.class)
 public @interface AllowNulls {
 
+}
+
+/**
+ * Guard handler for {@link AllowNulls}
+ *
+ * @see {@link AllowNulls}
+ */
+@SuppressWarnings("unused")
+final class AllowNullsGuardHandler extends Guard.Handler<AllowNulls> {
+
+    public AllowNullsGuardHandler() {
+    }
+
+    // TODO: Include Iterator/Iterable?
+    //public boolean test(Iterable<?> iterable) {
+    //    for ( Object elem : iterable ) {
+    //        if ( elem == null ) {
+    //            return false;
+    //        }
+    //    }
+    //    return true;
+    //}
+
+    public boolean test(Collection<?> collection) {
+            for ( Object elem : collection ) {
+                    if ( elem == null ) {
+                            return false;
+                    }
+            }
+            return true;
+    }
+
+    public boolean test(Object[] array) {
+            for ( Object element : array ) {
+                    if ( element == null ) {
+                            return false;
+                    }
+            }
+            return true;
+    }
 }

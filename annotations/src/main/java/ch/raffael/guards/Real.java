@@ -42,3 +42,26 @@ import ch.raffael.guards.definition.Positioning;
 public @interface Real {
 
 }
+
+/**
+ * Guard handler for {@link Real}
+ *
+ * @see {@link Real}
+ */
+@SuppressWarnings("unused")
+final class RealGuardHandler extends Guard.Handler<Real> {
+    public RealGuardHandler(Real annotation) {
+        super(annotation);
+    }
+
+    public boolean test(float value) {
+        return value != Float.NaN
+                && value != Float.POSITIVE_INFINITY
+                && value != Float.NEGATIVE_INFINITY;
+    }
+    public boolean test(double value) {
+        return value != Double.NaN
+                && value != Double.POSITIVE_INFINITY
+                && value != Double.NEGATIVE_INFINITY;
+    }
+}

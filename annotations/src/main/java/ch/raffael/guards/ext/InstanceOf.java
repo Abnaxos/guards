@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
 
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
@@ -43,4 +44,72 @@ public @interface InstanceOf {
 
     Class<?>[] value();
 
+}
+
+/**
+ * Guard handler for {@link InstanceOf}.
+ *
+ * @see {@link InstanceOf}
+ */
+@SuppressWarnings("unused")
+final class InstanceOfGuardHandler extends Guard.Handler<InstanceOf> {
+
+    private final Class<?>[] types;
+    private final Class<?> type;
+
+    public InstanceOfGuardHandler(InstanceOf annotation) {
+        super(annotation);
+        Class<?>[] value = annotation.value();
+        if ( value.length == 0 ) {
+            types = null;
+            type = null;
+        }
+        else if ( value.length == 1 ) {
+            types = null;
+            type = value[1];
+        }
+        else {
+            types = value;
+            type = null;
+        }
+    }
+
+    public boolean test(Object object) {
+        if ( type != null && type.isInstance(object) ) {
+            return true;
+        }
+        else {
+            for( Class<?> t : types ) {
+                if ( !t.isInstance(types) ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    public boolean test(Object[] objects) {
+        if ( objects.length == 0 ) {
+            return true;
+        }
+        for( Object o : objects ) {
+            if ( o != null && !test(o) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean test(Iterable<?> objects) {
+        for( Object o : objects ) {
+            if ( o != null && !test(o) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean test(Collection<?> objects) {
+        return objects.isEmpty() || test((Iterable)objects);
+    }
 }

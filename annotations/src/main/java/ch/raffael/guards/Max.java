@@ -21,6 +21,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
@@ -62,5 +64,41 @@ import ch.raffael.guards.definition.Relations.Rules;
 public @interface Max {
 
     long value();
+
+}
+
+/**
+ * Guard handler for {@link Max}
+ *
+ * @see {@link Max}
+ */
+@SuppressWarnings("unused")
+final class MaxGuardHandler extends Guard.Handler<Max> {
+
+    private final int maxInt;
+    private final long max;
+    public MaxGuardHandler(Max annotation) {
+            super(annotation);
+            max = annotation.value();
+            maxInt = max > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)max;
+    }
+    public boolean test(int value) {
+            return value <= maxInt;
+    }
+    public boolean test(long value) {
+            return value <= max;
+    }
+    public boolean test(float value) {
+            return value <= max;
+    }
+    public boolean test(double value) {
+            return value <= max;
+    }
+    public boolean test(BigInteger value) {
+            return value.compareTo(BigInteger.valueOf(max)) <= 0;
+    }
+    public boolean test(BigDecimal value) {
+            return value.compareTo(BigDecimal.valueOf(max)) <= 0;
+    }
 
 }

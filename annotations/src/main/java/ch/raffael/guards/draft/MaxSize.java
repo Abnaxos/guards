@@ -41,11 +41,4 @@ public @interface MaxSize {
 
     int value();
 
-    class Handler extends Guard.Handler<MaxSize> {
-
-        public Handler(MaxSize annotation) {
-            super(annotation);
-        }
-    }
-
 }

@@ -62,3 +62,28 @@ public @interface Matches {
     int flags() default 0;
 
 }
+
+/**
+ * Guard handler for {@link Matches}
+ *
+ * @see {@link Matches}
+ */
+@SuppressWarnings("unused")
+final class MatchesGuardHandler extends Guard.Handler<Matches> {
+
+    private final Pattern pattern;
+
+    public MatchesGuardHandler(Matches annotation) {
+        super(annotation);
+        pattern = Pattern.compile(annotation.value(), annotation.flags());
+    }
+
+    public boolean test(CharSequence value) {
+        if ( annotation.find() ) {
+            return pattern.matcher(value).find();
+        }
+        else{
+            return pattern.matcher(value).matches();
+        }
+    }
+}

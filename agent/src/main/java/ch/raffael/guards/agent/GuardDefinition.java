@@ -197,7 +197,8 @@ final class GuardDefinition {
 
     @NotNull
     private Set<TestMethod> findTestMethods() {
-        if ( handlerClass == null || handlerClass == Guard.AlwaysTrue.class ) {
+        if ( handlerClass == null ) {
+            // TODO: WTF? handlerClass==null
             return ImmutableSet.of();
         }
         ImmutableSet.Builder<TestMethod> testMethods = ImmutableSet.builder();
@@ -244,7 +245,7 @@ final class GuardDefinition {
             GuardInstance inst = new GuardInstance(instance, ann);
             prependTo = GuardDefinition.get(ann.annotationType()).resolveTestMethod(inst, prependTo);
         }
-        if ( handlerClass == Guard.AlwaysTrue.class || guard == null ) {
+        if ( guard == null ) {
             return prependTo;
         }
         TestMethod testMethod = findTestMethod(instance);

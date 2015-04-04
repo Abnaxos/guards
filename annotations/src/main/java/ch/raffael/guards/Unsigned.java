@@ -21,6 +21,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.Message;
@@ -43,4 +45,41 @@ import ch.raffael.guards.definition.Relations;
 @Message("Value must not be negative")
 public @interface Unsigned {
 
+}
+
+/**
+ * Guard handler for {@link Unsigned}
+ *
+ * @see {@link Unsigned}
+ */
+@SuppressWarnings("unused")
+final class UnsignedGuardHandler extends Guard.Handler<Unsigned> {
+
+    public UnsignedGuardHandler(Unsigned annotation) {
+        super(annotation);
+    }
+
+    public boolean test(int value) {
+        return value >= 0;
+    }
+
+    public boolean test(long value) {
+        return value >= 0;
+    }
+
+    public boolean test(float value) {
+        return value >= 0;
+    }
+
+    public boolean test(double value) {
+        return value >= 0;
+    }
+
+    public boolean test(BigInteger value) {
+        return value.compareTo(BigInteger.ZERO) >= 0;
+    }
+
+    public boolean test(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) >= 0;
+    }
 }

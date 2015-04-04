@@ -41,11 +41,4 @@ public @interface MinSize {
 
     int value();
 
-    class Handler extends Guard.Handler<MinSize> {
-
-        public Handler(MinSize annotation) {
-            super(annotation);
-        }
-    }
-
 }

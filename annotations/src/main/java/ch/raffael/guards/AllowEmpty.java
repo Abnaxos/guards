@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
 
 import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.definition.PerformanceImpact;
@@ -43,4 +44,76 @@ import ch.raffael.guards.definition.Relations;
 @Retract(NotEmpty.class)
 public @interface AllowEmpty {
 
+}
+
+/**
+ * Guard handler for {@link AllowEmpty}
+ *
+ * @see {@link AllowEmpty}
+ */
+@SuppressWarnings("unused")
+final class AllowEmptyGuardHandler extends Guard.Handler<AllowEmpty> {
+
+    public AllowEmptyGuardHandler() {
+    }
+
+    // TODO: Include Iterator/Iterable?
+    //public boolean test(Iterable<?> iterable) {
+    //    for ( Object elem : iterable ) {
+    //        if ( elem == null ) {
+    //            return false;
+    //        }
+    //    }
+    //    return true;
+    //}
+
+    public boolean test(Collection<?> collection) {
+        for ( Object elem : collection ) {
+            if ( elem == null ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean test(Object[] array) {
+        for ( Object element : array ) {
+            if ( element == null ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean test(int[] array) {
+        return true;
+    }
+
+    public boolean test(byte[] array) {
+        return true;
+    }
+
+    public boolean test(short[] array) {
+        return true;
+    }
+
+    public boolean test(long[] array) {
+        return true;
+    }
+
+    public boolean test(float[] array) {
+        return true;
+    }
+
+    public boolean test(double[] array) {
+        return true;
+    }
+
+    public boolean test(char[] array) {
+        return true;
+    }
+
+    public boolean test(boolean[] array) {
+        return true;
+    }
 }
