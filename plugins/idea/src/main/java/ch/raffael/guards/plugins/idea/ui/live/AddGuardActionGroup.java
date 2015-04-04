@@ -58,14 +58,13 @@ public class AddGuardActionGroup extends AbstractGuardPopupGroup<PsiGuardTarget>
                     .filter(new Predicate<PsiGuardType>() {
                         @Override
                         public boolean apply(PsiGuardType psiGuardType) {
-                            // TODO: check for applicability
-                            // TODO: check for duplicate names and try to expand them until unique
-                            return true;
+                            return psiGuardType.isApplicableTo(getView().getType());
                         }
                     }) )
             {
                 guardActions.add(new AddGuardAction(this, type, getView()));
             }
+            // TODO: check for duplicate names and try to expand them until unique
             //System.out.println(sw.stop() + " -> " + guardActions.size());
             Collections.sort(guardActions, new Comparator<AddGuardAction>() {
                 @Override

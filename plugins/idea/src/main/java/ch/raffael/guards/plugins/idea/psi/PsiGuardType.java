@@ -54,6 +54,7 @@ import ch.raffael.guards.plugins.idea.util.InspectionQueue;
 import static ch.raffael.guards.plugins.idea.psi.Psi.C_GUARD;
 import static ch.raffael.guards.plugins.idea.psi.Psi.C_HANDLER;
 import static ch.raffael.guards.plugins.idea.psi.Psi.M_GUARD_HANDLER;
+import static ch.raffael.guards.plugins.idea.psi.Psi.findClassByName;
 import static ch.raffael.guards.plugins.idea.psi.Psi.isGuardableLanguage;
 import static ch.raffael.guards.plugins.idea.psi.Psi.isSuperClass;
 import static ch.raffael.guards.plugins.idea.psi.Psi.resolve;
@@ -209,17 +210,28 @@ public class PsiGuardType extends PsiElementView<PsiClass, PsiElementView> {
                 }
             }
         }
+        PsiClass handlerClass = getElement().findInnerClassByName("Handler", false);
+        if ( handlerClass != null ) {
+            if ( isSuperClass(C_HANDLER, handlerClass) ) {
+                return new PsiHandlerClass(handlerClass, this);
+            }
+        }
+        handlerClass = findClassByName(getElement(), getElement().getQualifiedName() + "GuardHandler");
+        if ( handlerClass != null ) {
+            if ( isSuperClass(C_HANDLER, handlerClass) ) {
+                return new PsiHandlerClass(handlerClass, this);
+            }
+        }
         return null;
     }
 
     @NotNull
     public FluentIterable<PsiGuardType> getAllGuardTypes() {
+        final InspectionQueue<PsiGuardType> queue = new InspectionQueue<>(this);
         return fluentIterable(new Iterable<PsiGuardType>() {
             @Override
             public Iterator<PsiGuardType> iterator() {
                 return new AbstractIterator<PsiGuardType>() {
-                    private InspectionQueue<PsiGuardType> queue = new InspectionQueue<>(this);
-
                     @Override
                     protected PsiGuardType computeNext() {
                         PsiGuardType type = queue.poll();
@@ -251,6 +263,17 @@ public class PsiGuardType extends PsiElementView<PsiClass, PsiElementView> {
     public boolean isApplicableTo(@Nullable final PsiType type) {
         if ( type == null || TypeConversionUtil.isVoidType(type) || TypeConversionUtil.isNullType(type) ) {
             return false;
+        }
+        if ( getDirectHandlerClass() != null ) {
+            if ( !getDirectHandlerClass().getTestMethods().anyMatch(new Predicate<PsiTestMethod>() {
+                @Override
+                public boolean apply(PsiTestMethod psiTestMethod) {
+                    return psiTestMethod.isApplicableTo(type);
+                }
+            }) )
+            {
+                return false;
+            }
         }
         for( PsiHandlerClass handlerClass : getHandlerClasses() ) {
             if ( !handlerClass.getTestMethods().anyMatch(

@@ -57,8 +57,8 @@ import static java.util.Arrays.asList;
  */
 public class Psi {
 
-    public static final String C_GUARD = Guard.class.getName();
-    public static final String C_HANDLER = Guard.Handler.class.getName();
+    public static final String C_GUARD = Guard.class.getCanonicalName();
+    public static final String C_HANDLER = Guard.Handler.class.getCanonicalName();
     public static final String M_GUARD_HANDLER = "handler";
     public static final String C_TEST = HandlerAccess.C_TEST;
 
