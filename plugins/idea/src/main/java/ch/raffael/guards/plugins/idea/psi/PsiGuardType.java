@@ -16,8 +16,10 @@
 
 package ch.raffael.guards.plugins.idea.psi;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Function;
@@ -55,6 +57,7 @@ import static ch.raffael.guards.plugins.idea.psi.Psi.C_GUARD;
 import static ch.raffael.guards.plugins.idea.psi.Psi.C_HANDLER;
 import static ch.raffael.guards.plugins.idea.psi.Psi.M_GUARD_HANDLER;
 import static ch.raffael.guards.plugins.idea.psi.Psi.findClassByName;
+import static ch.raffael.guards.plugins.idea.psi.Psi.getDeclaredAnnotations;
 import static ch.raffael.guards.plugins.idea.psi.Psi.isGuardableLanguage;
 import static ch.raffael.guards.plugins.idea.psi.Psi.isSuperClass;
 import static ch.raffael.guards.plugins.idea.psi.Psi.resolve;
@@ -92,6 +95,16 @@ public class PsiGuardType extends PsiElementView<PsiClass, PsiElementView> {
             return null;
         }
         return ofPsiClass(cast(PsiClass.class, resolve(annotation.getNameReferenceElement())));
+    }
+
+    @NullIf("No guard Annotation")
+    public PsiAnnotation getGuardAnnotation() {
+        return Psi.getDeclaredAnnotations(getElement()).firstMatch(new Predicate<PsiAnnotation>() {
+            @Override
+            public boolean apply(PsiAnnotation psiAnnotation) {
+                return Psi.C_GUARD.equals(psiAnnotation.getQualifiedName());
+            }
+        }).orNull();
     }
 
     @NotNull
@@ -192,7 +205,7 @@ public class PsiGuardType extends PsiElementView<PsiClass, PsiElementView> {
     }
 
     @Nullable
-    public PsiHandlerClass getDirectHandlerClass() {
+    public PsiHandlerClass getHandlerClass() {
         PsiAnnotation annotation = AnnotationUtil.findAnnotation(element, C_GUARD);
         if ( annotation == null ) {
             return null;
@@ -248,45 +261,76 @@ public class PsiGuardType extends PsiElementView<PsiClass, PsiElementView> {
         });
     }
 
-    @NotNull
-    public FluentIterable<PsiHandlerClass> getHandlerClasses() {
-        return getAllGuardTypes()
-                .transform(new Function<PsiGuardType, PsiHandlerClass>() {
-                    @Override
-                    public PsiHandlerClass apply(@Nullable PsiGuardType psiGuardType) {
-                        return psiGuardType == null ? null : psiGuardType.getDirectHandlerClass();
-                    }
-                })
-                .filter(Predicates.notNull());
-    }
-
     public boolean isApplicableTo(@Nullable final PsiType type) {
+        class ApplicabilityChecker {
+            private final Map<PsiGuardType, Boolean> seen = new HashMap<>();
+
+            boolean isApplicableTo(PsiType type, PsiGuardType guardType) {
+                if ( type == null || TypeConversionUtil.isVoidType(type) || TypeConversionUtil.isNullType(type) ) {
+                    return false;
+                }
+                Boolean applicable = seen.get(guardType);
+                if ( applicable == null ) {
+                    applicable = checkApplicability(type, guardType);
+                    seen.put(guardType, applicable);
+                }
+                return applicable;
+            }
+
+            private boolean checkApplicability(PsiType type, PsiGuardType guardType) {
+                Boolean handler = checkDirectHandler(type, guardType);
+                if ( handler != null && !handler ) {
+                    return false;
+                }
+                Boolean implied = checkImpliedGuards(type, guardType);
+                if ( handler == null && implied == null ) {
+                    return false;
+                }
+                else {
+                    return (handler == null || handler) && (implied == null || implied);
+                }
+            }
+
+            @Nullable
+            private Boolean checkDirectHandler(@NotNull final PsiType type, @NotNull PsiGuardType guardType) {
+                if ( guardType.getHandlerClass() == null ) {
+                    return null;
+                }
+                FluentIterable<PsiTestMethod> testMethods = guardType.getHandlerClass().getTestMethods();
+                return testMethods.anyMatch(new Predicate<PsiTestMethod>() {
+                    @Override
+                    public boolean apply(PsiTestMethod psiTestMethod) {
+                        return psiTestMethod.isApplicableTo(type);
+                    }
+                });
+            }
+
+            @Nullable
+            private Boolean checkImpliedGuards(@NotNull final PsiType type, @NotNull PsiGuardType guardType) {
+                FluentIterable<PsiGuardType> implied = getDeclaredAnnotations(guardType.getElement()).
+                        transform(new Function<PsiAnnotation, PsiGuardType>() {
+                            @Override
+                            public PsiGuardType apply(@Nullable PsiAnnotation psiAnnotation) {
+                                return PsiGuardType.ofPsiAnnotation(psiAnnotation);
+                            }
+                        })
+                        .filter(Predicates.notNull());
+                if ( implied.isEmpty() ) {
+                    return null;
+                }
+                return implied.allMatch(new Predicate<PsiGuardType>() {
+                    @Override
+                    public boolean apply(PsiGuardType t) {
+                        return t.isApplicableTo(type);
+                    }
+                });
+            }
+        }
+
         if ( type == null || TypeConversionUtil.isVoidType(type) || TypeConversionUtil.isNullType(type) ) {
             return false;
         }
-        if ( getDirectHandlerClass() != null ) {
-            if ( !getDirectHandlerClass().getTestMethods().anyMatch(new Predicate<PsiTestMethod>() {
-                @Override
-                public boolean apply(PsiTestMethod psiTestMethod) {
-                    return psiTestMethod.isApplicableTo(type);
-                }
-            }) )
-            {
-                return false;
-            }
-        }
-        for( PsiHandlerClass handlerClass : getHandlerClasses() ) {
-            if ( !handlerClass.getTestMethods().anyMatch(
-                    new Predicate<PsiTestMethod>() {
-                        @Override
-                        public boolean apply(@Nullable PsiTestMethod psiTestMethod) {
-                            return psiTestMethod != null && psiTestMethod.isApplicableTo(type);
-                        }}) )
-            {
-                return false;
-            }
-        }
-        return true;
+        return new ApplicabilityChecker().isApplicableTo(type, this);
     }
 
     public String getDescription() {
@@ -306,7 +350,7 @@ public class PsiGuardType extends PsiElementView<PsiClass, PsiElementView> {
         }
         StringBuilder allAnnotations = new StringBuilder();
         Joiner.on(" ").skipNulls().appendTo(allAnnotations,
-                Psi.getGuards(element).transform(new Function<PsiGuard, String>() {
+                PsiGuardTarget.getGuards(element).transform(new Function<PsiGuard, String>() {
                     @Override
                     public String apply(@Nullable PsiGuard psiAnnotation) {
                         if ( psiAnnotation == null ) {

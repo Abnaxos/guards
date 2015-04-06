@@ -28,7 +28,7 @@ import ch.raffael.guards.GuardNotApplicableError
  */
 class TypeConversionsSpec extends AgentSpecification {
 
-    def "Standard type conversions are supported (exception integers to floats)"() {
+    def "Standard primitive type conversions are supported (exception integers to floats)"() {
       given:
         guards {
             guard.test(long)
@@ -165,33 +165,32 @@ class TypeConversionsSpec extends AgentSpecification {
         'intArg'   | Integer
     }
 
-    /**
-     * todo: Should we widen types on unboxing? The JLS says no.
-     */
-    def "Autoboxing is supported but won't widen types"() {
-      given:
-        guards {
-            guard.test(Integer)
-
-            method('intArg').param(Integer).guard()
-            method('shortArg').param(Short).guard()
-        }
-
-      when:
-        guards.invoke {
-            invokeMethod('intArg', 42)
-            invokeMethod('shortArg', (short)42)
-        }
-
-      then: "intArg() was properly guarded"
-        with(guardInvocations) {
-            1 * invocation('intArg', _, Integer.tt, 42)
-        }
-      then: "guarding of shortArg() failed"
-        def e = thrown(BootstrapMethodError)
-        e.cause instanceof GuardNotApplicableError
-      then: "no other invokations occurred"
-        0 * _._
-    }
+// What was I thinking? We do not autobox any values for now
+// todo: might there be any use-cases where unboxing actually makes sense?
+//    def "Autoboxing is supported but won't widen types"() {
+//      given:
+//        guards {
+//            guard.test(Integer)
+//
+//            method('intArg').param(int).guard()
+//            method('shortArg').param(short).guard()
+//        }
+//
+//      when:
+//        guards.invoke {
+//            invokeMethod('intArg', 42)
+//            invokeMethod('shortArg', (short)42)
+//        }
+//
+//      then: "intArg() was properly guarded"
+//        with(guardInvocations) {
+//            1 * invocation('intArg', _, Integer.tt, 42)
+//        }
+//      then: "guarding of shortArg() failed"
+//        def e = thrown(BootstrapMethodError)
+//        e.cause instanceof GuardNotApplicableError
+//      then: "no other invokations occurred"
+//        0 * _._
+//    }
 
 }

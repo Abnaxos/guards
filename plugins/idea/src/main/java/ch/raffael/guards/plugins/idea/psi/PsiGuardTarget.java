@@ -17,6 +17,8 @@
 package ch.raffael.guards.plugins.idea.psi;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiElement;
@@ -32,6 +34,7 @@ import ch.raffael.guards.Nullable;
 import ch.raffael.guards.ext.NullIf;
 import ch.raffael.guards.plugins.idea.util.NullSafe;
 
+import static ch.raffael.guards.plugins.idea.util.NullSafe.cast;
 import static ch.raffael.guards.plugins.idea.util.NullSafe.fluentIterable;
 
 
@@ -62,6 +65,19 @@ public class PsiGuardTarget extends PsiElementView<PsiModifierListOwner, PsiElem
     @Contract("null -> false")
     public static boolean isGuardable(@Nullable PsiElement element) {
         return Kind.of(element) != null;
+    }
+
+    public static boolean isGuarded(@Nullable PsiElement element) {
+        return getGuards(cast(PsiModifierListOwner.class, element)).anyMatch(Predicates.alwaysTrue());
+    }
+
+    @NotNull
+    public static FluentIterable<PsiGuard> getGuards(@Nullable PsiModifierListOwner element) {
+        PsiGuardTarget guardable = get(element);
+        if ( guardable == null ) {
+            return NullSafe.fluentIterable();
+        }
+        return guardable.getGuards();
     }
 
     @NotNull
@@ -130,7 +146,7 @@ public class PsiGuardTarget extends PsiElementView<PsiModifierListOwner, PsiElem
 
             @Override
             PsiType getType(PsiElement element) {
-                return ((PsiMethod)element).getReturnType();
+                return Objects.firstNonNull(((PsiMethod)element).getReturnType(), PsiType.VOID);
             }
         },
         PARAMETER(PsiParameter.class) {

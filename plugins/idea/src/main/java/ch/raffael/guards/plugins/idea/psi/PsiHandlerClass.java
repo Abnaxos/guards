@@ -25,6 +25,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterators;
+import com.intellij.codeInsight.AnnotationUtil;
+import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 
@@ -53,6 +55,18 @@ public class PsiHandlerClass extends PsiElementView<PsiClass, PsiGuardType> {
     @NotNull
     public PsiGuardType getPsiGuardType() {
         return getParent();
+    }
+
+    public boolean getTestNulls() {
+        PsiAnnotation guardAnnotation = getParent().getGuardAnnotation();
+        if ( guardAnnotation == null ) {
+            // shouldn't happen
+            return false;
+        }
+        else {
+            Boolean testNulls = AnnotationUtil.getBooleanAttributeValue(guardAnnotation, "testNulls");
+            return testNulls == null ? false : testNulls;
+        }
     }
 
     @NotNull

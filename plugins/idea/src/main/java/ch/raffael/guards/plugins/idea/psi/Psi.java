@@ -18,7 +18,6 @@ package ch.raffael.guards.plugins.idea.psi;
 
 import java.lang.annotation.Annotation;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.psi.JavaPsiFacade;
@@ -27,7 +26,6 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpressionList;
-import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiPrimitiveType;
@@ -35,7 +33,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTypesUtil;
 import com.intellij.psi.util.PsiUtil;
-import com.intellij.psi.util.TypeConversionUtil;
 import org.jetbrains.annotations.Contract;
 
 import ch.raffael.guards.NotNull;
@@ -45,7 +42,6 @@ import ch.raffael.guards.definition.Guard;
 import ch.raffael.guards.ext.InstanceOf;
 import ch.raffael.guards.ext.NullIfNotFound;
 import ch.raffael.guards.ext.UnsignedOrNotFound;
-import ch.raffael.guards.plugins.idea.util.NullSafe;
 
 import static ch.raffael.guards.plugins.idea.util.NullSafe.cast;
 import static ch.raffael.guards.plugins.idea.util.NullSafe.fluentIterable;
@@ -70,22 +66,12 @@ public class Psi {
         return element != null && JavaLanguage.INSTANCE.is(element.getLanguage());
     }
 
-    public static boolean isGuarded(@Nullable PsiElement element) {
-        return getGuards(cast(PsiModifierListOwner.class, element)).anyMatch(Predicates.alwaysTrue());
-    }
-
-    @NotNull
-    public static FluentIterable<PsiGuard> getGuards(@Nullable PsiModifierListOwner element) {
-        PsiGuardTarget guardable = PsiGuardTarget.get(element);
-        if ( guardable == null ) {
-            return NullSafe.fluentIterable();
-        }
-        return guardable.getGuards();
-    }
-
 
     @NotNull
     public static FluentIterable<PsiAnnotation> getDeclaredAnnotations(@Nullable PsiModifierListOwner owner) {
+        if ( owner == null ) {
+            return fluentIterable();
+        }
         if ( owner.getModifierList() != null ) {
             return fluentIterable(owner.getModifierList().getAnnotations());
         }
@@ -113,14 +99,6 @@ public class Psi {
     @Contract("null -> false")
     public static boolean isAnnotationType(@Nullable PsiClass element) {
         return element != null && element.isAnnotationType();
-    }
-
-    public static boolean isGuardableReturnType(@Nullable PsiMethod element) {
-        return element != null && isGuardableType((element).getReturnType());
-    }
-
-    public static boolean isGuardableType(@Nullable PsiType type) {
-        return type != null && !TypeConversionUtil.isVoidType(type) && !TypeConversionUtil.isNullType(type);
     }
 
     @UnsignedOrNotFound

@@ -29,6 +29,8 @@ import com.intellij.psi.util.TypeConversionUtil;
 import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 
+import static com.intellij.psi.util.TypeConversionUtil.isFloatOrDoubleType;
+
 
 /**
 * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -57,40 +59,46 @@ public class PsiTestMethod extends PsiElementView<PsiMethod, PsiHandlerClass> {
         return psiType;
     }
 
-    public boolean isApplicableTo(@Nullable PsiType target) {
-        if ( target == null || TypeConversionUtil.isVoidType(target) || TypeConversionUtil.isNullType(target) ) {
+    public boolean isApplicableTo(@Nullable PsiType guardedType) {
+        if ( guardedType == null || TypeConversionUtil.isVoidType(guardedType) || TypeConversionUtil.isNullType(guardedType) ) {
             return false;
         }
-        // box the target type if necessary
-        if ( !(psiType instanceof PsiPrimitiveType) && !(target instanceof PsiPrimitiveType) ) {
-            return psiType.isAssignableFrom(target);
-        }
-        else if ( !(psiType instanceof PsiPrimitiveType) /* ->type must be non-primitive */ ) {
-            // boxing
-            PsiType boxed = ((PsiPrimitiveType)target).getBoxedType(element);
-            if ( boxed == null ) {
-                // sorry ...
+        if ( guardedType instanceof PsiPrimitiveType ) {
+            if ( !(psiType instanceof PsiPrimitiveType) ) {
+                // we never do autoboxing
                 return false;
             }
             else {
-                return psiType.isAssignableFrom(boxed);
+                if ( isFloatOrDoubleType(guardedType) ^ isFloatOrDoubleType(psiType) ) {
+                    // take care at this point: generally, standard Java rules apply except that we
+                    // don't allow conversions from integer types to float types
+                    return false;
+                }
+                else {
+                    // all possible exceptions handled, forward to standard rules
+                    return psiType.isAssignableFrom(guardedType);
+                }
             }
         }
-        //noinspection ConstantConditions
-        assert psiType instanceof PsiPrimitiveType;
-        if ( !(target instanceof PsiPrimitiveType) ) {
-            // unbox the target
-            target = PsiPrimitiveType.getUnboxedType(target);
-            if ( target == null ) {
-                return false;
+        else {
+            // guardedType is NOT primitive
+            if ( psiType instanceof PsiPrimitiveType ) {
+                if ( !TypeConversionUtil.isPrimitiveWrapper(guardedType) ) {
+                    // this never works
+                    return false;
+                }
+                if ( isFloatOrDoubleType(psiType) ^ isFloatOrDoubleType(PsiPrimitiveType.getUnboxedType(guardedType)) ) {
+                    // we don't do any int/float conversions
+                    return false;
+                }
+                if ( getPsiHandlerClass().getTestNulls() ) {
+                    // we're not unboxing if the guard was declared to test null values
+                    return false;
+                }
             }
+            // exceptions done, standard rules apply from here
+            return psiType.isAssignableFrom(guardedType);
         }
-        if ( TypeConversionUtil.isFloatOrDoubleType(psiType) ^ TypeConversionUtil.isFloatOrDoubleType(target) ) {
-            // the JLS allows widening integer types to float types; we don't
-            return false;
-        }
-        // after we took our additional restriction out, we can use the standard method
-        return TypeConversionUtil.areTypesConvertible(target, psiType);
     }
 
     public static boolean isTestMethod(@Nullable PsiMethod method, @Nullable Set<PsiMethod> seenMethods) {

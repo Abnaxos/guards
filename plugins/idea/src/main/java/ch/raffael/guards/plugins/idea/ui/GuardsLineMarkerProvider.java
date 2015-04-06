@@ -42,8 +42,8 @@ import ch.raffael.guards.plugins.idea.ui.live.GuardPopupController;
 import ch.raffael.guards.plugins.idea.util.NullSafe;
 
 import static ch.raffael.guards.plugins.idea.psi.Psi.isAnnotationType;
-import static ch.raffael.guards.plugins.idea.psi.Psi.isGuarded;
 import static ch.raffael.guards.plugins.idea.psi.Psi.isPrimitiveType;
+import static ch.raffael.guards.plugins.idea.psi.PsiGuardTarget.isGuarded;
 
 
 /**
