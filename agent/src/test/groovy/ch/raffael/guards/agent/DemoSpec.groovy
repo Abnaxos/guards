@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-
-
-
-
 package ch.raffael.guards.agent
 
 /**

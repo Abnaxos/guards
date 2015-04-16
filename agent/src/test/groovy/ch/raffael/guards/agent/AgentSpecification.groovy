@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-
-
-
-
-
-
-
-
 package ch.raffael.guards.agent
 
 import ch.raffael.guards.agent.DynaGuards.Recorder

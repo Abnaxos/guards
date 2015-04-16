@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-
-
 package ch.raffael.guards.agent
 
 import org.jetbrains.annotations.NotNull

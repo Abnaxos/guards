@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-
-
-
-
-
-
-
-
 apply plugin:guards.PreparedShadow
 
 def antlr4Version = '4.5'
