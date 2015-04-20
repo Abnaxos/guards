@@ -17,6 +17,7 @@
 package ch.raffael.guards.plugins.idea.psi;
 
 import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
 
@@ -24,6 +25,7 @@ import ch.raffael.guards.NotNull;
 import ch.raffael.guards.Nullable;
 
 import static ch.raffael.guards.plugins.idea.psi.Psi.resolve;
+import static ch.raffael.guards.plugins.idea.util.NullSafe.cast;
 
 
 /**
@@ -47,10 +49,11 @@ public class PsiGuard extends PsiElementView<PsiAnnotation, PsiGuardTarget> {
         if ( psiGuardType == null ) {
             return null;
         }
-        if ( !(annotation.getOwner() instanceof PsiModifierListOwner) ) {
+        PsiModifierList modifierList = cast(PsiModifierList.class, annotation.getOwner());
+        if ( modifierList == null ) {
             return null;
         }
-        PsiGuardTarget target = PsiGuardTarget.get((PsiModifierListOwner)annotation.getOwner());
+        PsiGuardTarget target = PsiGuardTarget.get(cast(PsiModifierListOwner.class, modifierList.getParent()));
         if ( target == null ) {
             return null;
         }

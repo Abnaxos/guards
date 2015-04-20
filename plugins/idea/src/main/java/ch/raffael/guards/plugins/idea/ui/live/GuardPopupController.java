@@ -25,6 +25,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +37,9 @@ import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.SwingUtilities;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MapMaker;
 import com.intellij.ide.DataManager;
@@ -65,6 +70,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.popup.PopupFactoryImpl;
@@ -78,6 +85,8 @@ import ch.raffael.guards.Nullable;
 import ch.raffael.guards.Unsigned;
 import ch.raffael.guards.plugins.idea.ElementIndex;
 import ch.raffael.guards.plugins.idea.psi.PsiGuardTarget;
+
+import static ch.raffael.guards.plugins.idea.util.NullSafe.fluentIterable;
 
 
 /**
@@ -97,8 +106,16 @@ public class GuardPopupController implements Disposable {
     private final PsiMember member;
     private final List<PsiParameter> parameters;
 
-    private TextRange memberAnchor;
-    private final TextRange[] parameterAnchors;
+    private final Set<SmartPsiElementPointer<PsiElement>> memberAnchor = new HashSet<>();
+    private final List<Set<SmartPsiElementPointer<PsiElement>>> parameterAnchors;
+
+    private final Supplier<SmartPointerManager> smartPointerManager = Suppliers.memoize(
+            new Supplier<SmartPointerManager>() {
+                @Override
+                public SmartPointerManager get() {
+                    return SmartPointerManager.getInstance(member.getProject());
+                }
+            });
 
     @ElementIndex
     private Integer popupIndex = null;
@@ -129,7 +146,11 @@ public class GuardPopupController implements Disposable {
         else {
             parameters = ImmutableList.of();
         }
-        parameterAnchors = new TextRange[parameters.size()];
+        ImmutableList.Builder<Set<SmartPsiElementPointer<PsiElement>>> builder = ImmutableList.builder();
+        for( int i = 0; i < parameters.size(); i++ ) {
+            builder.add(new HashSet<SmartPsiElementPointer<PsiElement>>());
+        }
+        parameterAnchors = builder.build();
     }
 
     @NotNull
@@ -146,25 +167,22 @@ public class GuardPopupController implements Disposable {
     }
 
     public void extendMemberAnchor(@Nullable PsiElement element) {
-        extendMemberAnchor(textRange(element));
+        if ( element != null ) {
+            memberAnchor.add(smartPointerManager.get().createSmartPsiElementPointer(element));
+        }
     }
 
-    public void extendMemberAnchor(@Nullable TextRange range) {
-        if ( range == null ) {
-            return;
-        }
-        memberAnchor = union(memberAnchor, range);
-    }
+    //public void extendMemberAnchor(@Nullable TextRange range) {
+    //    if ( range == null ) {
+    //        return;
+    //    }
+    //    memberAnchor = union(memberAnchor, range);
+    //}
 
     public void extendParameterAnchor(@Unsigned int index, @Nullable PsiElement element) {
-        extendParameterAnchor(index, textRange(element));
-    }
-
-    public void extendParameterAnchor(@Unsigned int index, @Nullable TextRange range) {
-        if ( range == null ) {
-            return;
+        if ( element != null ) {
+            parameterAnchors.get(index).add(smartPointerManager.get().createSmartPsiElementPointer(element));
         }
-        parameterAnchors[index] = union(parameterAnchors[index], range);
     }
 
     public JBPopup shopPopup(DataContext data) {
@@ -175,12 +193,15 @@ public class GuardPopupController implements Disposable {
         int offset = -1;
         boolean selectInline = false;
         if ( editor != null ) {
-            selectInline = memberAnchor != null;
-            for( TextRange paramHighlight : parameterAnchors ) {
-                if ( paramHighlight == null ) {
-                    selectInline = false;
-                    break;
+            selectInline = !memberAnchor.isEmpty();
+            if ( fluentIterable(parameterAnchors).anyMatch(new Predicate<Set<SmartPsiElementPointer<PsiElement>>>() {
+                @Override
+                public boolean apply(Set<SmartPsiElementPointer<PsiElement>> smartPsiElementPointers) {
+                    return smartPsiElementPointers.isEmpty();
                 }
+            }) )
+            {
+                selectInline = false;
             }
         }
         selection = select;
@@ -210,9 +231,10 @@ public class GuardPopupController implements Disposable {
         //        data, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, true);
         JBPopup popup = createPopup(data, actionGroup);
         if ( selectInline) {
-            final TextRange anchor = popupIndex < 0 ? memberAnchor : parameterAnchors[popupIndex];
+            final TextRange anchor = calculateCombinedTextRange(popupIndex < 0 ? memberAnchor : parameterAnchors.get(popupIndex));
             popup.addListener(new JBPopupListener() {
                 public RangeHighlighter highlight = null;
+
                 @Override
                 public void beforeShown(LightweightWindowEvent event) {
                     highlight = editor.getMarkupModel().addRangeHighlighter(
@@ -223,6 +245,7 @@ public class GuardPopupController implements Disposable {
                                     0, null, null, null)),
                             HighlighterTargetArea.EXACT_RANGE);
                 }
+
                 @Override
                 public void onClosed(LightweightWindowEvent event) {
                     if ( highlight != null ) {
@@ -246,6 +269,26 @@ public class GuardPopupController implements Disposable {
         //}
     }
 
+    @Nullable
+    private static TextRange calculateCombinedTextRange(@NotNull Collection<? extends SmartPsiElementPointer<?>> elementPointers) {
+        TextRange result = null;
+        for( SmartPsiElementPointer<?> elementPointer : elementPointers ) {
+            PsiElement element = elementPointer.getElement();
+            if ( element != null ) {
+                if ( result == null ) {
+                    result = element.getTextRange();
+                }
+                else {
+                    TextRange add = element.getTextRange();
+                    if ( add != null ) {
+                        result = result.union(add);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     protected JBPopup createPopup(DataContext data, final ActionGroup actionGroup) {
         disposePopups();
         final ListPopup popup = new RootPopup(
@@ -257,10 +300,27 @@ public class GuardPopupController implements Disposable {
                         @Override
                         public void beforeShown(LightweightWindowEvent event) {
                             final ListPopup listPopup = (ListPopup)event.asPopup();
-                            //listPopup.removeListener(this);
-                            preselect(listPopup);
+                            // we'll now have to find out the window and add a windowOpened listener
+                            // this listener will then invokeLater() the actual pre-selection process
+                            // if we don't do it in these two steps, IDEA will mess up the focus
+                            // when the current popup menu is closed: The editor will get the focus
+                            // instead of the parent popup.
+                            final Window window = SwingUtilities.getWindowAncestor(listPopup.getContent());
+                            if ( window != null ) {
+                                window.addWindowListener(new WindowAdapter() {
+                                    @Override
+                                    public void windowOpened(WindowEvent e) {
+                                        window.removeWindowListener(this);
+                                        SwingUtilities.invokeLater(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                preselect(listPopup);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
                         }
-
                         @Override
                         public void onClosed(LightweightWindowEvent event) {
                         }
